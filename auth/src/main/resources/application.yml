@@ -55,6 +55,7 @@ jwt:
 
 # Application Configuration
 app:
+  base-url: ${APP_BASE_URL:http://localhost:8081}
   auth:
     tokenSecret: ${JWT_SECRET:dGhpcyBpcyBhIHZlcnkgc2VjdXJlIHNlY3JldCBrZXkgZm9yIGp3dCB0b2tlbiBnZW5lcmF0aW9uIHdoaWNoIHNob3VsZCBiZSBjaGFuZ2VkIGluIHByb2R1Y3Rpb24=}
     tokenExpirationMsec: 864000000
@@ -74,8 +75,7 @@ two-factor:
 # CORS Configuration
 cors:
   allowed-origins:
-    - ${FRONTEND_URL:http://localhost:3000}
-    - http://localhost:4200
+    - "*"
   allowed-methods:
     - GET
     - POST
