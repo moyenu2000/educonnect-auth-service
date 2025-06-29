@@ -7,22 +7,23 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class CorsConfig {
 
     @Value("${cors.allowed-origins}")
-    private List<String> allowedOrigins;
+    private String allowedOrigins;
 
     @Value("${cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS}")
-    private List<String> allowedMethods;
+    private String allowedMethods;
 
     @Value("${cors.allowed-headers:*}")
-    private List<String> allowedHeaders;
+    private String allowedHeaders;
 
     @Value("${cors.exposed-headers:Authorization}")
-    private List<String> exposedHeaders;
+    private String exposedHeaders;
 
     @Value("${cors.allow-credentials:true}")
     private boolean allowCredentials;
@@ -33,10 +34,18 @@ public class CorsConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(allowedOrigins);
-        configuration.setAllowedMethods(allowedMethods);
-        configuration.setAllowedHeaders(allowedHeaders);
-        configuration.setExposedHeaders(exposedHeaders);
+
+        // Split comma-separated strings into lists
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        List<String> methods = Arrays.asList(allowedMethods.split(","));
+        List<String> headers = allowedHeaders.equals("*") ? Arrays.asList("*")
+                : Arrays.asList(allowedHeaders.split(","));
+        List<String> exposed = Arrays.asList(exposedHeaders.split(","));
+
+        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedMethods(methods);
+        configuration.setAllowedHeaders(headers);
+        configuration.setExposedHeaders(exposed);
         configuration.setAllowCredentials(allowCredentials);
         configuration.setMaxAge(maxAge);
 
