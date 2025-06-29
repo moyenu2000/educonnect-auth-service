@@ -1,0 +1,37 @@
+{
+  "id": "auth-api-environment",
+  "name": "Learning Platform Auth API Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://34.68.47.215:8081/api/auth",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "temp_token",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "redirect_uri",
+      "value": "http://localhost:3000/oauth2/redirect",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+} 
