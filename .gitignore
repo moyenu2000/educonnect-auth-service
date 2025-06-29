@@ -5,11 +5,15 @@ README.md.backup
 # Maven/Gradle build artifacts for all microservices
 **/target/
 **/build/
-**/.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 !**/src/main/**/build/
 !**/src/test/**/build/
+
+# BUT keep Maven wrapper files
+!**/.mvn/wrapper/maven-wrapper.jar
+!**/mvnw
+!**/mvnw.cmd
 
 # Dependency directories
 **/node_modules/
@@ -27,8 +31,6 @@ README.md.backup
 **/.env.local
 **/.env.*.local
 **/application-local.properties
-**/application-dev.properties
-**/application-prod.properties
 
 # Database files
 *.db
@@ -93,14 +95,12 @@ Thumbs.db
 *.temp
 *~
 
-# Package files
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# Built JAR files (but keep source)
+**/target/*.jar
+**/build/*.jar
+# Allow JAR files that are dependencies or resources
+!**/lib/*.jar
+!**/libs/*.jar
 
 # JVM crash logs
 hs_err_pid*
@@ -130,3 +130,7 @@ hs_err_pid*
 **/*.crt
 **/*.p12
 **/*.jks
+
+# Local environment files only
+**/application-dev.properties
+**/application-local.properties
