@@ -42,7 +42,8 @@ public class CorsConfig {
                 : Arrays.asList(allowedHeaders.split(","));
         List<String> exposed = Arrays.asList(exposedHeaders.split(","));
 
-        configuration.setAllowedOrigins(origins);
+        // Use setAllowedOriginPatterns for better flexibility with specific origins
+        configuration.setAllowedOriginPatterns(origins);
         configuration.setAllowedMethods(methods);
         configuration.setAllowedHeaders(headers);
         configuration.setExposedHeaders(exposed);
