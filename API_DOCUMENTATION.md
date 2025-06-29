@@ -35,7 +35,7 @@ http://34.68.47.215:8081/api/auth
 ### Authentication Endpoints
 
 #### POST /auth/register
-Register a new user account.
+Register a new user account. All users are automatically registered as STUDENT.
 
 **Request Body:**
 ```json
@@ -43,8 +43,7 @@ Register a new user account.
   "username": "testuser",
   "email": "test@example.com",
   "password": "password123",
-  "fullName": "Test User",
-  "role": "STUDENT"
+  "fullName": "Test User"
 }
 ```
 
@@ -56,7 +55,7 @@ Register a new user account.
 }
 ```
 
-**Available Roles:** `STUDENT`, `QUESTION_SETTER`, `ADMIN`
+**Note:** The role is not accepted as input. All users are registered as STUDENT by default.
 
 #### POST /auth/login
 Authenticate user with username/email and password.
