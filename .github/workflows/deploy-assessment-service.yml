@@ -20,6 +20,22 @@ jobs:
       # - name: Run tests
       #   run: ./mvnw test
       
+      - name: Validate Environment Variables
+        run: |
+          if [ -z "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
+            echo "Error: DOCKER_HUB_USERNAME secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DB_PASSWORD }}" ]; then
+            echo "Error: DB_PASSWORD secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.JWT_SECRET }}" ]; then
+            echo "Error: JWT_SECRET secret is not set"
+            exit 1
+          fi
+          echo "All required environment variables are set"
+          
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -44,6 +60,9 @@ jobs:
             cat > .env << EOF
           DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_USER=${{ secrets.DB_USER || 'educonnect' }}
+          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+          RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'educonnect' }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
@@ -51,6 +70,7 @@ jobs:
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           APP_BASE_URL=${{ secrets.APP_BASE_URL }}
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          GRAFANA_PASSWORD=${{ secrets.GRAFANA_PASSWORD || 'admin' }}
           EOF
             
             # Remove existing container if it exists

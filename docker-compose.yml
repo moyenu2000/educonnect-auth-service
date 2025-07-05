@@ -7,8 +7,8 @@ services:
     container_name: educonnect-postgres
     environment:
       POSTGRES_DB: educonnect
-      POSTGRES_USER: educonnect
-      POSTGRES_PASSWORD: educonnect123
+      POSTGRES_USER: ${DB_USER:-educonnect}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
@@ -35,8 +35,8 @@ services:
     image: rabbitmq:3.12-management
     container_name: educonnect-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: educonnect
-      RABBITMQ_DEFAULT_PASS: educonnect123
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-educonnect}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -55,14 +55,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
-      - SPRING_DATASOURCE_USERNAME=educonnect
-      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-educonnect}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=educonnect
-      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
     ports:
       - "8081:8081"
     depends_on:
@@ -87,14 +87,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
-      - SPRING_DATASOURCE_USERNAME=educonnect
-      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-educonnect}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=educonnect
-      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - AUTH_SERVICE_URL=http://auth-service:8081
     ports:
       - "8082:8082"
@@ -121,14 +121,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
-      - SPRING_DATASOURCE_USERNAME=educonnect
-      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-educonnect}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=educonnect
-      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - AUTH_SERVICE_URL=http://auth-service:8081
       - ASSESSMENT_SERVICE_URL=http://assessment-service:8084
     ports:
@@ -156,14 +156,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
-      - SPRING_DATASOURCE_USERNAME=educonnect
-      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-educonnect}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=educonnect
-      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - AUTH_SERVICE_URL=http://auth-service:8081
       - ASSESSMENT_SERVICE_URL=http://assessment-service:8084
       - SOCIAL_FEED_SERVICE_URL=http://social-feed-service:8083
@@ -193,14 +193,14 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
-      - SPRING_DATASOURCE_USERNAME=educonnect
-      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_DATASOURCE_USERNAME=${DB_USER:-educonnect}
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=educonnect
-      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - AUTH_SERVICE_URL=http://auth-service:8081
       - SOCIAL_FEED_SERVICE_URL=http://social-feed-service:8083
       - DISCUSSION_SERVICE_URL=http://discussion-service:8082
@@ -259,7 +259,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
     volumes:
       - grafana_data:/var/lib/grafana
     networks:
