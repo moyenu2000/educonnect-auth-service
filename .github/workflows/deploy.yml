@@ -85,10 +85,42 @@ jobs:
             # Pull all images
             sudo docker-compose -f docker-compose.prod.yml --env-file .env pull
             
-            # Start all services
+            # Start database and cache services first
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d postgres redis
+            
+            # Wait for database to be ready
+            echo "Waiting for database to be ready..."
+            timeout=300
+            while [ $timeout -gt 0 ]; do
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres pg_isready -U postgres -d educonnect; then
+                echo "Database is ready!"
+                break
+              fi
+              echo "Database not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            
+            if [ $timeout -le 0 ]; then
+              echo "Database failed to start within timeout"
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env logs postgres
+              exit 1
+            fi
+            
+            # Verify database exists
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres psql -U postgres -c "\l" | grep educonnect || {
+              echo "Database educonnect not found, creating it..."
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres psql -U postgres -c "CREATE DATABASE educonnect;"
+            }
+            
+            # Start application services
             sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d
             
             # Wait for services to start and show status
             sleep 30
             sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
+            
+            # Check service health
+            echo "Checking service health..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env logs auth-service | tail -20
           '
