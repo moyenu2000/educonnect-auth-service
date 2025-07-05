@@ -38,9 +38,9 @@ jobs:
           
       - name: Deploy to VM
         run: |
-          gcloud compute scp docker-compose.prod.yml discussion-service-vm:~/ --zone=us-central1-a
+          gcloud compute scp docker-compose.prod.yml auth-service-vm:~/ --zone=us-central1-a
           
-          gcloud compute ssh discussion-service-vm --zone=us-central1-a --command='
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
             cat > .env << EOF
           DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
@@ -53,7 +53,6 @@ jobs:
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
           EOF
             
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env pull
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env down
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env pull discussion-service
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d discussion-service
           '
