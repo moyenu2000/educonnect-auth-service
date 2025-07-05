@@ -53,6 +53,17 @@ jobs:
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
           EOF
             
+            # Remove existing container if it exists
+            sudo docker stop educonnect-assessment-service 2>/dev/null || true
+            sudo docker rm educonnect-assessment-service 2>/dev/null || true
+            
+            # Pull the latest image
             sudo docker-compose -f docker-compose.prod.yml --env-file .env pull assessment-service
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d assessment-service
+            
+            # Start the service with dependencies
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d postgres redis auth-service discussion-service assessment-service
+            
+            # Wait for service to start and show status
+            sleep 30
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env ps assessment-service
           '

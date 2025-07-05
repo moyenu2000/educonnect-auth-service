@@ -55,6 +55,7 @@ jobs:
       - name: Deploy to VM
         run: |
           gcloud compute scp docker-compose.prod.yml auth-service-vm:~/ --zone=us-central1-a
+          gcloud compute scp scripts/cleanup.sh auth-service-vm:~/ --zone=us-central1-a
           
           gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
             # Clean up disk space
@@ -75,7 +76,19 @@ jobs:
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
           EOF
             
+            # Make cleanup script executable
+            chmod +x cleanup.sh
+            
+            # Run cleanup script
+            ./cleanup.sh
+            
+            # Pull all images
             sudo docker-compose -f docker-compose.prod.yml --env-file .env pull
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env down
+            
+            # Start all services
             sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d
+            
+            # Wait for services to start and show status
+            sleep 30
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
           '
