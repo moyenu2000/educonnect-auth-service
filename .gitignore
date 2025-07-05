@@ -1,0 +1,136 @@
+# Project documentation
+HELP.md
+README.md.backup
+
+# Maven/Gradle build artifacts for all microservices
+**/target/
+**/build/
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# BUT keep Maven wrapper files
+!**/.mvn/wrapper/maven-wrapper.jar
+!**/mvnw
+!**/mvnw.cmd
+
+# Dependency directories
+**/node_modules/
+**/vendor/
+
+# Log files
+*.log
+**/logs/
+
+# Environment and configuration files
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+**/application-local.properties
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
+### STS ###
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
+
+### IntelliJ IDEA ###
+.idea/
+**/.idea/
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+**/nbproject/private/
+**/nbbuild/
+**/dist/
+**/nbdist/
+**/.nb-gradle/
+
+### VS Code ###
+.vscode/
+**/.vscode/
+
+### Eclipse ###
+**/.metadata
+**/bin/
+**/tmp/
+**/*.tmp
+**/*.bak
+**/*.swp
+**/*~.nib
+**/local.properties
+**/.loadpath
+**/.recommenders
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+**/docker-compose.override.yml
+**/.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Built JAR files (but keep source)
+**/target/*.jar
+**/build/*.jar
+# Allow JAR files that are dependencies or resources
+!**/lib/*.jar
+!**/libs/*.jar
+
+# JVM crash logs
+hs_err_pid*
+
+# Maven
+**/dependency-reduced-pom.xml
+
+# Gradle
+**/.gradle/
+**/gradle-app.setting
+!gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
+
+# Spring Boot
+**/spring.log
+
+# Test coverage reports
+**/coverage/
+**/.nyc_output/
+**/jacoco.exec
+**/*.lcov
+
+# Security and secrets
+**/secrets/
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.jks
+
+# Local environment files only
+**/application-dev.properties
+**/application-local.properties

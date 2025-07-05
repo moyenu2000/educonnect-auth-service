@@ -1,0 +1,848 @@
+{
+  "info": {
+    "name": "EduConnect Discussion Service - Local Testing",
+    "description": "Complete API collection for testing Discussion Service locally",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8083/api/v1",
+      "type": "string",
+      "description": "Base URL for Discussion Service running locally"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT Access Token from Auth Service"
+    },
+    {
+      "key": "wsUrl",
+      "value": "ws://localhost:8083",
+      "type": "string",
+      "description": "WebSocket URL for real-time features"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Discussions",
+      "item": [
+        {
+          "name": "Get All Discussions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions?page=0&size=10&type=QUESTION&subjectId=1&sortBy=LATEST",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "QUESTION"
+                },
+                {
+                  "key": "subjectId",
+                  "value": "1"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "LATEST"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Discussion by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Discussion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Help with Calculus Integration\",\n  \"content\": \"I'm having trouble understanding integration by parts. Can someone explain the process?\",\n  \"type\": \"QUESTION\",\n  \"subjectId\": 1,\n  \"topicId\": 5,\n  \"tags\": [\"calculus\", \"integration\", \"help\"],\n  \"isAnonymous\": false,\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/discussions",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions"]
+            }
+          }
+        },
+        {
+          "name": "Update Discussion",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated: Help with Calculus Integration\",\n  \"content\": \"I'm having trouble understanding integration by parts. Can someone explain the process step by step?\",\n  \"tags\": [\"calculus\", \"integration\", \"help\", \"step-by-step\"],\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Discussion",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1"]
+            }
+          }
+        },
+        {
+          "name": "Upvote Discussion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1", "upvote"]
+            }
+          }
+        },
+        {
+          "name": "Downvote Discussion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1/downvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1", "downvote"]
+            }
+          }
+        },
+        {
+          "name": "Bookmark Discussion",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1/bookmark",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1", "bookmark"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Answers",
+      "item": [
+        {
+          "name": "Get Discussion Answers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1/answers?page=0&size=10&sortBy=UPVOTES",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1", "answers"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "UPVOTES"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Answer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Integration by parts follows the formula: ∫u dv = uv - ∫v du. First, identify u and dv, then differentiate u to get du and integrate dv to get v. Finally, apply the formula.\",\n  \"isAnonymous\": false,\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/discussions/1/answers",
+              "host": ["{{baseUrl}}"],
+              "path": ["discussions", "1", "answers"]
+            }
+          }
+        },
+        {
+          "name": "Update Answer",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated answer: Integration by parts follows the formula: ∫u dv = uv - ∫v du. Here's a step-by-step process:\\n1. Identify u and dv\\n2. Find du and v\\n3. Apply the formula\\n4. Simplify the result\",\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/answers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Answer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1"]
+            }
+          }
+        },
+        {
+          "name": "Upvote Answer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1", "upvote"]
+            }
+          }
+        },
+        {
+          "name": "Downvote Answer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1/downvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1", "downvote"]
+            }
+          }
+        },
+        {
+          "name": "Accept Answer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/answers/1/accept",
+              "host": ["{{baseUrl}}"],
+              "path": ["answers", "1", "accept"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Study Groups",
+      "item": [
+        {
+          "name": "Get All Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/groups?page=0&size=10&type=STUDY_GROUP&subjectId=1&joined=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "STUDY_GROUP"
+                },
+                {
+                  "key": "subjectId",
+                  "value": "1"
+                },
+                {
+                  "key": "joined",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Group by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/groups/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "1"]
+            }
+          }
+        },
+        {
+          "name": "Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Advanced Mathematics Study Group\",\n  \"description\": \"A group for students studying advanced mathematics topics including calculus, linear algebra, and differential equations.\",\n  \"type\": \"STUDY_GROUP\",\n  \"subjectId\": 1,\n  \"isPrivate\": false,\n  \"avatarUrl\": \"https://example.com/group-avatar.jpg\",\n  \"rules\": \"1. Be respectful to all members\\n2. Stay on topic\\n3. Help others learn\\n4. No spam or inappropriate content\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups"]
+            }
+          }
+        },
+        {
+          "name": "Update Group",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Advanced Mathematics Study Group\",\n  \"description\": \"Updated description for the advanced mathematics study group.\",\n  \"avatarUrl\": \"https://example.com/updated-group-avatar.jpg\",\n  \"rules\": \"Updated rules for the group\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "1"]
+            }
+          }
+        },
+        {
+          "name": "Join Group",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/groups/1/join",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "1", "join"]
+            }
+          }
+        },
+        {
+          "name": "Get Group Members",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/groups/1/members?page=0&size=10&role=MEMBER",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "1", "members"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "role",
+                  "value": "MEMBER"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Group Discussions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/groups/1/discussions?page=0&size=10&sortBy=LATEST",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "1", "discussions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "LATEST"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Group Discussion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Group Discussion: Limits and Continuity\",\n  \"content\": \"Let's discuss the concept of limits and continuity in calculus. What are the key points to remember?\",\n  \"tags\": [\"calculus\", \"limits\", \"continuity\"],\n  \"isAnonymous\": false,\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/groups/1/discussions",
+              "host": ["{{baseUrl}}"],
+              "path": ["groups", "1", "discussions"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Direct Messages",
+      "item": [
+        {
+          "name": "Get Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/conversations?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "conversations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Conversation Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/conversations/1?page=0&size=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "conversations", "1"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipientId\": 2,\n  \"content\": \"Hi! I saw your answer about integration by parts. Could you help me with a specific problem?\",\n  \"type\": \"TEXT\",\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages"]
+            }
+          }
+        },
+        {
+          "name": "Update Message",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hi! I saw your answer about integration by parts. Could you help me with a specific problem? I'm struggling with question 3 from chapter 7.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/messages/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "1"]
+            }
+          }
+        },
+        {
+          "name": "Mark Message as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/1/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Message Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/messages/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["messages", "unread-count"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Assistant",
+      "item": [
+        {
+          "name": "Ask AI Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is the derivative of x^2 * sin(x)?\",\n  \"context\": \"I'm learning about the product rule in calculus\",\n  \"subjectId\": 1,\n  \"includeSteps\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/ask",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "ask"]
+            }
+          }
+        },
+        {
+          "name": "Get AI History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/history?page=0&size=10&subjectId=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "history"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "subjectId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Search Discussions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search/discussions?q=calculus&page=0&size=10&subjectId=1&type=QUESTION&sortBy=RELEVANCE",
+              "host": ["{{baseUrl}}"],
+              "path": ["search", "discussions"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "calculus"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "subjectId",
+                  "value": "1"
+                },
+                {
+                  "key": "type",
+                  "value": "QUESTION"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "RELEVANCE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search/groups?q=mathematics&page=0&size=10&type=STUDY_GROUP",
+              "host": ["{{baseUrl}}"],
+              "path": ["search", "groups"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "mathematics"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "STUDY_GROUP"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/search/users?q=john&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["search", "users"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "john"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?page=0&size=10&type=ANSWER&unread=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "ANSWER"
+                },
+                {
+                  "key": "unread",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/1/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Notification Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-count"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8083/actuator/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8083",
+              "path": ["actuator", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

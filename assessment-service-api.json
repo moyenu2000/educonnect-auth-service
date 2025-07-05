@@ -1,0 +1,1205 @@
+{
+  "info": {
+    "title": "EduConnect Assessment Service API",
+    "version": "1.0.0",
+    "baseUrl": "http://34.68.47.215:8084/api/v1",
+    "port": 8084,
+    "description": "Assessment microservice for subjects, topics, questions, live exams, daily questions, practice problems, contests, progress tracking, and performance analytics"
+  },
+  "auth": {
+    "bearer": "Authorization: Bearer {access_token}",
+    "publicEndpoints": [
+      "GET /subjects/public",
+      "GET /topics/public/by-subject/{subjectId}",
+      "GET /questions/public/daily",
+      "GET /daily-questions/public",
+      "GET /contests/public",
+      "GET /leaderboard/public"
+    ]
+  },
+  "endpoints": {
+    "subjects": {
+      "GET /subjects": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "classLevel": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "subjects": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "currentPage": "int"
+          }
+        },
+        "description": "Get all subjects with optional filtering"
+      },
+      "POST /subjects": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "name": "str",
+          "description": "str",
+          "classLevel": "enum",
+          "displayOrder": "int",
+          "isActive": "bool"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Subject",
+          "message": "str"
+        },
+        "description": "Create a new subject"
+      },
+      "GET /subjects/{subjectId}": {
+        "auth": "optional",
+        "response": {
+          "success": "bool",
+          "data": "Subject"
+        },
+        "description": "Get specific subject details"
+      },
+      "PUT /subjects/{subjectId}": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "name": "str",
+          "description": "str",
+          "classLevel": "enum",
+          "displayOrder": "int",
+          "isActive": "bool"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Subject",
+          "message": "str"
+        },
+        "description": "Update subject details"
+      },
+      "DELETE /subjects/{subjectId}": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Delete a subject"
+      }
+    },
+    "topics": {
+      "GET /topics": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "subjectId": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "topics": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get topics with optional filtering"
+      },
+      "POST /topics": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "name": "str",
+          "description": "str",
+          "subjectId": "int",
+          "displayOrder": "int",
+          "isActive": "bool"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Topic",
+          "message": "str"
+        },
+        "description": "Create a new topic"
+      },
+      "GET /topics/{topicId}": {
+        "auth": "optional",
+        "response": {
+          "success": "bool",
+          "data": "Topic"
+        },
+        "description": "Get specific topic details"
+      },
+      "PUT /topics/{topicId}": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "name": "str",
+          "description": "str",
+          "displayOrder": "int",
+          "isActive": "bool"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Topic",
+          "message": "str"
+        },
+        "description": "Update topic details"
+      },
+      "DELETE /topics/{topicId}": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Delete a topic"
+      }
+    },
+    "questions": {
+      "GET /questions": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "subjectId": "int?",
+          "topicId": "int?",
+          "difficulty": "enum?",
+          "type": "enum?",
+          "search": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "filters": "object"
+          }
+        },
+        "description": "Get questions with filtering options"
+      },
+      "POST /questions": {
+        "auth": "required (ADMIN|QUESTION_SETTER)",
+        "body": {
+          "text": "str",
+          "type": "enum",
+          "subjectId": "int",
+          "topicId": "int?",
+          "difficulty": "enum",
+          "options": "array?",
+          "correctAnswer": "str",
+          "explanation": "str",
+          "points": "int",
+          "tags": "array?",
+          "attachments": "array?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Question",
+          "message": "str"
+        },
+        "description": "Create a new question"
+      },
+      "GET /questions/{questionId}": {
+        "auth": "optional",
+        "response": {
+          "success": "bool",
+          "data": "Question"
+        },
+        "description": "Get specific question details"
+      },
+      "PUT /questions/{questionId}": {
+        "auth": "required (ADMIN|QUESTION_SETTER)",
+        "body": {
+          "text": "str",
+          "type": "enum",
+          "subjectId": "int",
+          "topicId": "int?",
+          "difficulty": "enum",
+          "options": "array?",
+          "correctAnswer": "str",
+          "explanation": "str",
+          "points": "int",
+          "tags": "array?",
+          "attachments": "array?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Question",
+          "message": "str"
+        },
+        "description": "Update question details"
+      },
+      "DELETE /questions/{questionId}": {
+        "auth": "required (ADMIN|QUESTION_SETTER)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Delete a question"
+      },
+      "POST /questions/bulk": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "questions": "array",
+          "subjectId": "int",
+          "topicId": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "imported": "int",
+            "failed": "int",
+            "errors": "array"
+          }
+        },
+        "description": "Bulk import questions"
+      }
+    },
+    "dailyQuestions": {
+      "GET /daily-questions": {
+        "auth": "optional",
+        "params": {
+          "date": "date?",
+          "subjectId": "int?",
+          "classLevel": "enum?",
+          "difficulty": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "streakInfo": "object?",
+            "totalQuestions": "int"
+          }
+        },
+        "description": "Get daily questions for a specific date"
+      },
+      "POST /daily-questions/{questionId}/submit": {
+        "auth": "required",
+        "body": {
+          "answer": "str",
+          "timeTaken": "int",
+          "explanation": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "correct": "bool",
+            "correctAnswer": "str",
+            "explanation": "str",
+            "points": "int",
+            "streak": "object",
+            "ranking": "object"
+          }
+        },
+        "description": "Submit answer for daily question"
+      },
+      "GET /daily-questions/streak": {
+        "auth": "required",
+        "params": {
+          "subjectId": "int?",
+          "period": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "currentStreak": "int",
+            "longestStreak": "int",
+            "streakHistory": "array",
+            "subjectStreaks": "array"
+          }
+        },
+        "description": "Get user's streak information"
+      },
+      "GET /daily-questions/history": {
+        "auth": "required",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "subjectId": "int?",
+          "status": "enum?",
+          "difficulty": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "submissions": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "stats": "object"
+          }
+        },
+        "description": "Get user's daily question history"
+      }
+    },
+    "practiceProblems": {
+      "GET /practice-problems": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "subjectId": "int?",
+          "topicId": "int?",
+          "difficulty": "enum?",
+          "type": "enum?",
+          "status": "enum?",
+          "search": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "problems": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "filters": "object"
+          }
+        },
+        "description": "Get practice problems with filtering"
+      },
+      "GET /practice-problems/{problemId}": {
+        "auth": "optional",
+        "response": {
+          "success": "bool",
+          "data": "PracticeProblem"
+        },
+        "description": "Get a specific practice problem"
+      },
+      "POST /practice-problems/{problemId}/submit": {
+        "auth": "required",
+        "body": {
+          "answer": "str",
+          "timeTaken": "int",
+          "workingSteps": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "correct": "bool",
+            "correctAnswer": "str",
+            "explanation": "str",
+            "points": "int",
+            "hints": "array?",
+            "similarProblems": "array?"
+          }
+        },
+        "description": "Submit solution for practice problem"
+      },
+      "GET /practice-problems/{problemId}/hint": {
+        "auth": "required",
+        "params": {
+          "hintLevel": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "hint": "str",
+            "level": "int",
+            "pointsDeducted": "int"
+          }
+        },
+        "description": "Get hint for practice problem"
+      },
+      "POST /practice-problems/{problemId}/bookmark": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "bookmarked": "bool"
+          }
+        },
+        "description": "Bookmark/unbookmark practice problem"
+      },
+      "GET /practice-problems/recommendations": {
+        "auth": "required",
+        "params": {
+          "count": "int?",
+          "subjectId": "int?",
+          "difficulty": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "recommendations": "array",
+            "reason": "str"
+          }
+        },
+        "description": "Get personalized problem recommendations"
+      }
+    },
+    "liveExams": {
+      "GET /live-exams": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "status": "enum?",
+          "subjectId": "int?",
+          "classLevel": "enum?",
+          "upcoming": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "exams": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get live exams"
+      },
+      "GET /live-exams/{examId}": {
+        "auth": "optional",
+        "response": {
+          "success": "bool",
+          "data": "LiveExam"
+        },
+        "description": "Get specific live exam details"
+      },
+      "POST /live-exams/{examId}/register": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "registered": "bool",
+            "registrationId": "int"
+          }
+        },
+        "description": "Register for live exam"
+      },
+      "POST /live-exams/{examId}/start": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "sessionId": "str",
+            "questions": "array",
+            "timeLimit": "int",
+            "startTime": "datetime"
+          }
+        },
+        "description": "Start live exam session"
+      },
+      "POST /live-exams/{examId}/submit-answer": {
+        "auth": "required",
+        "body": {
+          "sessionId": "str",
+          "questionId": "int",
+          "answer": "str",
+          "timeTaken": "int"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "submitted": "bool",
+            "remaining": "int"
+          }
+        },
+        "description": "Submit answer during live exam"
+      },
+      "POST /live-exams/{examId}/finish": {
+        "auth": "required",
+        "body": {
+          "sessionId": "str",
+          "finalAnswers": "array"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "submissionId": "int",
+            "score": "int",
+            "totalQuestions": "int",
+            "correctAnswers": "int",
+            "rank": "int"
+          }
+        },
+        "description": "Finish and submit live exam"
+      },
+      "GET /live-exams/{examId}/results": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "result": "ExamResult",
+            "solutions": "array",
+            "performance": "object",
+            "ranking": "object"
+          }
+        },
+        "description": "Get exam results and solutions"
+      },
+      "GET /live-exams/{examId}/leaderboard": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "leaderboard": "array",
+            "totalParticipants": "int",
+            "userRank": "int?"
+          }
+        },
+        "description": "Get exam leaderboard"
+      }
+    },
+    "contests": {
+      "GET /contests": {
+        "auth": "required (ADMIN|QUESTION_SETTER|STUDENT)",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "status": "enum?",
+          "type": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "contests": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "last": "bool"
+          }
+        },
+        "description": "Get all contests with filtering options"
+      },
+      "GET /contests/public": {
+        "auth": "none",
+        "response": {
+          "success": "bool",
+          "data": "array"
+        },
+        "description": "Get public contests (upcoming and active)"
+      },
+      "POST /contests": {
+        "auth": "required (ADMIN|QUESTION_SETTER)",
+        "body": {
+          "title": "str",
+          "description": "str",
+          "type": "enum",
+          "startTime": "datetime",
+          "endTime": "datetime",
+          "duration": "int",
+          "problemIds": "array",
+          "prizes": "array?",
+          "rules": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Contest",
+          "message": "str"
+        },
+        "description": "Create a new contest"
+      },
+      "GET /contests/{contestId}": {
+        "auth": "required (ADMIN|QUESTION_SETTER|STUDENT)",
+        "response": {
+          "success": "bool",
+          "data": {
+            "contest": "Contest",
+            "questionsCount": "int",
+            "timeRemaining": "long",
+            "canParticipate": "bool"
+          }
+        },
+        "description": "Get contest details with participation info"
+      },
+      "PUT /contests/{contestId}": {
+        "auth": "required (ADMIN|QUESTION_SETTER)",
+        "body": {
+          "title": "str",
+          "description": "str",
+          "type": "enum",
+          "startTime": "datetime",
+          "endTime": "datetime",
+          "duration": "int",
+          "problemIds": "array",
+          "prizes": "array?",
+          "rules": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Contest",
+          "message": "str"
+        },
+        "description": "Update contest details"
+      },
+      "DELETE /contests/{contestId}": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Delete a contest"
+      },
+      "POST /contests/{contestId}/join": {
+        "auth": "required (STUDENT)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Join/register for contest"
+      },
+      "GET /contests/{contestId}/questions": {
+        "auth": "required (STUDENT)",
+        "response": {
+          "success": "bool",
+          "data": "array"
+        },
+        "description": "Get contest questions (only when contest is active)"
+      },
+      "POST /contests/{contestId}/questions/{questionId}/submit": {
+        "auth": "required (STUDENT)",
+        "body": {
+          "answer": "str",
+          "timeTaken": "int?",
+          "explanation": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "isCorrect": "bool",
+            "pointsEarned": "int",
+            "correctAnswer": "str",
+            "explanation": "str"
+          }
+        },
+        "description": "Submit answer for individual contest question"
+      },
+      "GET /contests/{contestId}/leaderboard": {
+        "auth": "required (ADMIN|QUESTION_SETTER|STUDENT)",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "contest": "Contest",
+            "leaderboard": "array",
+            "totalParticipants": "int"
+          }
+        },
+        "description": "Get contest leaderboard"
+      },
+      "GET /contests/{contestId}/submissions": {
+        "auth": "required (STUDENT)",
+        "response": {
+          "success": "bool",
+          "data": "array"
+        },
+        "description": "Get user's submissions for specific contest"
+      },
+      "GET /contests/my-submissions": {
+        "auth": "required (STUDENT)",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "contestStatus": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "submissions": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "last": "bool"
+          }
+        },
+        "description": "Get all contest submissions for current user"
+      },
+      "GET /contests/{contestId}/results": {
+        "auth": "required (ADMIN|QUESTION_SETTER|STUDENT)",
+        "response": {
+          "success": "bool",
+          "data": {
+            "contest": "Contest",
+            "finalLeaderboard": "array",
+            "totalParticipants": "int",
+            "totalQuestions": "int"
+          }
+        },
+        "description": "Get final contest results (after completion)"
+      },
+      "POST /contests/{contestId}/start": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Manually start contest"
+      },
+      "POST /contests/{contestId}/end": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Manually end contest"
+      }
+    },
+    "personalizedExams": {
+      "POST /personalized-exams": {
+        "auth": "required",
+        "body": {
+          "title": "str",
+          "subjectId": "int",
+          "topicIds": "array",
+          "difficulty": "enum",
+          "questionCount": "int",
+          "timeLimit": "int",
+          "questionTypes": "array"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "examId": "int",
+            "questions": "array",
+            "timeLimit": "int"
+          }
+        },
+        "description": "Create personalized exam"
+      },
+      "GET /personalized-exams": {
+        "auth": "required",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "status": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "exams": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get user's personalized exams"
+      },
+      "POST /personalized-exams/{examId}/start": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "sessionId": "str",
+            "questions": "array",
+            "timeLimit": "int",
+            "startTime": "datetime"
+          }
+        },
+        "description": "Start personalized exam"
+      },
+      "POST /personalized-exams/{examId}/submit": {
+        "auth": "required",
+        "body": {
+          "sessionId": "str",
+          "answers": "array"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "score": "int",
+            "correctAnswers": "int",
+            "totalQuestions": "int",
+            "timeTaken": "int",
+            "results": "array"
+          }
+        },
+        "description": "Submit personalized exam"
+      }
+    },
+    "analytics": {
+      "GET /analytics/dashboard": {
+        "auth": "required",
+        "params": {
+          "period": "enum?",
+          "subjectId": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "overview": "object",
+            "streaks": "object",
+            "performance": "object",
+            "rankings": "object",
+            "recommendations": "array"
+          }
+        },
+        "description": "Get user analytics dashboard"
+      },
+      "GET /analytics/performance": {
+        "auth": "required",
+        "params": {
+          "period": "enum?",
+          "subjectId": "int?",
+          "type": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "accuracy": "object",
+            "speed": "object",
+            "difficulty": "object",
+            "topics": "object",
+            "trends": "array"
+          }
+        },
+        "description": "Get detailed performance analytics"
+      },
+      "GET /analytics/progress": {
+        "auth": "required",
+        "params": {
+          "subjectId": "int?",
+          "period": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "skillProgress": "object",
+            "topicMastery": "object",
+            "weakAreas": "array",
+            "strongAreas": "array",
+            "recommendations": "array"
+          }
+        },
+        "description": "Get learning progress analytics"
+      },
+      "GET /analytics/rankings": {
+        "auth": "required",
+        "params": {
+          "type": "enum?",
+          "subjectId": "int?",
+          "period": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "globalRank": "int",
+            "subjectRanks": "array",
+            "classRank": "int",
+            "percentile": "float",
+            "history": "array"
+          }
+        },
+        "description": "Get user rankings"
+      }
+    },
+    "leaderboard": {
+      "GET /leaderboard/global": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "period": "enum?",
+          "subjectId": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "leaderboard": "array",
+            "totalUsers": "int",
+            "userRank": "int?",
+            "period": "str"
+          }
+        },
+        "description": "Get global leaderboard"
+      },
+      "GET /leaderboard/subject/{subjectId}": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "period": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "leaderboard": "array",
+            "totalUsers": "int",
+            "userRank": "int?",
+            "subject": "object"
+          }
+        },
+        "description": "Get subject-specific leaderboard"
+      },
+      "GET /leaderboard/class/{classLevel}": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "period": "enum?",
+          "subjectId": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "leaderboard": "array",
+            "totalUsers": "int",
+            "userRank": "int?",
+            "classLevel": "enum"
+          }
+        },
+        "description": "Get class-specific leaderboard"
+      }
+    },
+    "admin": {
+      "POST /admin/live-exams": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "title": "str",
+          "description": "str",
+          "subjectId": "int",
+          "classLevel": "enum",
+          "scheduledAt": "datetime",
+          "duration": "int",
+          "questionIds": "array",
+          "instructions": "str",
+          "passingScore": "int"
+        },
+        "response": {
+          "success": "bool",
+          "data": "LiveExam",
+          "message": "str"
+        },
+        "description": "Create live exam"
+      },
+      "POST /admin/contests": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "title": "str",
+          "description": "str",
+          "type": "enum",
+          "startTime": "datetime",
+          "duration": "int",
+          "problemIds": "array",
+          "prizes": "array",
+          "rules": "str"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Contest",
+          "message": "str"
+        },
+        "description": "Create contest"
+      },
+      "PUT /admin/daily-questions": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "date": "date",
+          "questionIds": "array",
+          "subjectDistribution": "object"
+        },
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Set daily questions for a date"
+      },
+      "GET /admin/analytics": {
+        "auth": "required (ADMIN)",
+        "params": {
+          "period": "enum?",
+          "type": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "userStats": "object",
+            "examStats": "object",
+            "performanceStats": "object",
+            "engagementStats": "object"
+          }
+        },
+        "description": "Get admin analytics"
+      }
+    }
+  },
+  "schemas": {
+    "Subject": {
+      "id": "int",
+      "name": "str",
+      "description": "str",
+      "classLevel": "enum",
+      "displayOrder": "int",
+      "isActive": "bool",
+      "topicsCount": "int",
+      "questionsCount": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    },
+    "Topic": {
+      "id": "int",
+      "name": "str",
+      "description": "str",
+      "subjectId": "int",
+      "subject": "Subject?",
+      "displayOrder": "int",
+      "isActive": "bool",
+      "questionsCount": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    },
+    "Question": {
+      "id": "int",
+      "text": "str",
+      "type": "MCQ|TRUE_FALSE|FILL_BLANK|NUMERIC|ESSAY",
+      "subjectId": "int",
+      "topicId": "int?",
+      "subject": "Subject?",
+      "topic": "Topic?",
+      "difficulty": "enum",
+      "options": "array?",
+      "correctAnswer": "str",
+      "explanation": "str",
+      "points": "int",
+      "tags": "array",
+      "attachments": "array",
+      "isActive": "bool",
+      "createdBy": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    },
+    "DailyQuestion": {
+      "id": "int",
+      "question": "Question",
+      "date": "date",
+      "subjectId": "int",
+      "difficulty": "enum",
+      "points": "int",
+      "answered": "bool?",
+      "correct": "bool?",
+      "streak": "int?"
+    },
+    "PracticeProblem": {
+      "id": "int",
+      "question": "Question",
+      "difficulty": "enum",
+      "topicId": "int",
+      "subjectId": "int",
+      "type": "enum",
+      "points": "int",
+      "hints": "array",
+      "similarProblems": "array",
+      "status": "enum?",
+      "attempts": "int?",
+      "solved": "bool?",
+      "bookmarked": "bool?"
+    },
+    "LiveExam": {
+      "id": "int",
+      "title": "str",
+      "description": "str",
+      "subjectId": "int",
+      "classLevel": "enum",
+      "scheduledAt": "datetime",
+      "duration": "int",
+      "questions": "array",
+      "instructions": "str",
+      "passingScore": "int",
+      "totalParticipants": "int",
+      "status": "enum",
+      "createdAt": "datetime",
+      "registered": "bool?",
+      "canStart": "bool?",
+      "timeRemaining": "int?"
+    },
+    "Contest": {
+      "id": "int",
+      "title": "str",
+      "description": "str",
+      "type": "PRACTICE|COMPETITIVE",
+      "startTime": "datetime",
+      "endTime": "datetime",
+      "duration": "int",
+      "problemIds": "array",
+      "prizes": "array",
+      "rules": "str",
+      "participants": "int",
+      "status": "UPCOMING|ACTIVE|COMPLETED",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    },
+    "ExamResult": {
+      "id": "int",
+      "examId": "int",
+      "userId": "int",
+      "score": "int",
+      "totalQuestions": "int",
+      "correctAnswers": "int",
+      "incorrectAnswers": "int",
+      "unanswered": "int",
+      "timeTaken": "int",
+      "rank": "int",
+      "percentile": "float",
+      "passed": "bool",
+      "submittedAt": "datetime",
+      "answers": "array"
+    },
+    "Streak": {
+      "id": "int",
+      "userId": "int",
+      "subjectId": "int",
+      "currentStreak": "int",
+      "longestStreak": "int",
+      "lastActivity": "date",
+      "isActive": "bool"
+    },
+    "LeaderboardEntry": {
+      "rank": "int",
+      "user": "User",
+      "score": "int",
+      "accuracy": "float",
+      "problemsSolved": "int",
+      "streak": "int",
+      "badges": "array"
+    },
+    "Analytics": {
+      "totalQuestions": "int",
+      "correctAnswers": "int",
+      "accuracy": "float",
+      "averageTime": "int",
+      "streaks": "object",
+      "subjectPerformance": "array",
+      "topicMastery": "array",
+      "weakAreas": "array",
+      "improvements": "array"
+    }
+  },
+  "enums": {
+    "Difficulty": ["EASY", "MEDIUM", "HARD", "EXPERT"],
+    "QuestionType": ["MCQ", "TRUE_FALSE", "FILL_BLANK", "NUMERIC", "ESSAY"],
+    "ExamStatus": ["SCHEDULED", "ACTIVE", "COMPLETED", "CANCELLED"],
+    "ContestType": ["PRACTICE", "COMPETITIVE"],
+    "ContestStatus": ["UPCOMING", "ACTIVE", "COMPLETED"],
+    "ProblemStatus": ["UNSOLVED", "ATTEMPTED", "SOLVED", "BOOKMARKED"],
+    "Period": ["DAILY", "WEEKLY", "MONTHLY", "YEARLY", "ALL_TIME"],
+    "AnalyticsType": ["OVERVIEW", "PERFORMANCE", "PROGRESS", "RANKINGS"],
+    "ClassLevel": ["CLASS_6", "CLASS_7", "CLASS_8", "CLASS_9", "CLASS_10", "CLASS_11", "CLASS_12"],
+    "SubmissionStatus": ["PENDING", "ACCEPTED", "WRONG_ANSWER", "TIME_LIMIT", "RUNTIME_ERROR"]
+  },
+  "security": {
+    "rateLimits": {
+      "daily-questions": "50/day/user",
+      "practice-problems": "100/day/user",
+      "live-exams": "5/day/user",
+      "contests": "10/day/user",
+      "analytics": "100/hour/user"
+    },
+    "features": ["JWT Auth", "Session Management", "Anti-Cheating", "Time Tracking", "Proctoring"]
+  },
+  "integration": {
+    "services": {
+      "auth-service": "User authentication and profiles",
+      "social-feed-service": "Achievement sharing",
+      "discussion-service": "Q&A and help",
+      "notification-service": "Exam reminders and results"
+    }
+  },
+  "websocket": {
+    "endpoints": {
+      "/ws/live-exams/{examId}": "Real-time exam updates",
+      "/ws/contests/{contestId}": "Live contest updates",
+      "/ws/leaderboard": "Live leaderboard updates"
+    }
+  }
+}

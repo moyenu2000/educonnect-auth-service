@@ -1,0 +1,165 @@
+{
+  "info": {
+    "title": "Learning Platform Authentication API",
+    "version": "1.0.0",
+    "baseUrl": "http://34.68.47.215:8081/api",
+    "description": "Authentication microservice with JWT, 2FA, OAuth2, and user management"
+  },
+  "auth": {
+    "bearer": "Authorization: Bearer {access_token}",
+    "flows": {
+      "registration": ["POST /auth/register", "GET /auth/verify-email", "POST /auth/login"],
+      "login": ["POST /auth/login", "GET /auth/me"],
+      "2fa": ["POST /auth/login", "POST /auth/verify-2fa", "GET /auth/me"],
+      "passwordReset": ["POST /auth/forgot-password", "POST /auth/reset-password"]
+    }
+  },
+  "endpoints": {
+    "auth": {
+      "POST /auth/register": {
+        "body": {"username": "str", "email": "str", "password": "str", "fullName": "str"},
+        "response": {"success": "bool", "message": "str"}
+      },
+      "POST /auth/login": {
+        "body": {"usernameOrEmail": "str", "password": "str"},
+        "response": {"success": "bool", "accessToken": "str", "refreshToken": "str", "user": "object", "requiresTwoFactor": "bool", "tempToken": "str?"}
+      },
+      "POST /auth/verify-2fa": {
+        "body": {"tempToken": "str", "code": "str"},
+        "response": {"success": "bool", "accessToken": "str", "refreshToken": "str", "user": "object"}
+      },
+      "POST /auth/refresh-token": {
+        "body": {"refreshToken": "str"},
+        "response": {"accessToken": "str", "refreshToken": "str"}
+      },
+      "POST /auth/logout": {
+        "auth": "required",
+        "body": {"refreshToken": "str"},
+        "response": {"success": "bool", "message": "str"}
+      }
+    },
+    "email": {
+      "GET /auth/verify-email": {
+        "params": {"token": "str"},
+        "response": {"success": "bool", "message": "str"}
+      },
+      "POST /auth/resend-verification": {
+        "body": {"email": "str"},
+        "response": {"success": "bool", "message": "str"}
+      }
+    },
+    "password": {
+      "POST /auth/forgot-password": {
+        "body": {"email": "str"},
+        "response": {"success": "bool", "message": "str"}
+      },
+      "POST /auth/reset-password": {
+        "body": {"token": "str", "newPassword": "str", "confirmPassword": "str"},
+        "response": {"success": "bool", "message": "str"}
+      },
+      "POST /auth/change-password": {
+        "auth": "required",
+        "body": {"currentPassword": "str", "newPassword": "str", "confirmPassword": "str"},
+        "response": {"success": "bool", "message": "str"}
+      }
+    },
+    "profile": {
+      "GET /auth/me": {
+        "auth": "required",
+        "response": {"id": "int", "username": "str", "email": "str", "fullName": "str", "bio": "str?", "avatarUrl": "str?", "role": "enum", "verified": "bool", "twoFactorEnabled": "bool", "createdAt": "datetime"}
+      },
+      "PUT /auth/profile": {
+        "auth": "required",
+        "body": {"fullName": "str?", "bio": "str?", "avatarUrl": "str?"},
+        "response": {"success": "bool", "user": "object"}
+      }
+    },
+    "2fa": {
+      "POST /auth/2fa/enable": {
+        "auth": "required",
+        "response": {"secret": "str", "qrCodeUrl": "str", "manualEntryKey": "str"}
+      },
+      "POST /auth/2fa/confirm": {
+        "auth": "required",
+        "body": {"code": "str"},
+        "response": {"success": "bool", "message": "str"}
+      },
+      "POST /auth/2fa/disable": {
+        "auth": "required",
+        "body": {"password": "str"},
+        "response": {"success": "bool", "message": "str"}
+      }
+    },
+    "oauth2": {
+      "GET /oauth2/authorize/google": {
+        "params": {"redirect_uri": "str"},
+        "response": "redirect"
+      },
+      "GET /oauth2/callback/google": {
+        "params": {"code": "str", "state": "str"},
+        "response": "redirect with tokens"
+      }
+    },
+    "admin": {
+      "GET /auth/admin/users": {
+        "auth": "required (ADMIN)",
+        "params": {"page": "int?", "size": "int?"},
+        "response": {"users": "array", "totalElements": "int", "totalPages": "int"}
+      },
+      "PUT /auth/admin/users/{userId}/role": {
+        "auth": "required (ADMIN)",
+        "body": {"role": "enum"},
+        "response": {"success": "bool", "message": "str"}
+      },
+      "PUT /auth/admin/users/{userId}/status": {
+        "auth": "required (ADMIN)",
+        "body": {"enabled": "bool"},
+        "response": {"success": "bool", "message": "str"}
+      }
+    }
+  },
+  "schemas": {
+    "User": {
+      "id": "int",
+      "username": "str",
+      "email": "str",
+      "fullName": "str",
+      "bio": "str?",
+      "avatarUrl": "str?",
+      "role": "STUDENT|QUESTION_SETTER|ADMIN",
+      "verified": "bool",
+      "twoFactorEnabled": "bool",
+      "createdAt": "datetime"
+    },
+    "ErrorResponse": {
+      "success": false,
+      "message": "str"
+    }
+  },
+  "security": {
+    "jwt": {
+      "accessToken": "24 hours",
+      "refreshToken": "7 days"
+    },
+    "rateLimits": {
+      "login": "5/min/IP",
+      "register": "3/hour/IP",
+      "passwordReset": "3/hour/email"
+    },
+    "features": ["JWT", "2FA (TOTP)", "OAuth2 (Google)", "Email verification", "Password reset"]
+  },
+  "statusCodes": {
+    "200": "Success",
+    "201": "Created", 
+    "400": "Bad Request",
+    "401": "Unauthorized",
+    "403": "Forbidden",
+    "404": "Not Found",
+    "500": "Internal Server Error"
+  },
+  "postmanCollection": {
+    "collection": "auth-api.postman_collection.json",
+    "environment": "auth-api-environment.json",
+    "variables": ["base_url", "access_token", "refresh_token", "temp_token", "redirect_uri"]
+  }
+}

@@ -1,0 +1,502 @@
+{
+  "info": {
+    "title": "EduConnect Social Feed Service API",
+    "version": "1.0.0",
+    "baseUrl": "http://34.68.47.215:8082/api/v1",
+    "port": 8082,
+    "description": "Social Feed microservice for managing posts, follows, comments, likes, shares, and user interactions"
+  },
+  "auth": {
+    "bearer": "Authorization: Bearer {access_token}",
+    "publicEndpoints": [
+      "GET /posts/public",
+      "GET /posts/{postId}/public"
+    ]
+  },
+  "endpoints": {
+    "posts": {
+      "GET /posts": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "type": "enum?",
+          "subjectId": "int?",
+          "userId": "int?",
+          "following": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "posts": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "currentPage": "int"
+          }
+        },
+        "description": "Get posts with filtering options"
+      },
+      "POST /posts": {
+        "auth": "required",
+        "body": {
+          "content": "str",
+          "type": "enum",
+          "subjectId": "int?",
+          "topicId": "int?",
+          "tags": "array?",
+          "attachments": "array?",
+          "isAnonymous": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Post",
+          "message": "str"
+        },
+        "description": "Create a new post"
+      },
+      "GET /posts/{postId}": {
+        "auth": "optional",
+        "response": {
+          "success": "bool",
+          "data": "Post"
+        },
+        "description": "Get a specific post by ID"
+      },
+      "PUT /posts/{postId}": {
+        "auth": "required",
+        "body": {
+          "content": "str",
+          "tags": "array?",
+          "attachments": "array?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Post",
+          "message": "str"
+        },
+        "description": "Update a post (only by author)"
+      },
+      "DELETE /posts/{postId}": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Delete a post (only by author or admin)"
+      },
+      "POST /posts/{postId}/like": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "liked": "bool",
+            "likesCount": "int"
+          }
+        },
+        "description": "Like/unlike a post"
+      },
+      "POST /posts/{postId}/share": {
+        "auth": "required",
+        "body": {
+          "content": "str?",
+          "isAnonymous": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Post",
+          "message": "str"
+        },
+        "description": "Share a post with optional comment"
+      },
+      "GET /posts/{postId}/shares": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "shares": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get shares of a post"
+      }
+    },
+    "comments": {
+      "GET /posts/{postId}/comments": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "sortBy": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "comments": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get comments for a post"
+      },
+      "POST /posts/{postId}/comments": {
+        "auth": "required",
+        "body": {
+          "content": "str",
+          "parentCommentId": "int?",
+          "isAnonymous": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Comment",
+          "message": "str"
+        },
+        "description": "Add a comment to a post"
+      },
+      "PUT /comments/{commentId}": {
+        "auth": "required",
+        "body": {
+          "content": "str"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Comment",
+          "message": "str"
+        },
+        "description": "Update a comment (only by author)"
+      },
+      "DELETE /comments/{commentId}": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Delete a comment (only by author or admin)"
+      },
+      "POST /comments/{commentId}/like": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "liked": "bool",
+            "likesCount": "int"
+          }
+        },
+        "description": "Like/unlike a comment"
+      }
+    },
+    "follows": {
+      "POST /users/{userId}/follow": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "following": "bool",
+            "followersCount": "int",
+            "followingCount": "int"
+          }
+        },
+        "description": "Follow/unfollow a user"
+      },
+      "GET /users/{userId}/followers": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "followers": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get user's followers"
+      },
+      "GET /users/{userId}/following": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "following": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get users that this user follows"
+      },
+      "GET /users/me/feed": {
+        "auth": "required",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "type": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "posts": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get personalized feed based on following"
+      }
+    },
+    "bookmarks": {
+      "POST /posts/{postId}/bookmark": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": {
+            "bookmarked": "bool"
+          }
+        },
+        "description": "Bookmark/unbookmark a post"
+      },
+      "GET /users/me/bookmarks": {
+        "auth": "required",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "type": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "bookmarks": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get user's bookmarked posts"
+      }
+    },
+    "tags": {
+      "GET /tags": {
+        "auth": "optional",
+        "params": {
+          "search": "str?",
+          "limit": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "tags": "array"
+          }
+        },
+        "description": "Get popular tags"
+      },
+      "GET /tags/{tagName}/posts": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "posts": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get posts with specific tag"
+      }
+    },
+    "reports": {
+      "POST /posts/{postId}/report": {
+        "auth": "required",
+        "body": {
+          "reason": "enum",
+          "description": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Report a post"
+      },
+      "POST /comments/{commentId}/report": {
+        "auth": "required",
+        "body": {
+          "reason": "enum",
+          "description": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Report a comment"
+      }
+    },
+    "admin": {
+      "GET /admin/posts": {
+        "auth": "required (ADMIN)",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "status": "enum?",
+          "reported": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "posts": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get all posts for admin review"
+      },
+      "PUT /admin/posts/{postId}/status": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "status": "enum",
+          "reason": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "message": "str"
+        },
+        "description": "Update post status (approve/reject/hide)"
+      },
+      "GET /admin/reports": {
+        "auth": "required (ADMIN)",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "type": "enum?",
+          "status": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "reports": "array",
+            "totalElements": "int",
+            "totalPages": "int"
+          }
+        },
+        "description": "Get all reports for admin review"
+      }
+    }
+  },
+  "schemas": {
+    "Post": {
+      "id": "int",
+      "content": "str",
+      "type": "QUESTION|DISCUSSION|ANNOUNCEMENT|STUDY_MATERIAL|ACHIEVEMENT",
+      "author": "User",
+      "subjectId": "int?",
+      "topicId": "int?",
+      "tags": "array",
+      "attachments": "array",
+      "isAnonymous": "bool",
+      "likesCount": "int",
+      "commentsCount": "int",
+      "sharesCount": "int",
+      "bookmarksCount": "int",
+      "status": "ACTIVE|HIDDEN|DELETED",
+      "createdAt": "datetime",
+      "updatedAt": "datetime",
+      "liked": "bool?",
+      "bookmarked": "bool?",
+      "shared": "bool?"
+    },
+    "Comment": {
+      "id": "int",
+      "content": "str",
+      "author": "User",
+      "postId": "int",
+      "parentCommentId": "int?",
+      "isAnonymous": "bool",
+      "likesCount": "int",
+      "repliesCount": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime",
+      "liked": "bool?",
+      "replies": "array?"
+    },
+    "User": {
+      "id": "int",
+      "username": "str",
+      "fullName": "str",
+      "avatarUrl": "str?",
+      "role": "enum",
+      "verified": "bool",
+      "followersCount": "int",
+      "followingCount": "int",
+      "isFollowing": "bool?"
+    },
+    "Follow": {
+      "id": "int",
+      "followerId": "int",
+      "followingId": "int",
+      "createdAt": "datetime"
+    },
+    "Bookmark": {
+      "id": "int",
+      "userId": "int",
+      "postId": "int",
+      "createdAt": "datetime"
+    },
+    "Tag": {
+      "id": "int",
+      "name": "str",
+      "postsCount": "int",
+      "color": "str?"
+    },
+    "Attachment": {
+      "id": "int",
+      "fileName": "str",
+      "fileUrl": "str",
+      "fileType": "IMAGE|VIDEO|DOCUMENT|AUDIO",
+      "fileSize": "int"
+    },
+    "Report": {
+      "id": "int",
+      "reporterId": "int",
+      "contentType": "POST|COMMENT",
+      "contentId": "int",
+      "reason": "SPAM|INAPPROPRIATE|HARASSMENT|MISINFORMATION|OTHER",
+      "description": "str?",
+      "status": "PENDING|REVIEWED|RESOLVED",
+      "createdAt": "datetime"
+    }
+  },
+  "enums": {
+    "PostType": ["QUESTION", "DISCUSSION", "ANNOUNCEMENT", "STUDY_MATERIAL", "ACHIEVEMENT"],
+    "PostStatus": ["ACTIVE", "HIDDEN", "DELETED"],
+    "ReportReason": ["SPAM", "INAPPROPRIATE", "HARASSMENT", "MISINFORMATION", "OTHER"],
+    "ReportStatus": ["PENDING", "REVIEWED", "RESOLVED"],
+    "FileType": ["IMAGE", "VIDEO", "DOCUMENT", "AUDIO"],
+    "SortBy": ["NEWEST", "OLDEST", "MOST_LIKED", "MOST_COMMENTED"]
+  },
+  "security": {
+    "rateLimits": {
+      "posts": "10/min/user",
+      "comments": "20/min/user",
+      "likes": "100/min/user",
+      "follows": "50/min/user",
+      "reports": "5/hour/user"
+    },
+    "features": ["JWT Auth", "Content Moderation", "Spam Detection", "File Upload", "Anonymous Posts"]
+  },
+  "integration": {
+    "services": {
+      "auth-service": "User authentication and profile data",
+      "assessment-service": "Subject and topic information",
+      "discussion-service": "Cross-posting to discussion groups",
+      "notification-service": "Real-time notifications"
+    }
+  }
+}

@@ -1,0 +1,286 @@
+version: '3.8'
+
+services:
+  # Database Services
+  postgres:
+    image: postgres:15
+    container_name: educonnect-postgres
+    environment:
+      POSTGRES_DB: educonnect
+      POSTGRES_USER: educonnect
+      POSTGRES_PASSWORD: educonnect123
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: educonnect-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: educonnect-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: educonnect
+      RABBITMQ_DEFAULT_PASS: educonnect123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+
+  # Auth Service
+  auth-service:
+    build: 
+      context: ./auth
+      dockerfile: Dockerfile
+    container_name: educonnect-auth-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
+      - SPRING_DATASOURCE_USERNAME=educonnect
+      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=educonnect
+      - SPRING_RABBITMQ_PASSWORD=educonnect123
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Question Bank Service
+  question-bank-service:
+    build: 
+      context: ./question-bank
+      dockerfile: Dockerfile
+    container_name: educonnect-question-bank-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
+      - SPRING_DATASOURCE_USERNAME=educonnect
+      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=educonnect
+      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - AUTH_SERVICE_URL=http://auth-service:8081
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - auth-service
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Social Feed Service
+  social-feed-service:
+    build: 
+      context: ./social-feed
+      dockerfile: Dockerfile
+    container_name: educonnect-social-feed-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
+      - SPRING_DATASOURCE_USERNAME=educonnect
+      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=educonnect
+      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - ASSESSMENT_SERVICE_URL=http://assessment-service:8084
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - auth-service
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Discussion Service
+  discussion-service:
+    build: 
+      context: ./discussion-service
+      dockerfile: Dockerfile
+    container_name: educonnect-discussion-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
+      - SPRING_DATASOURCE_USERNAME=educonnect
+      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=educonnect
+      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - ASSESSMENT_SERVICE_URL=http://assessment-service:8084
+      - SOCIAL_FEED_SERVICE_URL=http://social-feed-service:8083
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - auth-service
+      - social-feed-service
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Assessment Service
+  assessment-service:
+    build: 
+      context: ./assessment-service
+      dockerfile: Dockerfile
+    container_name: educonnect-assessment-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
+      - SPRING_DATASOURCE_USERNAME=educonnect
+      - SPRING_DATASOURCE_PASSWORD=educonnect123
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=educonnect
+      - SPRING_RABBITMQ_PASSWORD=educonnect123
+      - AUTH_SERVICE_URL=http://auth-service:8081
+      - SOCIAL_FEED_SERVICE_URL=http://social-feed-service:8083
+      - DISCUSSION_SERVICE_URL=http://discussion-service:8082
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - auth-service
+      - social-feed-service
+      - discussion-service
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway (Optional - for production)
+  api-gateway:
+    image: nginx:alpine
+    container_name: educonnect-api-gateway
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - auth-service
+      - social-feed-service
+      - discussion-service
+      - assessment-service
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+
+  # Monitoring Services (Optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: educonnect-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: educonnect-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - educonnect-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  educonnect-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

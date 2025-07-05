@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/learning_platform
+    username: postgres
+    password: postgres123
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIHNlY3JldCBrZXkgZm9yIGp3dCB0b2tlbiBnZW5lcmF0aW9uIHdoaWNoIHNob3VsZCBiZSBjaGFuZ2VkIGluIHByb2R1Y3Rpb24=
+
+mail:
+  username: your_email@gmail.com
+  password: your_app_password
+
+google:
+  client-id: your_google_client_id
+  client-secret: your_google_client_secret
+
+app:
+  base-url: http://localhost:8081
+  frontend-url: http://localhost:3000

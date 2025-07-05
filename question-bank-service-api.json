@@ -1,0 +1,472 @@
+{
+  "info": {
+    "title": "EduConnect Question Bank Service API",
+    "version": "1.0.0",
+    "baseUrl": "http://34.68.47.215:8082/api/v1",
+    "port": 8082,
+    "description": "Question Bank microservice for managing questions, subjects, topics, daily questions, and practice questions with streak tracking"
+  },
+  "auth": {
+    "bearer": "Authorization: Bearer {access_token}",
+    "publicEndpoints": [
+      "GET /subjects/public",
+      "GET /topics/public/by-subject/{subjectId}",
+      "GET /questions/public/daily"
+    ]
+  },
+  "endpoints": {
+    "subjects": {
+      "GET /subjects": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "classLevel": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "subjects": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "currentPage": "int"
+          }
+        }
+      },
+      "POST /subjects": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "name": "str",
+          "description": "str",
+          "classLevel": "enum",
+          "displayOrder": "int",
+          "isActive": "bool"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Subject",
+          "message": "str"
+        }
+      },
+      "PUT /subjects/{subjectId}": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "name": "str?",
+          "description": "str?",
+          "displayOrder": "int?",
+          "isActive": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Subject",
+          "message": "str"
+        }
+      },
+      "DELETE /subjects/{subjectId}": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        }
+      }
+    },
+    "topics": {
+      "GET /topics/by-subject/{subjectId}": {
+        "auth": "optional",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "topics": "array",
+            "totalElements": "int"
+          }
+        }
+      },
+      "POST /topics": {
+        "auth": "required (ADMIN/QUESTION_SETTER)",
+        "body": {
+          "name": "str",
+          "description": "str",
+          "subjectId": "uuid",
+          "displayOrder": "int",
+          "isActive": "bool"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Topic",
+          "message": "str"
+        }
+      },
+      "PUT /topics/{topicId}": {
+        "auth": "required (ADMIN/QUESTION_SETTER)",
+        "body": {
+          "name": "str?",
+          "description": "str?",
+          "displayOrder": "int?",
+          "isActive": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Topic"
+        }
+      }
+    },
+    "questions": {
+      "GET /questions": {
+        "auth": "required",
+        "params": {
+          "page": "int?",
+          "size": "int?",
+          "subjectId": "uuid?",
+          "topicId": "uuid?",
+          "difficulty": "enum?",
+          "type": "enum?",
+          "status": "enum?",
+          "search": "str?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "totalElements": "int",
+            "totalPages": "int",
+            "filters": "object"
+          }
+        }
+      },
+      "GET /questions/{questionId}": {
+        "auth": "required",
+        "response": {
+          "success": "bool",
+          "data": "Question"
+        }
+      },
+      "POST /questions": {
+        "auth": "required (QUESTION_SETTER/ADMIN)",
+        "body": {
+          "title": "str",
+          "content": "str",
+          "type": "enum",
+          "difficulty": "enum",
+          "subjectId": "uuid",
+          "topicId": "uuid",
+          "options": "array?",
+          "correctAnswer": "str",
+          "explanation": "str?",
+          "points": "int",
+          "timeLimit": "int?",
+          "tags": "array?",
+          "metadata": "object?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Question",
+          "message": "str"
+        }
+      },
+      "PUT /questions/{questionId}": {
+        "auth": "required (QUESTION_SETTER/ADMIN)",
+        "body": {
+          "title": "str?",
+          "content": "str?",
+          "difficulty": "enum?",
+          "options": "array?",
+          "correctAnswer": "str?",
+          "explanation": "str?",
+          "points": "int?",
+          "tags": "array?"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Question"
+        }
+      },
+      "DELETE /questions/{questionId}": {
+        "auth": "required (QUESTION_SETTER/ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        }
+      },
+      "POST /questions/{questionId}/approve": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "message": "str"
+        }
+      },
+      "POST /questions/{questionId}/reject": {
+        "auth": "required (ADMIN)",
+        "body": {
+          "reason": "str"
+        },
+        "response": {
+          "success": "bool",
+          "message": "str"
+        }
+      }
+    },
+    "dailyQuestions": {
+      "GET /daily-questions": {
+        "auth": "required",
+        "params": {
+          "subjectId": "uuid?",
+          "date": "date?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "streakInfo": "object",
+            "completedToday": "bool"
+          }
+        }
+      },
+      "POST /daily-questions/attempt": {
+        "auth": "required",
+        "body": {
+          "questionId": "uuid",
+          "answer": "str",
+          "timeSpent": "int"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "correct": "bool",
+            "explanation": "str",
+            "streakUpdated": "bool",
+            "points": "int"
+          }
+        }
+      },
+      "GET /daily-questions/streak": {
+        "auth": "required",
+        "params": {
+          "subjectId": "uuid?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "currentStreak": "int",
+            "longestStreak": "int",
+            "streakBySubject": "object",
+            "totalDaysActive": "int"
+          }
+        }
+      }
+    },
+    "practice": {
+      "GET /practice/questions": {
+        "auth": "required",
+        "params": {
+          "subjectId": "uuid?",
+          "topicId": "uuid?",
+          "difficulty": "enum?",
+          "count": "int?",
+          "excludeAttempted": "bool?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "metadata": "object"
+          }
+        }
+      },
+      "POST /practice/attempt": {
+        "auth": "required",
+        "body": {
+          "questionId": "uuid",
+          "answer": "str",
+          "timeSpent": "int"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "correct": "bool",
+            "explanation": "str",
+            "points": "int",
+            "statistics": "object"
+          }
+        }
+      },
+      "GET /practice/statistics": {
+        "auth": "required",
+        "params": {
+          "subjectId": "uuid?",
+          "timeRange": "enum?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "totalAttempts": "int",
+            "correctAttempts": "int",
+            "accuracy": "float",
+            "subjectWiseStats": "object",
+            "difficultyWiseStats": "object"
+          }
+        }
+      }
+    },
+    "search": {
+      "GET /search/questions": {
+        "auth": "required",
+        "params": {
+          "query": "str",
+          "subjectId": "uuid?",
+          "difficulty": "enum?",
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "totalElements": "int",
+            "searchMetadata": "object"
+          }
+        }
+      },
+      "GET /search/questions/by-id": {
+        "auth": "required",
+        "params": {
+          "questionId": "str"
+        },
+        "response": {
+          "success": "bool",
+          "data": "Question"
+        }
+      }
+    },
+    "admin": {
+      "GET /admin/questions/pending": {
+        "auth": "required (ADMIN)",
+        "params": {
+          "page": "int?",
+          "size": "int?"
+        },
+        "response": {
+          "success": "bool",
+          "data": {
+            "questions": "array",
+            "totalElements": "int"
+          }
+        }
+      },
+      "GET /admin/statistics": {
+        "auth": "required (ADMIN)",
+        "response": {
+          "success": "bool",
+          "data": {
+            "totalQuestions": "int",
+            "pendingApproval": "int",
+            "questionsBySubject": "object",
+            "questionsByDifficulty": "object",
+            "recentActivity": "array"
+          }
+        }
+      }
+    }
+  },
+  "schemas": {
+    "Subject": {
+      "id": "uuid",
+      "name": "str",
+      "description": "str",
+      "classLevel": "enum",
+      "displayOrder": "int",
+      "isActive": "bool",
+      "questionCount": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    },
+    "Topic": {
+      "id": "uuid",
+      "name": "str",
+      "description": "str",
+      "subjectId": "uuid",
+      "displayOrder": "int",
+      "isActive": "bool",
+      "questionCount": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    },
+    "Question": {
+      "id": "uuid",
+      "title": "str",
+      "content": "str",
+      "type": "enum",
+      "difficulty": "enum",
+      "subjectId": "uuid",
+      "topicId": "uuid",
+      "options": "array",
+      "correctAnswer": "str",
+      "explanation": "str",
+      "points": "int",
+      "timeLimit": "int",
+      "tags": "array",
+      "status": "enum",
+      "createdBy": "uuid",
+      "approvedBy": "uuid",
+      "createdAt": "datetime",
+      "updatedAt": "datetime",
+      "metadata": "object"
+    },
+    "DailyQuestion": {
+      "id": "uuid",
+      "questionId": "uuid",
+      "subjectId": "uuid",
+      "date": "date",
+      "isActive": "bool",
+      "createdAt": "datetime"
+    },
+    "QuestionAttempt": {
+      "id": "uuid",
+      "userId": "uuid",
+      "questionId": "uuid",
+      "answer": "str",
+      "isCorrect": "bool",
+      "timeSpent": "int",
+      "points": "int",
+      "attemptType": "enum",
+      "createdAt": "datetime"
+    },
+    "UserStreak": {
+      "id": "uuid",
+      "userId": "uuid",
+      "subjectId": "uuid",
+      "currentStreak": "int",
+      "longestStreak": "int",
+      "lastAttemptDate": "date",
+      "totalDaysActive": "int",
+      "createdAt": "datetime",
+      "updatedAt": "datetime"
+    }
+  },
+  "enums": {
+    "QuestionType": ["MCQ", "TRUE_FALSE", "FILL_IN_THE_BLANK", "SHORT_ANSWER", "LONG_ANSWER"],
+    "Difficulty": ["EASY", "MEDIUM", "HARD", "EXPERT"],
+    "QuestionStatus": ["DRAFT", "PENDING", "APPROVED", "REJECTED", "ARCHIVED"],
+    "ClassLevel": ["CLASS_6", "CLASS_7", "CLASS_8", "CLASS_9", "CLASS_10", "CLASS_11", "CLASS_12"],
+    "AttemptType": ["DAILY", "PRACTICE", "EXAM", "CUSTOM"]
+  },
+  "statusCodes": {
+    "200": "Success",
+    "201": "Created",
+    "400": "Bad Request",
+    "401": "Unauthorized",
+    "403": "Forbidden",
+    "404": "Not Found",
+    "409": "Conflict",
+    "500": "Internal Server Error"
+  },
+  "rateLimits": {
+    "dailyQuestions": "50/day/user",
+    "practiceAttempts": "200/day/user",
+    "search": "100/hour/user",
+    "questionCreation": "20/hour/user"
+  }
+}
