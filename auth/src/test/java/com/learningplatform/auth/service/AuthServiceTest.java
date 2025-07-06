@@ -6,7 +6,6 @@ import com.learningplatform.auth.entity.RefreshToken;
 import com.learningplatform.auth.entity.User;
 import com.learningplatform.auth.entity.UserRole;
 import com.learningplatform.auth.exception.BadRequestException;
-import com.learningplatform.auth.exception.ResourceNotFoundException;
 import com.learningplatform.auth.repository.RefreshTokenRepository;
 import com.learningplatform.auth.repository.UserRepository;
 import com.learningplatform.auth.security.CustomUserPrincipal;
@@ -85,8 +84,7 @@ class AuthServiceTest {
                 .verified(true)
                 .provider(AuthProvider.LOCAL)
                 .twoFactorEnabled(false)
-                .accountLocked(false)
-                .failedAttempts(0)
+                .failedLoginAttempts(0)
                 .build();
 
         registerRequest = new RegisterRequest();
@@ -171,7 +169,7 @@ class AuthServiceTest {
 
     @Test
     void login_ShouldThrowException_WhenAccountLocked() {
-        testUser.setAccountLocked(true);
+        testUser.setLockedUntil(LocalDateTime.now().plusMinutes(30));
         when(userRepository.findByUsernameOrEmail(anyString(), anyString())).thenReturn(Optional.of(testUser));
 
         assertThrows(BadRequestException.class, () -> authService.login(loginRequest, httpServletRequest));
@@ -216,7 +214,6 @@ class AuthServiceTest {
     void refreshToken_ShouldReturnNewToken_WhenValidRefreshToken() {
         RefreshTokenRequest request = new RefreshTokenRequest();
         request.setRefreshToken("refreshToken123");
-        CustomUserPrincipal userPrincipal = CustomUserPrincipal.create(testUser);
 
         when(refreshTokenRepository.findByToken(anyString())).thenReturn(Optional.of(refreshToken));
         when(jwtUtils.generateAccessToken(any(CustomUserPrincipal.class))).thenReturn("newAccessToken");

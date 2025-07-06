@@ -2,14 +2,12 @@ package com.learningplatform.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learningplatform.auth.dto.*;
-import com.learningplatform.auth.entity.UserRole;
 import com.learningplatform.auth.service.AuthService;
 import com.learningplatform.auth.service.TwoFactorAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -92,11 +90,10 @@ class AuthControllerTest {
 
     @Test
     void register_ShouldReturnBadRequest_WhenInvalidRequest() throws Exception {
-        RegisterRequest invalidRequest = RegisterRequest.builder()
-                .username("")
-                .email("invalid-email")
-                .password("123")
-                .build();
+        RegisterRequest invalidRequest = new RegisterRequest();
+        invalidRequest.setUsername("");
+        invalidRequest.setEmail("invalid-email");
+        invalidRequest.setPassword("123");
 
         mockMvc.perform(post("/auth/register")
                 .with(csrf())

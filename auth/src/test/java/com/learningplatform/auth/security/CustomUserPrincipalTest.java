@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,7 +29,6 @@ class CustomUserPrincipalTest {
                 .enabled(true)
                 .verified(true)
                 .provider(AuthProvider.LOCAL)
-                .accountLocked(false)
                 .build();
     }
 
@@ -117,7 +117,7 @@ class CustomUserPrincipalTest {
 
     @Test
     void isAccountNonLocked_ShouldReturnTrue_WhenUserNotLocked() {
-        testUser.setAccountLocked(false);
+        testUser.setLockedUntil(null);
         CustomUserPrincipal principal = CustomUserPrincipal.create(testUser);
 
         assertTrue(principal.isAccountNonLocked());
@@ -125,7 +125,7 @@ class CustomUserPrincipalTest {
 
     @Test
     void isAccountNonLocked_ShouldReturnFalse_WhenUserLocked() {
-        testUser.setAccountLocked(true);
+        testUser.setLockedUntil(LocalDateTime.now().plusMinutes(30));
         CustomUserPrincipal principal = CustomUserPrincipal.create(testUser);
 
         assertFalse(principal.isAccountNonLocked());
