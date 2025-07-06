@@ -71,7 +71,7 @@ services:
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/api/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -91,14 +91,23 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
-      - AUTH_SERVICE_URL=http://auth-service:8081
+      - AUTH_SERVICE_URL=http://auth-service:8081/api/v1
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres
-      - redis
-      - auth-service
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
     networks:
       - educonnect-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/api/v1/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
 
   # Assessment Service
@@ -114,16 +123,26 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
-      - AUTH_SERVICE_URL=http://auth-service:8081
-      - DISCUSSION_SERVICE_URL=http://discussion-service:8082
+      - AUTH_SERVICE_URL=http://auth-service:8081/api/v1
+      - DISCUSSION_SERVICE_URL=http://discussion-service:8082/api/v1
       - JWT_SECRET=${JWT_SECRET}
     depends_on:
-      - postgres
-      - redis
-      - auth-service
-      - discussion-service
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      discussion-service:
+        condition: service_healthy
     networks:
       - educonnect-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/api/v1/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
 
 networks:
