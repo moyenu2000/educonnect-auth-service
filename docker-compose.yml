@@ -131,7 +131,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - AUTH_SERVICE_URL=http://auth-service:8081
-      - ASSESSMENT_SERVICE_URL=http://assessment-service:8084
+      - ASSESSMENT_SERVICE_URL=http://assessment-service:8083
     ports:
       - "8083:8083"
     depends_on:
@@ -166,7 +166,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - AUTH_SERVICE_URL=http://auth-service:8081
-      - ASSESSMENT_SERVICE_URL=http://assessment-service:8084
+      - ASSESSMENT_SERVICE_URL=http://assessment-service:8083
       - SOCIAL_FEED_SERVICE_URL=http://social-feed-service:8083
     ports:
       - "8082:8082"
@@ -206,7 +206,7 @@ services:
       - SOCIAL_FEED_SERVICE_URL=http://social-feed-service:8083
       - DISCUSSION_SERVICE_URL=http://discussion-service:8082
     ports:
-      - "8084:8084"
+      - "8083:8083"
     depends_on:
       - postgres
       - redis
@@ -218,7 +218,7 @@ services:
       - educonnect-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3

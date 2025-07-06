@@ -71,7 +71,7 @@ services:
   assessment-service:
     image: ${DOCKER_HUB_USERNAME}/assessment-service:latest
     ports:
-      - "8084:8084"
+      - "8083:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
