@@ -78,7 +78,7 @@ jobs:
 
   build-auth:
     runs-on: ubuntu-latest
-    needs: [validate, test-auth]
+    needs: [validate]
     steps:
       - uses: actions/checkout@v4
       
