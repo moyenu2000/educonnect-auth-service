@@ -57,14 +57,14 @@ jobs:
           ./mvnw jacoco:report
           
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: auth-test-results
           path: auth/target/surefire-reports/
           
       - name: Upload Coverage Reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: auth-coverage-report
