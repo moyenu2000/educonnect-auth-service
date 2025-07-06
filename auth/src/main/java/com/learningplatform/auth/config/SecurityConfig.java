@@ -76,7 +76,9 @@ public class SecurityConfig {
                                                                 "/actuator/health",
                                                                 "/actuator/health/**",
                                                                 "/api/actuator/health",
-                                                                "/api/actuator/health/**")
+                                                                "/api/actuator/health/**",
+                                                                "/api/v1/actuator/health",
+                                                                "/api/v1/actuator/health/**")
                                                 .permitAll()
                                                 .requestMatchers("/auth/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())
