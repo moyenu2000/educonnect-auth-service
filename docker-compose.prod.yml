@@ -43,28 +43,6 @@ services:
       start_period: 40s
     restart: unless-stopped
 
-  # RabbitMQ Message Queue
-  rabbitmq:
-    image: rabbitmq:3.12-management
-    container_name: educonnect-rabbitmq
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-educonnect}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - educonnect-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
-
   # Auth Service
   auth-service:
     image: ${DOCKER_HUB_USERNAME}/auth-service:latest
@@ -115,14 +93,9 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - AUTH_SERVICE_URL=http://auth-service:8081
       - JWT_SECRET=${JWT_SECRET}
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=${RABBITMQ_USER:-educonnect}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
     depends_on:
       - postgres
       - redis
-      - rabbitmq
       - auth-service
     networks:
       - educonnect-network
@@ -161,6 +134,4 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  rabbitmq_data:
     driver: local

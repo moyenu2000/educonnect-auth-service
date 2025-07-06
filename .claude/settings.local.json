@@ -21,7 +21,13 @@
       "Bash(npm run lint)",
       "Bash(grep:*)",
       "Bash(npm run lint:*)",
-      "Bash(docker compose:*)"
+      "Bash(docker compose:*)",
+      "Bash(sed:*)",
+      "Bash(for file in *.java)",
+      "Bash(do sed -i 's|@RequestMapping(\"\"/api/v1/\\([^\"\"]*\\)\"\")|@RequestMapping(\"\"/\\1\"\")|g' \"$file\")",
+      "Bash(done)",
+      "Bash(do sed -i 's|@RequestMapping(\"\"/api/v1/|@RequestMapping(\"\"/|g' \"$file\")",
+      "Bash(do sed -i 's#@RequestMapping(\"\"/api/v1/#@RequestMapping(\"\"/#g' \"$file\")"
     ],
     "deny": []
   }

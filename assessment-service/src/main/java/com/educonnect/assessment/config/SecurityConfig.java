@@ -36,10 +36,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints - no authentication required
-                        .requestMatchers("/api/v1/subjects/public").permitAll()
-                        .requestMatchers("/api/v1/topics/public/by-subject/**").permitAll()
-                        .requestMatchers("/api/v1/daily-questions/public").permitAll()
-                        .requestMatchers("/api/v1/leaderboard/public").permitAll()
+                        .requestMatchers("/subjects/public").permitAll()
+                        .requestMatchers("/topics/public/by-subject/**").permitAll()
+                        .requestMatchers("/daily-questions/public").permitAll()
+                        .requestMatchers("/leaderboard/public").permitAll()
                         
                         // Health check endpoints
                         .requestMatchers("/actuator/**").permitAll()
@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         
                         // Admin only endpoints
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         
                         // All other endpoints require authentication (role-specific access handled by method-level security)
                         .anyRequest().authenticated()

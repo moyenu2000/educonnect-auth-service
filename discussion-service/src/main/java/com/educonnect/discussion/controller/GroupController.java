@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/groups")
+@RequestMapping("/groups")
 public class GroupController {
 
     @Autowired

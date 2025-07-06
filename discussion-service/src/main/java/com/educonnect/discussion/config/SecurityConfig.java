@@ -37,9 +37,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints - no authentication required
-                        .requestMatchers("/api/v1/discussions/public").permitAll()
-                        .requestMatchers("/api/v1/discussions/{discussionId}/public").permitAll()
-                        .requestMatchers("/api/v1/search/**").permitAll()
+                        .requestMatchers("/discussions/public").permitAll()
+                        .requestMatchers("/discussions/{discussionId}/public").permitAll()
+                        .requestMatchers("/search/**").permitAll()
                         
                         // Health check endpoints
                         .requestMatchers("/actuator/**").permitAll()
@@ -48,11 +48,11 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         
                         // Allow GET requests to discussions without authentication
-                        .requestMatchers(HttpMethod.GET, "/api/v1/discussions").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/discussions/{discussionId}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/discussions/{discussionId}/answers").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/groups").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/groups/{groupId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/discussions").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/discussions/{discussionId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/discussions/{discussionId}/answers").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/groups").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/groups/{groupId}").permitAll()
                         
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
