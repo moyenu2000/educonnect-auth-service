@@ -8,6 +8,11 @@ set -e
 echo "🧪 Starting EduConnect Auth Service Tests..."
 echo "============================================"
 
+# Make Maven wrapper executable
+chmod +x auth/mvnw 2>/dev/null || true
+chmod +x assessment-service/mvnw 2>/dev/null || true
+chmod +x discussion-service/mvnw 2>/dev/null || true
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
