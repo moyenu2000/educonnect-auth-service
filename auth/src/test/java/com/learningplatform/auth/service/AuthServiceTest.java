@@ -117,7 +117,8 @@ class AuthServiceTest {
         ApiResponse response = authService.register(registerRequest);
 
         assertTrue(response.isSuccess());
-        assertEquals("User registered successfully. Please check your email to verify your account.", response.getMessage());
+        assertEquals("User registered successfully. Please check your email to verify your account.",
+                response.getMessage());
         verify(userRepository).save(any(User.class));
         verify(emailService).sendVerificationEmail(any(User.class));
     }
@@ -142,9 +143,10 @@ class AuthServiceTest {
     @Test
     void login_ShouldReturnAuthResponse_WhenValidCredentials() {
         CustomUserPrincipal userPrincipal = CustomUserPrincipal.create(testUser);
-        
+
         when(userRepository.findByUsernameOrEmail(anyString(), anyString())).thenReturn(Optional.of(testUser));
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(userPrincipal);
         when(jwtUtils.generateAccessToken(any(CustomUserPrincipal.class))).thenReturn("accessToken");
         when(refreshTokenRepository.save(any(RefreshToken.class))).thenReturn(refreshToken);
@@ -189,7 +191,8 @@ class AuthServiceTest {
         CustomUserPrincipal userPrincipal = CustomUserPrincipal.create(testUser);
 
         when(userRepository.findByUsernameOrEmail(anyString(), anyString())).thenReturn(Optional.of(testUser));
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class))).thenReturn(authentication);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(userPrincipal);
 
         AuthResponse response = authService.login(loginRequest, httpServletRequest);
@@ -301,7 +304,7 @@ class AuthServiceTest {
     void resetPassword_ShouldResetPassword_WhenValidToken() {
         testUser.setResetToken("validResetToken");
         testUser.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
-        
+
         ResetPasswordRequest request = new ResetPasswordRequest();
         request.setToken("validResetToken");
         request.setNewPassword("newPassword123");

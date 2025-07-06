@@ -287,32 +287,130 @@ Services communicate via REST APIs for:
 - Subject and topic data
 - Cross-service operations
 
-## 🧪 Testing
+## 🧪 Testing Strategy
 
-### Unit Tests
-```bash
-# Run tests for specific service
-cd [service-name]
-./mvnw test
+Currently implementing a **focused testing approach** starting with the Auth Service.
 
-# Run all tests
-./mvnw test
+### 🏗️ CI/CD Testing Pipeline
+
+The project implements testing for critical services:
+
+1. **Auth Service Testing** - Comprehensive unit tests with coverage reports
+2. **Other Services** - Will be added as development progresses
+3. **Fast Docker builds** - Tests are separated from Docker builds for performance
+
+#### Current Pipeline Flow:
+```
+Validation → Auth Tests → Build All Services → Deployment
+     ↓           ↓              ↓                ↓
+   Secrets    Unit Tests    Docker Images    Cloud Deploy
+   Check      Coverage      (Auth Tested)    
 ```
 
-### Integration Tests
+### 🔬 Test Profiles (Auth Service Only)
+
+The Auth Service supports multiple testing environments:
+
+#### Test Profile (`-Dspring.profiles.active=test`)
+- **Database**: H2 in-memory database
+- **Cache**: Embedded Redis
+- **Speed**: Fast execution for unit tests
+- **Purpose**: Quick feedback during development
+
+### 🚀 Running Tests Locally
+
+#### Auth Service Unit Tests (Currently Available)
 ```bash
-# Run integration tests
-./mvnw test -Dtest=**/*IntegrationTest
+# Run unit tests for Auth service
+cd auth
+./mvnw clean test -Dspring.profiles.active=test
+
+# With coverage report
+./mvnw clean test jacoco:report
+
+# Run specific test class
+./mvnw test -Dtest=AuthServiceTest
+
+# Run specific test method
+./mvnw test -Dtest=AuthServiceTest#login_ShouldReturnAuthResponse_WhenValidCredentials
 ```
 
-### Load Testing
+#### Other Services (No Tests Yet)
 ```bash
-# Using Apache Bench
-ab -n 1000 -c 10 http://localhost:8081/api/auth/health
+# Discussion and Assessment services
+# Tests will be added in future development phases
+cd discussion-service
+./mvnw clean package -DskipTests
 
-# Using JMeter
-jmeter -n -t load-test.jmx -l results.jtl
+cd assessment-service  
+./mvnw clean package -DskipTests
 ```
+
+### 📊 Test Coverage & Reports
+
+Auth Service coverage reports are available at:
+- Local: `auth/target/site/jacoco/index.html`
+- CI/CD: GitHub Actions artifacts
+
+### 🎯 Quality Gates
+
+The CI/CD pipeline enforces quality gates for the Auth Service:
+
+- ✅ **Auth Service unit tests must pass**
+- ✅ **Code coverage reporting enabled**
+- ✅ **No critical security vulnerabilities**
+- ❌ **Deployment blocked if Auth tests fail**
+
+### 🔧 Test Configuration
+
+#### Auth Service Dependencies:
+```xml
+<!-- Unit Testing -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- H2 Database for Testing -->
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+### 🐛 Debugging Failed Tests
+
+#### View Auth Service Test Results:
+```bash
+# View detailed test output
+cd auth
+./mvnw test -X
+
+# View coverage report
+open target/site/jacoco/index.html  # macOS
+start target/site/jacoco/index.html # Windows
+```
+
+#### View CI/CD Test Results:
+1. Go to GitHub Actions tab
+2. Click on the failed workflow run  
+3. Download `auth-test-results` and `auth-coverage-report` artifacts
+
+### � Future Development
+
+**Planned Testing Additions:**
+- Discussion Service unit tests
+- Assessment Service unit tests  
+- Integration tests for service communication
+- End-to-end API testing
+- Load testing for all services
+
+**Current Status:**
+- ✅ Auth Service: Full unit testing
+- 🚧 Discussion Service: Tests pending
+- 🚧 Assessment Service: Tests pending
 
 ## 📊 Monitoring & Observability
 

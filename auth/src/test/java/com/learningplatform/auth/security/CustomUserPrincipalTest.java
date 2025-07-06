@@ -50,7 +50,7 @@ class CustomUserPrincipalTest {
 
         assertNotNull(principal.getAuthorities());
         assertEquals(1, principal.getAuthorities().size());
-        
+
         GrantedAuthority authority = principal.getAuthorities().iterator().next();
         assertEquals("ROLE_STUDENT", authority.getAuthority());
     }

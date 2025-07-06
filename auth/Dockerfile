@@ -14,6 +14,8 @@ RUN ./mvnw dependency:go-offline -B
 
 COPY src src
 
+# Note: Tests are run separately in CI/CD pipeline before Docker build
+# This keeps Docker build fast while ensuring code quality through CI/CD testing
 RUN ./mvnw clean package -DskipTests -B
 
 RUN cp target/*.jar app.jar
