@@ -55,6 +55,7 @@ services:
     container_name: educonnect-auth-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_SERVLET_CONTEXT_PATH=/api/v1
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/educonnect
       - SPRING_DATASOURCE_USERNAME=${DB_USER:-educonnect}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
