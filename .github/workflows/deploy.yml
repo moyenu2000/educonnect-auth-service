@@ -194,7 +194,7 @@ jobs:
             # Wait for Auth Service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8081/api/actuator/health >/dev/null 2>&1; then
+              if curl -f http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Auth Service is ready!"
                 exit 0
               fi
@@ -224,7 +224,7 @@ jobs:
             # Wait for Discussion Service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8082/api/actuator/health >/dev/null 2>&1; then
+              if curl -f http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Discussion Service is ready!"
                 exit 0
               fi
@@ -254,7 +254,7 @@ jobs:
             # Wait for Assessment Service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8083/api/actuator/health >/dev/null 2>&1; then
+              if curl -f http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Assessment Service is ready!"
                 sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
                 exit 0
