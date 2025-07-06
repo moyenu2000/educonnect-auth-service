@@ -55,6 +55,7 @@ jobs:
       - name: Deploy to VM
         run: |
           gcloud compute scp docker-compose.prod.yml auth-service-vm:~/ --zone=us-central1-a
+          gcloud compute scp init-db.sql auth-service-vm:~/ --zone=us-central1-a
           
           gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
             cat > .env << EOF

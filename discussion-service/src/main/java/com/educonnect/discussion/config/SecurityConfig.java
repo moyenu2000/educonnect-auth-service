@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 
@@ -47,11 +48,11 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         
                         // Allow GET requests to discussions without authentication
-                        .requestMatchers("GET", "/api/v1/discussions").permitAll()
-                        .requestMatchers("GET", "/api/v1/discussions/{discussionId}").permitAll()
-                        .requestMatchers("GET", "/api/v1/discussions/{discussionId}/answers").permitAll()
-                        .requestMatchers("GET", "/api/v1/groups").permitAll()
-                        .requestMatchers("GET", "/api/v1/groups/{groupId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/discussions").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/discussions/{discussionId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/discussions/{discussionId}/answers").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/groups").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/groups/{groupId}").permitAll()
                         
                         // All other endpoints require authentication
                         .anyRequest().authenticated()
