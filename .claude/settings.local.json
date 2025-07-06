@@ -28,7 +28,10 @@
       "Bash(done)",
       "Bash(do sed -i 's|@RequestMapping(\"\"/api/v1/|@RequestMapping(\"\"/|g' \"$file\")",
       "Bash(do sed -i 's#@RequestMapping(\"\"/api/v1/#@RequestMapping(\"\"/#g' \"$file\")",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(apt list:*)",
+      "Bash(sudo apt:*)",
+      "Bash(sudo apt install:*)"
     ],
     "deny": []
   }
