@@ -43,6 +43,7 @@ public class SecurityConfig {
                         
                         // Health check endpoints
                         .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/api/v1/actuator/**").permitAll()
                         
                         // WebSocket endpoints
                         .requestMatchers("/ws/**").permitAll()
