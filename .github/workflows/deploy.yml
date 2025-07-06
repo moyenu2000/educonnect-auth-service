@@ -1,8 +1,15 @@
-name: Deploy Auth Service
+name: Deploy EduConnect Services
 
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'Services to deploy (comma-separated: auth,discussion,assessment or "all")'
+        required: true
+        default: 'all'
+        type: string
 
 jobs:
   deploy:
@@ -42,10 +49,28 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
           
-      - name: Build and push Docker image
+      - name: Build and push Docker images
         run: |
-          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/auth-service:latest ./auth
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/auth-service:latest
+          # Determine which services to build
+          SERVICES="${{ github.event.inputs.services || 'all' }}"
+          
+          if [[ "$SERVICES" == "all" || "$SERVICES" == *"auth"* ]]; then
+            echo "Building auth service..."
+            docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/auth-service:latest ./auth
+            docker push ${{ secrets.DOCKER_HUB_USERNAME }}/auth-service:latest
+          fi
+          
+          if [[ "$SERVICES" == "all" || "$SERVICES" == *"discussion"* ]]; then
+            echo "Building discussion service..."
+            docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/discussion-service:latest ./discussion-service
+            docker push ${{ secrets.DOCKER_HUB_USERNAME }}/discussion-service:latest
+          fi
+          
+          if [[ "$SERVICES" == "all" || "$SERVICES" == *"assessment"* ]]; then
+            echo "Building assessment service..."
+            docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/assessment-service:latest ./assessment-service
+            docker push ${{ secrets.DOCKER_HUB_USERNAME }}/assessment-service:latest
+          fi
       
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
@@ -90,7 +115,8 @@ jobs:
             # Pull all images
             sudo docker-compose -f docker-compose.prod.yml --env-file .env pull
             
-            # Start database and cache services first
+            # Step 1: Start infrastructure services first
+            echo "Starting infrastructure services..."
             sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d postgres redis
             
             # Wait for database to be ready
@@ -118,8 +144,85 @@ jobs:
               sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres psql -U postgres -c "CREATE DATABASE educonnect;"
             }
             
-            # Start application services
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d
+            # Wait for Redis to be ready
+            echo "Waiting for Redis to be ready..."
+            timeout=60
+            while [ $timeout -gt 0 ]; do
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T redis redis-cli ping | grep PONG; then
+                echo "Redis is ready!"
+                break
+              fi
+              echo "Redis not ready yet, waiting..."
+              sleep 2
+              timeout=$((timeout - 2))
+            done
+            
+            # Determine which services to deploy
+            SERVICES="${{ github.event.inputs.services || 'all' }}"
+            echo "Deploying services: $SERVICES"
+            
+            # Step 2: Start Auth Service (foundational service)
+            if [[ "$SERVICES" == "all" || "$SERVICES" == *"auth"* ]]; then
+              echo "Starting Auth Service..."
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d auth-service
+              
+              # Wait for Auth Service to be healthy
+              echo "Waiting for Auth Service to be ready..."
+              timeout=120
+              while [ $timeout -gt 0 ]; do
+                if curl -f http://localhost:8081/api/actuator/health >/dev/null 2>&1; then
+                  echo "Auth Service is ready!"
+                  break
+                fi
+                echo "Auth Service not ready yet, waiting..."
+                sleep 5
+                timeout=$((timeout - 5))
+              done
+            else
+              echo "Skipping Auth Service deployment"
+            fi
+            
+            # Step 3: Start Discussion Service
+            if [[ "$SERVICES" == "all" || "$SERVICES" == *"discussion"* ]]; then
+              echo "Starting Discussion Service..."
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d discussion-service
+              
+              # Wait for Discussion Service to be ready
+              echo "Waiting for Discussion Service to be ready..."
+              timeout=120
+              while [ $timeout -gt 0 ]; do
+                if curl -f http://localhost:8082/actuator/health >/dev/null 2>&1; then
+                  echo "Discussion Service is ready!"
+                  break
+                fi
+                echo "Discussion Service not ready yet, waiting..."
+                sleep 5
+                timeout=$((timeout - 5))
+              done
+            else
+              echo "Skipping Discussion Service deployment"
+            fi
+            
+            # Step 4: Start Assessment Service (depends on everything)
+            if [[ "$SERVICES" == "all" || "$SERVICES" == *"assessment"* ]]; then
+              echo "Starting Assessment Service..."
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d assessment-service
+              
+              # Wait for Assessment Service to be ready
+              echo "Waiting for Assessment Service to be ready..."
+              timeout=120
+              while [ $timeout -gt 0 ]; do
+                if curl -f http://localhost:8084/api/v1/actuator/health >/dev/null 2>&1; then
+                  echo "Assessment Service is ready!"
+                  break
+                fi
+                echo "Assessment Service not ready yet, waiting..."
+                sleep 5
+                timeout=$((timeout - 5))
+              done
+            else
+              echo "Skipping Assessment Service deployment"
+            fi
             
             # Wait for services to start and show status
             sleep 30
