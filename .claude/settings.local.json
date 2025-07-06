@@ -31,7 +31,8 @@
       "Bash(docker logs:*)",
       "Bash(apt list:*)",
       "Bash(sudo apt:*)",
-      "Bash(sudo apt install:*)"
+      "Bash(sudo apt install:*)",
+      "Bash(echo $JAVA_HOME)"
     ],
     "deny": []
   }
