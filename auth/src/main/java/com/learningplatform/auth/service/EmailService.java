@@ -37,7 +37,7 @@ public class EmailService {
             helper.setTo(user.getEmail());
             helper.setSubject("Verify Your Email - Learning Platform");
 
-            String verificationUrl = baseUrl + "/api/auth/verify-email?token=" + user.getVerificationToken();
+            String verificationUrl = baseUrl + "/api/v1/auth/verify-email?token=" + user.getVerificationToken();
 
             String htmlContent = buildVerificationEmailContent(user.getFullName(), verificationUrl);
             helper.setText(htmlContent, true);
