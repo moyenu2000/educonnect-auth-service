@@ -35,7 +35,8 @@
       "Bash(echo $JAVA_HOME)",
       "Bash(sudo docker-compose:*)",
       "Bash(cd:*)",
-      "Bash(sudo docker exec:*)"
+      "Bash(sudo docker exec:*)",
+      "Bash(docker build:*)"
     ],
     "deny": []
   }
