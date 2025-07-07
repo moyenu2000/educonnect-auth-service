@@ -95,18 +95,18 @@ public class LiveExamController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> joinLiveExam(@PathVariable Long examId) {
         return liveExamRepository.findById(examId)
                 .map(exam -> {
-                    if (exam.getStatus() == ExamStatus.LIVE) {
+                    if (exam.getStatus() == ExamStatus.ACTIVE) {
                         Map<String, Object> response = Map.of(
                             "examId", examId,
                             "status", "JOINED",
                             "message", "Successfully joined live exam"
                         );
-                        return ResponseEntity.ok(ApiResponse.success(response));
+                        return ResponseEntity.ok(ApiResponse.<Map<String, Object>>success(response));
                     } else {
                         return ResponseEntity.badRequest()
-                                .body(ApiResponse.error("Exam is not currently live"));
+                                .body(ApiResponse.<Map<String, Object>>error("Exam is not currently live"));
                     }
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

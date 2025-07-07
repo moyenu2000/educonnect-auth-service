@@ -36,7 +36,8 @@
       "Bash(sudo docker-compose:*)",
       "Bash(cd:*)",
       "Bash(sudo docker exec:*)",
-      "Bash(docker build:*)"
+      "Bash(docker build:*)",
+      "Bash(docker-compose build:*)"
     ],
     "deny": []
   }

@@ -46,7 +46,8 @@ public class PersonalizedExamController {
             if ("COMPLETED".equals(status.toUpperCase())) {
                 exams = personalizedExamRepository.findCompletedExamsByUserId(userId, pageable);
             } else {
-                exams = personalizedExamRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, examStatus, pageable);
+                exams = personalizedExamRepository.findByUserIdAndStatusOrderByCreatedAtDesc(userId, examStatus,
+                        pageable);
             }
         } else if (classLevel != null) {
             ClassLevel level = ClassLevel.valueOf(classLevel.toUpperCase());
@@ -64,7 +65,7 @@ public class PersonalizedExamController {
     public ResponseEntity<ApiResponse<PersonalizedExam>> getPersonalizedExam(
             @PathVariable Long examId,
             Authentication authentication) {
-        
+
         return personalizedExamRepository.findById(examId)
                 .map(exam -> ResponseEntity.ok(ApiResponse.success(exam)))
                 .orElse(ResponseEntity.notFound().build());
@@ -75,7 +76,7 @@ public class PersonalizedExamController {
     public ResponseEntity<ApiResponse<PersonalizedExam>> createPersonalizedExam(
             @RequestBody CreatePersonalizedExamRequest request,
             Authentication authentication) {
-        
+
         // For now, using a mock userId - in real implementation, get from JWT token
         Long userId = 1L; // Extract from authentication.getPrincipal()
 
@@ -97,28 +98,28 @@ public class PersonalizedExamController {
 
     @PostMapping("/{examId}/start")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> startPersonalizedExam(
+    public ResponseEntity<?> startPersonalizedExam(
             @PathVariable Long examId,
             Authentication authentication) {
-        
+
         return personalizedExamRepository.findById(examId)
                 .map(exam -> {
                     if (exam.getStatus() == ExamStatus.SCHEDULED) {
-                        exam.setStatus(ExamStatus.IN_PROGRESS);
+                        exam.setStatus(ExamStatus.ACTIVE);
                         exam.setStartedAt(LocalDateTime.now());
                         personalizedExamRepository.save(exam);
-                        
+
                         Map<String, Object> response = Map.of(
-                            "examId", examId,
-                            "status", "IN_PROGRESS",
-                            "startedAt", exam.getStartedAt(),
-                            "duration", exam.getDuration(),
-                            "message", "Exam started successfully"
-                        );
+                                "examId", examId,
+                                "status", "ACTIVE",
+                                "startedAt", exam.getStartedAt(),
+                                "duration", exam.getDuration(),
+                                "message", "Exam started successfully");
                         return ResponseEntity.ok(ApiResponse.success(response));
                     } else {
                         return ResponseEntity.badRequest()
-                                .body(ApiResponse.error("Exam cannot be started in current status: " + exam.getStatus()));
+                                .body(ApiResponse
+                                        .error("Exam cannot be started in current status: " + exam.getStatus()));
                     }
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -126,14 +127,14 @@ public class PersonalizedExamController {
 
     @PostMapping("/{examId}/submit")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> submitPersonalizedExam(
+    public ResponseEntity<?> submitPersonalizedExam(
             @PathVariable Long examId,
             @RequestBody SubmitExamRequest request,
             Authentication authentication) {
-        
+
         return personalizedExamRepository.findById(examId)
                 .map(exam -> {
-                    if (exam.getStatus() == ExamStatus.IN_PROGRESS) {
+                    if (exam.getStatus() == ExamStatus.ACTIVE) {
                         exam.setStatus(ExamStatus.COMPLETED);
                         exam.setCompletedAt(LocalDateTime.now());
                         exam.setScore(request.getScore());
@@ -141,21 +142,21 @@ public class PersonalizedExamController {
                         exam.setIncorrectAnswers(request.getIncorrectAnswers());
                         exam.setUnansweredQuestions(request.getUnansweredQuestions());
                         personalizedExamRepository.save(exam);
-                        
+
                         Map<String, Object> response = Map.of(
-                            "examId", examId,
-                            "status", "COMPLETED",
-                            "score", exam.getScore(),
-                            "correctAnswers", exam.getCorrectAnswers(),
-                            "incorrectAnswers", exam.getIncorrectAnswers(),
-                            "unansweredQuestions", exam.getUnansweredQuestions(),
-                            "passed", exam.getScore() >= exam.getPassingScore(),
-                            "message", "Exam submitted successfully"
-                        );
+                                "examId", examId,
+                                "status", "COMPLETED",
+                                "score", exam.getScore(),
+                                "correctAnswers", exam.getCorrectAnswers(),
+                                "incorrectAnswers", exam.getIncorrectAnswers(),
+                                "unansweredQuestions", exam.getUnansweredQuestions(),
+                                "passed", exam.getScore() >= exam.getPassingScore(),
+                                "message", "Exam submitted successfully");
                         return ResponseEntity.ok(ApiResponse.success(response));
                     } else {
                         return ResponseEntity.badRequest()
-                                .body(ApiResponse.error("Exam cannot be submitted in current status: " + exam.getStatus()));
+                                .body(ApiResponse
+                                        .error("Exam cannot be submitted in current status: " + exam.getStatus()));
                     }
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -165,7 +166,7 @@ public class PersonalizedExamController {
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getPersonalizedExamStats(
             Authentication authentication) {
-        
+
         // For now, using a mock userId - in real implementation, get from JWT token
         Long userId = 1L; // Extract from authentication.getPrincipal()
 
@@ -174,12 +175,11 @@ public class PersonalizedExamController {
         Double averageScore = personalizedExamRepository.getAverageScoreByUserId(userId);
 
         Map<String, Object> stats = Map.of(
-            "totalExams", totalExams,
-            "passedExams", passedExams,
-            "failedExams", totalExams - passedExams,
-            "averageScore", averageScore != null ? averageScore : 0.0,
-            "passRate", totalExams > 0 ? (double) passedExams / totalExams * 100 : 0.0
-        );
+                "totalExams", totalExams,
+                "passedExams", passedExams,
+                "failedExams", totalExams - passedExams,
+                "averageScore", averageScore != null ? averageScore : 0.0,
+                "passRate", totalExams > 0 ? (double) passedExams / totalExams * 100 : 0.0);
 
         return ResponseEntity.ok(ApiResponse.success(stats));
     }
@@ -196,22 +196,69 @@ public class PersonalizedExamController {
         private Integer passingScore;
 
         // Getters and setters
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public String getDescription() { return description; }
-        public void setDescription(String description) { this.description = description; }
-        public Long getSubjectId() { return subjectId; }
-        public void setSubjectId(Long subjectId) { this.subjectId = subjectId; }
-        public ClassLevel getClassLevel() { return classLevel; }
-        public void setClassLevel(ClassLevel classLevel) { this.classLevel = classLevel; }
-        public Integer getDuration() { return duration; }
-        public void setDuration(Integer duration) { this.duration = duration; }
-        public java.util.List<Long> getQuestionIds() { return questionIds; }
-        public void setQuestionIds(java.util.List<Long> questionIds) { this.questionIds = questionIds; }
-        public String getInstructions() { return instructions; }
-        public void setInstructions(String instructions) { this.instructions = instructions; }
-        public Integer getPassingScore() { return passingScore; }
-        public void setPassingScore(Integer passingScore) { this.passingScore = passingScore; }
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public Long getSubjectId() {
+            return subjectId;
+        }
+
+        public void setSubjectId(Long subjectId) {
+            this.subjectId = subjectId;
+        }
+
+        public ClassLevel getClassLevel() {
+            return classLevel;
+        }
+
+        public void setClassLevel(ClassLevel classLevel) {
+            this.classLevel = classLevel;
+        }
+
+        public Integer getDuration() {
+            return duration;
+        }
+
+        public void setDuration(Integer duration) {
+            this.duration = duration;
+        }
+
+        public java.util.List<Long> getQuestionIds() {
+            return questionIds;
+        }
+
+        public void setQuestionIds(java.util.List<Long> questionIds) {
+            this.questionIds = questionIds;
+        }
+
+        public String getInstructions() {
+            return instructions;
+        }
+
+        public void setInstructions(String instructions) {
+            this.instructions = instructions;
+        }
+
+        public Integer getPassingScore() {
+            return passingScore;
+        }
+
+        public void setPassingScore(Integer passingScore) {
+            this.passingScore = passingScore;
+        }
     }
 
     public static class SubmitExamRequest {
@@ -221,13 +268,36 @@ public class PersonalizedExamController {
         private Integer unansweredQuestions;
 
         // Getters and setters
-        public Integer getScore() { return score; }
-        public void setScore(Integer score) { this.score = score; }
-        public Integer getCorrectAnswers() { return correctAnswers; }
-        public void setCorrectAnswers(Integer correctAnswers) { this.correctAnswers = correctAnswers; }
-        public Integer getIncorrectAnswers() { return incorrectAnswers; }
-        public void setIncorrectAnswers(Integer incorrectAnswers) { this.incorrectAnswers = incorrectAnswers; }
-        public Integer getUnansweredQuestions() { return unansweredQuestions; }
-        public void setUnansweredQuestions(Integer unansweredQuestions) { this.unansweredQuestions = unansweredQuestions; }
+        public Integer getScore() {
+            return score;
+        }
+
+        public void setScore(Integer score) {
+            this.score = score;
+        }
+
+        public Integer getCorrectAnswers() {
+            return correctAnswers;
+        }
+
+        public void setCorrectAnswers(Integer correctAnswers) {
+            this.correctAnswers = correctAnswers;
+        }
+
+        public Integer getIncorrectAnswers() {
+            return incorrectAnswers;
+        }
+
+        public void setIncorrectAnswers(Integer incorrectAnswers) {
+            this.incorrectAnswers = incorrectAnswers;
+        }
+
+        public Integer getUnansweredQuestions() {
+            return unansweredQuestions;
+        }
+
+        public void setUnansweredQuestions(Integer unansweredQuestions) {
+            this.unansweredQuestions = unansweredQuestions;
+        }
     }
 }
