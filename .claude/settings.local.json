@@ -33,7 +33,8 @@
       "Bash(sudo apt:*)",
       "Bash(sudo apt install:*)",
       "Bash(echo $JAVA_HOME)",
-      "Bash(sudo docker-compose:*)"
+      "Bash(sudo docker-compose:*)",
+      "Bash(cd:*)"
     ],
     "deny": []
   }
