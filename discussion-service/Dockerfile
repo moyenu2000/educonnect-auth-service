@@ -34,5 +34,5 @@ EXPOSE 8082
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8082/api/v1/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application with legacy config processing
+ENTRYPOINT ["java", "-Dspring.config.use-legacy-processing=true", "-jar", "app.jar"]
