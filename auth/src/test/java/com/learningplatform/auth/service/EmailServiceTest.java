@@ -63,7 +63,7 @@ class EmailServiceTest {
     @Test
     void sendVerificationEmail_ShouldHandleException_WhenMessagingFails() throws MessagingException {
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
-        doThrow(new MessagingException("Email failed")).when(mailSender).send(any(MimeMessage.class));
+        doThrow(new RuntimeException("Email failed")).when(mailSender).send(any(MimeMessage.class));
 
         emailService.sendVerificationEmail(testUser);
 
@@ -84,7 +84,7 @@ class EmailServiceTest {
     @Test
     void sendPasswordResetEmail_ShouldHandleException_WhenMessagingFails() throws MessagingException {
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
-        doThrow(new MessagingException("Email failed")).when(mailSender).send(any(MimeMessage.class));
+        doThrow(new RuntimeException("Email failed")).when(mailSender).send(any(MimeMessage.class));
 
         emailService.sendPasswordResetEmail(testUser);
 
@@ -105,7 +105,7 @@ class EmailServiceTest {
     @Test
     void sendWelcomeEmail_ShouldHandleException_WhenMessagingFails() throws MessagingException {
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
-        doThrow(new MessagingException("Email failed")).when(mailSender).send(any(MimeMessage.class));
+        doThrow(new RuntimeException("Email failed")).when(mailSender).send(any(MimeMessage.class));
 
         emailService.sendWelcomeEmail(testUser);
 

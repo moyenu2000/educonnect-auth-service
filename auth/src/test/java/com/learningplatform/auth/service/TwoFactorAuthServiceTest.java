@@ -10,6 +10,8 @@ import com.learningplatform.auth.exception.ResourceNotFoundException;
 import com.learningplatform.auth.repository.UserRepository;
 import com.warrenstrange.googleauth.GoogleAuthenticator;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+import com.warrenstrange.googleauth.GoogleAuthenticatorQRGenerator;
+import com.warrenstrange.googleauth.GoogleAuthenticatorConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,14 +76,21 @@ class TwoFactorAuthServiceTest {
         when(googleAuthenticator.createCredentials()).thenReturn(googleAuthenticatorKey);
         when(googleAuthenticatorKey.getKey()).thenReturn("TESTKEY123456789");
 
-        TwoFactorSetupResponse response = twoFactorAuthService.enableTwoFactorAuth("testuser");
+        // Mock the static method
+        try (MockedStatic<GoogleAuthenticatorQRGenerator> mockedStatic = mockStatic(GoogleAuthenticatorQRGenerator.class)) {
+            mockedStatic.when(() -> GoogleAuthenticatorQRGenerator.getOtpAuthURL(
+                    anyString(), anyString(), any(GoogleAuthenticatorKey.class)))
+                    .thenReturn("otpauth://totp/test");
 
-        assertNotNull(response);
-        assertEquals("TESTKEY123456789", response.getSecret());
-        assertNotNull(response.getQrCodeUrl());
-        assertTrue(response.getQrCodeUrl().startsWith("data:image/png;base64,"));
-        assertNotNull(response.getManualEntryKey());
-        verify(userRepository).save(testUser);
+            TwoFactorSetupResponse response = twoFactorAuthService.enableTwoFactorAuth("testuser");
+
+            assertNotNull(response);
+            assertEquals("TESTKEY123456789", response.getSecret());
+            assertNotNull(response.getQrCodeUrl());
+            assertTrue(response.getQrCodeUrl().startsWith("data:image/png;base64,"));
+            assertNotNull(response.getManualEntryKey());
+            verify(userRepository).save(testUser);
+        }
     }
 
     @Test

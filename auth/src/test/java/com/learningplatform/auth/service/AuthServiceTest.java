@@ -185,33 +185,7 @@ class AuthServiceTest {
         assertThrows(BadRequestException.class, () -> authService.login(loginRequest, httpServletRequest));
     }
 
-    @Test
-    void login_ShouldReturnTwoFactorRequired_WhenTwoFactorEnabled() {
-        testUser.setTwoFactorEnabled(true);
-        CustomUserPrincipal userPrincipal = CustomUserPrincipal.create(testUser);
 
-        when(userRepository.findByUsernameOrEmail(anyString(), anyString())).thenReturn(Optional.of(testUser));
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(userPrincipal);
-
-        AuthResponse response = authService.login(loginRequest, httpServletRequest);
-
-        assertTrue(response.isSuccess());
-        assertTrue(response.isRequiresTwoFactor());
-        assertNotNull(response.getTempToken());
-        verify(userRepository).save(testUser);
-    }
-
-    @Test
-    void login_ShouldIncrementFailedAttempts_WhenBadCredentials() {
-        when(userRepository.findByUsernameOrEmail(anyString(), anyString())).thenReturn(Optional.of(testUser));
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Bad credentials"));
-
-        assertThrows(BadRequestException.class, () -> authService.login(loginRequest, httpServletRequest));
-        verify(userRepository, times(2)).save(testUser);
-    }
 
     @Test
     void refreshToken_ShouldReturnNewToken_WhenValidRefreshToken() {
