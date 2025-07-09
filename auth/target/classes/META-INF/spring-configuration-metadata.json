@@ -1,0 +1,26 @@
+{
+  "groups": [
+    {
+      "name": "app",
+      "type": "com.learningplatform.auth.config.AppProperties",
+      "sourceType": "com.learningplatform.auth.config.AppProperties"
+    },
+    {
+      "name": "app.oauth2",
+      "type": "com.learningplatform.auth.config.AppProperties$OAuth2",
+      "sourceType": "com.learningplatform.auth.config.AppProperties",
+      "sourceMethod": "public com.learningplatform.auth.config.AppProperties.OAuth2 getOauth2() "
+    }
+  ],
+  "properties": [
+    {
+      "name": "app.oauth2.authorized-redirect-uris",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.learningplatform.auth.config.AppProperties$OAuth2"
+    }
+  ],
+  "hints": [],
+  "ignored": {
+    "properties": []
+  }
+}

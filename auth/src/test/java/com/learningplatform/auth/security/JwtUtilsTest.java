@@ -42,7 +42,6 @@ class JwtUtilsTest {
 
         userPrincipal = CustomUserPrincipal.create(testUser);
 
-        // Set test properties using reflection
         ReflectionTestUtils.setField(jwtUtils, "jwtSecret", 
                 "dGVzdC1zZWNyZXQta2V5LXRoYXQtaXMtbG9uZy1lbm91Z2gtZm9yLWptd3Q=");
         ReflectionTestUtils.setField(jwtUtils, "jwtExpirationMs", 86400000); // 24 hours

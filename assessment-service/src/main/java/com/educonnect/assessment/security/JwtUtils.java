@@ -16,10 +16,10 @@ import java.util.List;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value("${app.jwtSecret}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${app.jwtExpirationInMs}")
+    @Value("${jwt.expiration-ms}")
     private int jwtExpirationInMs;
 
     private SecretKey getSigningKey() {

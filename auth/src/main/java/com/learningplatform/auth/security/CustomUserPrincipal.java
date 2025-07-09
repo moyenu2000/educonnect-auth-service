@@ -1,5 +1,3 @@
-
-// CustomUserPrincipal.java
 package com.learningplatform.auth.security;
 
 import com.learningplatform.auth.entity.User;
