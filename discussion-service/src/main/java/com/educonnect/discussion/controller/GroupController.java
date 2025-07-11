@@ -58,7 +58,7 @@ public class GroupController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Group>> createGroup(
             @Valid @RequestBody GroupRequest request,
             @CurrentUser UserPrincipal currentUser) {
@@ -69,7 +69,7 @@ public class GroupController {
     }
 
     @PutMapping("/{groupId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Group>> updateGroup(
             @PathVariable Long groupId,
             @Valid @RequestBody GroupRequest request,
@@ -81,7 +81,7 @@ public class GroupController {
     }
 
     @PostMapping("/{groupId}/join")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> joinGroup(
             @PathVariable Long groupId,
             @CurrentUser UserPrincipal currentUser) {
@@ -97,7 +97,7 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}/members")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<PagedResponse<GroupMember>>> getGroupMembers(
             @PathVariable Long groupId,
             @RequestParam(defaultValue = "0") int page,
@@ -112,7 +112,7 @@ public class GroupController {
     }
 
     @PutMapping("/{groupId}/members/{userId}/role")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<String>> changeGroupMemberRole(
             @PathVariable Long groupId,
             @PathVariable Long userId,
@@ -126,7 +126,7 @@ public class GroupController {
     }
 
     @DeleteMapping("/{groupId}/members/{userId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<String>> removeGroupMember(
             @PathVariable Long groupId,
             @PathVariable Long userId,
@@ -138,7 +138,7 @@ public class GroupController {
     }
 
     @GetMapping("/{groupId}/discussions")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<PagedResponse<DiscussionDto>>> getGroupDiscussions(
             @PathVariable Long groupId,
             @RequestParam(defaultValue = "0") int page,
@@ -154,7 +154,7 @@ public class GroupController {
     }
 
     @PostMapping("/{groupId}/discussions")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<DiscussionDto>> createGroupDiscussion(
             @PathVariable Long groupId,
             @Valid @RequestBody DiscussionRequest request,

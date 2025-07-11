@@ -42,7 +42,7 @@ public class AnswerController {
     }
 
     @PostMapping("/discussions/{discussionId}/answers")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<AnswerDto>> createAnswer(
             @PathVariable Long discussionId,
             @Valid @RequestBody AnswerRequest request,
@@ -54,7 +54,7 @@ public class AnswerController {
     }
 
     @PutMapping("/answers/{answerId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<AnswerDto>> updateAnswer(
             @PathVariable Long answerId,
             @Valid @RequestBody AnswerRequest request,
@@ -66,7 +66,7 @@ public class AnswerController {
     }
 
     @DeleteMapping("/answers/{answerId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<String>> deleteAnswer(
             @PathVariable Long answerId,
             @CurrentUser UserPrincipal currentUser) {
@@ -77,7 +77,7 @@ public class AnswerController {
     }
 
     @PostMapping("/answers/{answerId}/upvote")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> upvoteAnswer(
             @PathVariable Long answerId,
             @CurrentUser UserPrincipal currentUser) {
@@ -93,7 +93,7 @@ public class AnswerController {
     }
 
     @PostMapping("/answers/{answerId}/downvote")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> downvoteAnswer(
             @PathVariable Long answerId,
             @CurrentUser UserPrincipal currentUser) {
@@ -109,7 +109,7 @@ public class AnswerController {
     }
 
     @PostMapping("/answers/{answerId}/accept")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> acceptAnswer(
             @PathVariable Long answerId,
             @CurrentUser UserPrincipal currentUser) {

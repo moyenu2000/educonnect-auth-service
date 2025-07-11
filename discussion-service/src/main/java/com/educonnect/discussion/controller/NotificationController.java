@@ -18,7 +18,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/notifications")
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasRole('STUDENT')")
 public class NotificationController {
 
     @Autowired

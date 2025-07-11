@@ -58,7 +58,7 @@ public class DiscussionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<DiscussionDto>> createDiscussion(
             @Valid @RequestBody DiscussionRequest request,
             @CurrentUser UserPrincipal currentUser) {
@@ -69,7 +69,7 @@ public class DiscussionController {
     }
 
     @PutMapping("/{discussionId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<DiscussionDto>> updateDiscussion(
             @PathVariable Long discussionId,
             @Valid @RequestBody DiscussionRequest request,
@@ -81,7 +81,7 @@ public class DiscussionController {
     }
 
     @DeleteMapping("/{discussionId}")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<String>> deleteDiscussion(
             @PathVariable Long discussionId,
             @CurrentUser UserPrincipal currentUser) {
@@ -92,7 +92,7 @@ public class DiscussionController {
     }
 
     @PostMapping("/{discussionId}/upvote")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> upvoteDiscussion(
             @PathVariable Long discussionId,
             @CurrentUser UserPrincipal currentUser) {
@@ -108,7 +108,7 @@ public class DiscussionController {
     }
 
     @PostMapping("/{discussionId}/downvote")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> downvoteDiscussion(
             @PathVariable Long discussionId,
             @CurrentUser UserPrincipal currentUser) {
@@ -124,7 +124,7 @@ public class DiscussionController {
     }
 
     @PostMapping("/{discussionId}/bookmark")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> bookmarkDiscussion(
             @PathVariable Long discussionId,
             @CurrentUser UserPrincipal currentUser) {

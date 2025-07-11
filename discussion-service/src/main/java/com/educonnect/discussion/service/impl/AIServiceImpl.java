@@ -9,6 +9,7 @@ import com.educonnect.discussion.exception.ResourceNotFoundException;
 import com.educonnect.discussion.repository.AIQueryRepository;
 import com.educonnect.discussion.repository.UserRepository;
 import com.educonnect.discussion.service.AIService;
+import com.educonnect.discussion.service.UserSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,10 +29,12 @@ public class AIServiceImpl implements AIService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserSyncService userSyncService;
+
     @Override
     public AIQueryResponse askAI(AIQueryRequest request, Long userId) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
 
         // Simulate AI processing (in real implementation, this would call an actual AI service)
         AIQueryResponse response = processAIQuery(request);

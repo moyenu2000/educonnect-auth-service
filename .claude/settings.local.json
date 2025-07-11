@@ -37,7 +37,11 @@
       "Bash(cd:*)",
       "Bash(sudo docker exec:*)",
       "Bash(docker build:*)",
-      "Bash(docker-compose build:*)"
+      "Bash(docker-compose build:*)",
+      "Bash(pkill:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker exec:*)",
+      "Bash(gemini:*)"
     ],
     "deny": []
   }

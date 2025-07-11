@@ -39,6 +39,24 @@ public class QuestionController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/random")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<List<Question>>> getRandomQuestions(
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(defaultValue = "10") int count) {
+        
+        List<Question> randomQuestions = questionService.getRandomQuestions(subjectId, difficulty, count);
+        return ResponseEntity.ok(ApiResponse.success(randomQuestions));
+    }
+
+    @GetMapping("/public/daily")
+    public ResponseEntity<ApiResponse<List<Question>>> getPublicDailyQuestions() {
+        // Get today's daily questions that are public
+        List<Question> dailyQuestions = questionService.getPublicDailyQuestions();
+        return ResponseEntity.ok(ApiResponse.success(dailyQuestions));
+    }
+
     @GetMapping("/{questionId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Question>> getQuestionById(@PathVariable Long questionId) {

@@ -91,10 +91,8 @@ public class QuestionService {
             throw new ResourceNotFoundException("Topic not found with id: " + request.getTopicId());
         }
 
-        Long currentUserId = SecurityUtils.getCurrentUserId();
-        if (currentUserId == null) {
-            throw new IllegalStateException("User must be authenticated to create questions");
-        }
+        Long currentUserId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated to create questions"));
 
         Question question = new Question();
         question.setText(request.getText());
@@ -187,5 +185,13 @@ public class QuestionService {
             return questionRepository.findRandomQuestionsBySubjectAndDifficulty(subjectId, difficulty, count);
         }
         return questionRepository.findRandomQuestionsBySubject(subjectId, count);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Question> getPublicDailyQuestions() {
+        // Get a few random questions for public viewing
+        Pageable pageable = PageRequest.of(0, 5);
+        Page<Question> questions = questionRepository.findByIsActiveTrue(pageable);
+        return questions.getContent();
     }
 }

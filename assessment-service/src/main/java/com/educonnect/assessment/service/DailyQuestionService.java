@@ -53,11 +53,10 @@ public class DailyQuestionService {
         result.put("totalQuestions", dailyQuestions.size());
 
         // Add streak info if user is authenticated
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId != null) {
+        SecurityUtils.getCurrentUserId().ifPresent(userId -> {
             Map<String, Object> streakInfo = getUserStreakInfo(userId, subjectId);
             result.put("streakInfo", streakInfo);
-        }
+        });
 
         return result;
     }
@@ -68,10 +67,8 @@ public class DailyQuestionService {
 
     public Map<String, Object> submitDailyQuestionAnswer(Long questionId, String answer, 
                                                        Integer timeTaken, String explanation) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new IllegalStateException("User must be authenticated to submit answers");
-        }
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated to submit answers"));
 
         // Check if already answered today
         Optional<UserSubmission> existingSubmission = userSubmissionRepository
@@ -160,10 +157,8 @@ public class DailyQuestionService {
 
     public PagedResponse<UserSubmission> getDailyQuestionHistory(int page, int size, Long subjectId, 
                                                                Boolean status, Difficulty difficulty) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new IllegalStateException("User must be authenticated");
-        }
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("submittedAt").descending());
         Page<UserSubmission> submissions = userSubmissionRepository.findDailyQuestionHistory(

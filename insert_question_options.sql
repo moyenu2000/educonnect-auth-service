@@ -1,0 +1,22 @@
+-- Insert question options for MCQ questions
+INSERT INTO assessment.question_options (question_id, option_text) VALUES
+(1, '10'), (1, '11'), (1, '12'), (1, '13'),
+(2, 'x = 3'), (2, 'x = 4'), (2, 'x = 5'), (2, 'x = 6'),
+(3, '30 square cm'), (3, '40 square cm'), (3, '50 square cm'), (3, '80 square cm'),
+(5, '(x+3)(x-3)'), (5, '(x+9)(x-1)'), (5, '(x+1)(x-9)'), (5, '(x-3)²'),
+(8, 'x = 1, 6'), (8, 'x = 2, 3'), (8, 'x = -2, -3'), (8, 'x = 0, 5'),
+(9, '1/2'), (9, '√2/2'), (9, '√3/2'), (9, '1'),
+(10, 'x²'), (10, '3x²'), (10, '3x³'), (10, 'x³/3'),
+(11, 'H2O'), (11, 'H2O2'), (11, 'HO'), (11, 'H3O'),
+(12, 'Carbon dioxide'), (12, 'Oxygen'), (12, 'Nitrogen'), (12, 'Hydrogen'),
+(17, '3 × 10⁸ m/s'), (17, '3 × 10⁶ m/s'), (17, '3 × 10⁷ m/s'), (17, '3 × 10⁹ m/s'),
+(19, 'Volt'), (19, 'Ampere'), (19, 'Ohm'), (19, 'Watt'),
+(21, 'A naming word'), (21, 'An action word'), (21, 'A describing word'), (21, 'A joining word'),
+(22, 'goed'), (22, 'went'), (22, 'gone'), (22, 'going'),
+(23, 'A direct comparison without using like or as'), (23, 'A comparison using like or as'), (23, 'An exaggeration'), (23, 'A question'),
+(25, 'sad'), (25, 'angry'), (25, 'joyful'), (25, 'tired'),
+(26, 'A storage location with a name'), (26, 'A type of loop'), (26, 'A function'), (26, 'An operator'),
+(27, 'Makes decisions in code'), (27, 'Repeats code'), (27, 'Stores data'), (27, 'Prints output'),
+(28, 'To store data'), (28, 'To organize code into reusable blocks'), (28, 'To make decisions'), (28, 'To repeat code'),
+(29, 'A single variable'), (29, 'A collection of similar data types'), (29, 'A function'), (29, 'A loop'),
+(31, 'O(n)'), (31, 'O(log n)'), (31, 'O(n²)'), (31, 'O(1)');

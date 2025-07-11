@@ -11,6 +11,7 @@ import com.educonnect.discussion.exception.ResourceNotFoundException;
 import com.educonnect.discussion.exception.UnauthorizedException;
 import com.educonnect.discussion.repository.*;
 import com.educonnect.discussion.service.AnswerService;
+import com.educonnect.discussion.service.UserSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +38,9 @@ public class AnswerServiceImpl implements AnswerService {
 
     @Autowired
     private VoteRepository voteRepository;
+
+    @Autowired
+    private UserSyncService userSyncService;
 
     @Override
     public PagedResponse<AnswerDto> getAnswersByDiscussionId(Long discussionId, String sortBy, Pageable pageable, Long currentUserId) {
@@ -69,8 +73,7 @@ public class AnswerServiceImpl implements AnswerService {
         Discussion discussion = discussionRepository.findById(discussionId)
             .orElseThrow(() -> new ResourceNotFoundException("Discussion not found with id: " + discussionId));
         
-        User author = userRepository.findById(authorId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + authorId));
+        User author = userSyncService.getOrCreateUser(authorId);
         
         Answer answer = new Answer();
         answer.setContent(request.getContent());
@@ -124,8 +127,7 @@ public class AnswerServiceImpl implements AnswerService {
         Answer answer = answerRepository.findById(answerId)
             .orElseThrow(() -> new ResourceNotFoundException("Answer not found with id: " + answerId));
         
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
         
         Vote existingVote = voteRepository.findByUserIdAndAnswerId(userId, answerId).orElse(null);
         
@@ -156,8 +158,7 @@ public class AnswerServiceImpl implements AnswerService {
         Answer answer = answerRepository.findById(answerId)
             .orElseThrow(() -> new ResourceNotFoundException("Answer not found with id: " + answerId));
         
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
         
         Vote existingVote = voteRepository.findByUserIdAndAnswerId(userId, answerId).orElse(null);
         

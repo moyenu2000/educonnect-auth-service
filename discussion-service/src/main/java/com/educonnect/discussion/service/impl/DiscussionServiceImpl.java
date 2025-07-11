@@ -14,6 +14,7 @@ import com.educonnect.discussion.exception.ResourceNotFoundException;
 import com.educonnect.discussion.exception.UnauthorizedException;
 import com.educonnect.discussion.repository.*;
 import com.educonnect.discussion.service.DiscussionService;
+import com.educonnect.discussion.service.UserSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +44,9 @@ public class DiscussionServiceImpl implements DiscussionService {
 
     @Autowired
     private GroupMemberRepository groupMemberRepository;
+
+    @Autowired
+    private UserSyncService userSyncService;
 
     @Override
     public PagedResponse<DiscussionDto> getDiscussions(
@@ -92,8 +96,7 @@ public class DiscussionServiceImpl implements DiscussionService {
 
     @Override
     public DiscussionDto createDiscussion(DiscussionRequest request, Long authorId) {
-        User author = userRepository.findById(authorId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + authorId));
+        User author = userSyncService.getOrCreateUser(authorId);
         
         Discussion discussion = new Discussion();
         discussion.setTitle(request.getTitle());
@@ -177,8 +180,7 @@ public class DiscussionServiceImpl implements DiscussionService {
         Discussion discussion = discussionRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Discussion not found with id: " + id));
         
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
         
         Vote existingVote = voteRepository.findByUserIdAndDiscussionId(userId, id).orElse(null);
         
@@ -209,8 +211,7 @@ public class DiscussionServiceImpl implements DiscussionService {
         Discussion discussion = discussionRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Discussion not found with id: " + id));
         
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
         
         Vote existingVote = voteRepository.findByUserIdAndDiscussionId(userId, id).orElse(null);
         
@@ -241,8 +242,7 @@ public class DiscussionServiceImpl implements DiscussionService {
         Discussion discussion = discussionRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Discussion not found with id: " + id));
         
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
         
         Bookmark existingBookmark = bookmarkRepository.findByUserIdAndDiscussionId(userId, id).orElse(null);
         
@@ -289,8 +289,7 @@ public class DiscussionServiceImpl implements DiscussionService {
             throw new UnauthorizedException("You must be a member of this group to create discussions");
         }
         
-        User author = userRepository.findById(authorId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + authorId));
+        User author = userSyncService.getOrCreateUser(authorId);
         
         Discussion discussion = new Discussion();
         discussion.setTitle(request.getTitle());

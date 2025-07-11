@@ -3,6 +3,7 @@ package com.educonnect.assessment.controller;
 import com.educonnect.assessment.dto.ApiResponse;
 import com.educonnect.assessment.dto.PagedResponse;
 import com.educonnect.assessment.dto.TopicRequest;
+import com.educonnect.assessment.dto.TopicUpdateRequest;
 import com.educonnect.assessment.entity.Topic;
 import com.educonnect.assessment.service.TopicService;
 import jakarta.validation.Valid;
@@ -57,7 +58,7 @@ public class TopicController {
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
     public ResponseEntity<ApiResponse<Topic>> updateTopic(
             @PathVariable Long topicId,
-            @Valid @RequestBody TopicRequest request) {
+            @Valid @RequestBody TopicUpdateRequest request) {
         
         Topic topic = topicService.updateTopic(topicId, request);
         return ResponseEntity.ok(ApiResponse.success(topic, "Topic updated successfully"));

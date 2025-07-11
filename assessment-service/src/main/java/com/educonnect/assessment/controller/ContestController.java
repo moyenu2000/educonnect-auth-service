@@ -71,7 +71,7 @@ public class ContestController {
             @PathVariable Long questionId,
             @Valid @RequestBody ContestSubmissionRequest request) {
         
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
         Map<String, Object> result = contestService.submitContestAnswer(
                 contestId, questionId, userId, request.getAnswer(), request.getTimeTaken(), request.getExplanation());
         return ResponseEntity.ok(ApiResponse.success(result));
@@ -93,7 +93,7 @@ public class ContestController {
     @GetMapping("/{contestId}/submissions")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<List<UserSubmission>>> getUserContestSubmissions(@PathVariable Long contestId) {
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
         List<UserSubmission> submissions = contestService.getUserContestSubmissions(contestId, userId);
         return ResponseEntity.ok(ApiResponse.success(submissions));
     }
@@ -106,7 +106,7 @@ public class ContestController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) ContestStatus contestStatus) {
         
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
         PagedResponse<UserSubmission> submissions = contestService.getUserContestSubmissions(userId, page, size, contestStatus);
         return ResponseEntity.ok(ApiResponse.success(submissions));
     }
@@ -115,7 +115,7 @@ public class ContestController {
     @PostMapping("/{contestId}/join")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<String>> joinContest(@PathVariable Long contestId) {
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
         contestService.joinContest(contestId, userId);
         return ResponseEntity.ok(ApiResponse.success("Successfully joined the contest"));
     }

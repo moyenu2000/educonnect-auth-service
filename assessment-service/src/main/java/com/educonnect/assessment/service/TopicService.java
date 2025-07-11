@@ -2,6 +2,7 @@ package com.educonnect.assessment.service;
 
 import com.educonnect.assessment.dto.PagedResponse;
 import com.educonnect.assessment.dto.TopicRequest;
+import com.educonnect.assessment.dto.TopicUpdateRequest;
 import com.educonnect.assessment.entity.Topic;
 import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.repository.SubjectRepository;
@@ -86,6 +87,22 @@ public class TopicService {
     }
 
     public Topic updateTopic(Long id, TopicRequest request) {
+        Topic topic = getTopicById(id);
+
+        if (!topic.getName().equals(request.getName()) &&
+            topicRepository.existsByNameAndSubjectIdAndIdNot(request.getName(), topic.getSubjectId(), id)) {
+            throw new IllegalArgumentException("Topic with this name already exists in this subject");
+        }
+
+        topic.setName(request.getName());
+        topic.setDescription(request.getDescription());
+        topic.setDisplayOrder(request.getDisplayOrder());
+        topic.setIsActive(request.getIsActive());
+
+        return topicRepository.save(topic);
+    }
+
+    public Topic updateTopic(Long id, TopicUpdateRequest request) {
         Topic topic = getTopicById(id);
 
         if (!topic.getName().equals(request.getName()) &&

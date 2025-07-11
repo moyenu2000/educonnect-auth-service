@@ -34,4 +34,16 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
     boolean existsByNameAndSubjectIdAndIdNot(String name, Long subjectId, Long id);
     
     long countBySubjectIdAndIsActiveTrue(Long subjectId);
+    
+    @Query("SELECT t, COUNT(q) FROM Topic t " +
+           "LEFT JOIN Question q ON q.topicId = t.id AND q.isActive = true " +
+           "WHERE t.isActive = true AND (:subjectId IS NULL OR t.subjectId = :subjectId) " +
+           "GROUP BY t.id ORDER BY t.displayOrder")
+    List<Object[]> findTopicsWithQuestionCount(@Param("subjectId") Long subjectId);
+    
+    @Query("SELECT t, COUNT(q) FROM Topic t " +
+           "LEFT JOIN Question q ON q.topicId = t.id AND q.isActive = true " +
+           "WHERE t.id = :topicId AND t.isActive = true " +
+           "GROUP BY t.id")
+    Object[] findTopicWithQuestionCount(@Param("topicId") Long topicId);
 }

@@ -24,7 +24,7 @@ public class AIController {
     private AIService aiService;
 
     @PostMapping("/ask")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<AIQueryResponse>> askAI(
             @Valid @RequestBody AIQueryRequest request,
             @CurrentUser UserPrincipal currentUser) {
@@ -35,7 +35,7 @@ public class AIController {
     }
 
     @GetMapping("/history")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<PagedResponse<AIQuery>>> getAIHistory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

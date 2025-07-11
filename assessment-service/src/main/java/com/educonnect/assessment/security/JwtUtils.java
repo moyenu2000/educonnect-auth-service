@@ -54,6 +54,24 @@ public class JwtUtils {
         return claims.get("role", String.class);
     }
 
+    public String getEmailFromJwtToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("email", String.class);
+    }
+
+    public String getFullNameFromJwtToken(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("fullName", String.class);
+    }
+
     public boolean validateJwtToken(String authToken) {
         try {
             Jwts.parser()

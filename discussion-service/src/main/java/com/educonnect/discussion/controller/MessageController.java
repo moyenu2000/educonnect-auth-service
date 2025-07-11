@@ -24,7 +24,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/messages")
-@PreAuthorize("hasRole('USER')")
+@PreAuthorize("hasRole('STUDENT')")
 public class MessageController {
 
     @Autowired

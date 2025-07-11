@@ -13,6 +13,7 @@ import com.educonnect.discussion.repository.GroupMemberRepository;
 import com.educonnect.discussion.repository.GroupRepository;
 import com.educonnect.discussion.repository.UserRepository;
 import com.educonnect.discussion.service.GroupService;
+import com.educonnect.discussion.service.UserSyncService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserSyncService userSyncService;
 
     @Override
     public PagedResponse<Group> getGroups(GroupType type, Long subjectId, Boolean joined, Pageable pageable, Long currentUserId) {
@@ -63,8 +67,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public Group createGroup(GroupRequest request, Long creatorId) {
-        User creator = userRepository.findById(creatorId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + creatorId));
+        User creator = userSyncService.getOrCreateUser(creatorId);
         
         Group group = new Group();
         group.setName(request.getName());
@@ -116,8 +119,7 @@ public class GroupServiceImpl implements GroupService {
         Group group = groupRepository.findById(groupId)
             .orElseThrow(() -> new ResourceNotFoundException("Group not found with id: " + groupId));
         
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        User user = userSyncService.getOrCreateUser(userId);
         
         // Check if user is already a member
         if (groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)) {

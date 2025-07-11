@@ -55,6 +55,17 @@ public class DailyQuestionController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
+    @GetMapping("/today")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTodayDailyQuestions(
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) ClassLevel classLevel,
+            @RequestParam(required = false) Difficulty difficulty) {
+        
+        Map<String, Object> todayQuestions = dailyQuestionService.getDailyQuestions(LocalDate.now(), subjectId, classLevel, difficulty);
+        return ResponseEntity.ok(ApiResponse.success(todayQuestions));
+    }
+
     @GetMapping("/streak")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getUserStreakInfo(
@@ -62,9 +73,21 @@ public class DailyQuestionController {
             @RequestParam(required = false) Period period) {
         
         // Get current user ID from security context
-        Long userId = com.educonnect.assessment.util.SecurityUtils.getCurrentUserId();
+        Long userId = com.educonnect.assessment.util.SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
         Map<String, Object> streakInfo = dailyQuestionService.getUserStreakInfo(userId, subjectId);
         return ResponseEntity.ok(ApiResponse.success(streakInfo));
+    }
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestionStats(
+            @RequestParam(required = false) Period period,
+            @RequestParam(required = false) Long subjectId) {
+        
+        // Get current user ID from security context  
+        Long userId = com.educonnect.assessment.util.SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
+        Map<String, Object> stats = dailyQuestionService.getUserStreakInfo(userId, subjectId);
+        return ResponseEntity.ok(ApiResponse.success(stats));
     }
 
     @GetMapping("/history")

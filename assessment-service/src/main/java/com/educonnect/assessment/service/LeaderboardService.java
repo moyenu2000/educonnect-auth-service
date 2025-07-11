@@ -33,10 +33,9 @@ public class LeaderboardService {
         result.put("period", period != null ? period.toString() : "ALL_TIME");
         
         // Add current user rank if authenticated
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId != null) {
+        SecurityUtils.getCurrentUserId().ifPresent(userId -> {
             result.put("userRank", calculateUserRank(userId));
-        }
+        });
         
         return result;
     }
@@ -50,10 +49,9 @@ public class LeaderboardService {
         result.put("subject", getSubjectInfo(subjectId));
         
         // Add current user rank if authenticated
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId != null) {
+        SecurityUtils.getCurrentUserId().ifPresent(userId -> {
             result.put("userRank", calculateUserRank(userId));
-        }
+        });
         
         return result;
     }
@@ -68,10 +66,9 @@ public class LeaderboardService {
         result.put("classLevel", classLevel);
         
         // Add current user rank if authenticated
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId != null) {
+        SecurityUtils.getCurrentUserId().ifPresent(userId -> {
             result.put("userRank", calculateUserRank(userId));
-        }
+        });
         
         return result;
     }

@@ -138,7 +138,14 @@ public class Topic {
         this.questions = questions;
     }
 
+    @Transient
+    private Integer questionsCount;
+
     public int getQuestionsCount() {
-        return questions != null ? questions.size() : 0;
+        return questionsCount != null ? questionsCount : 0;
+    }
+
+    public void setQuestionsCount(Integer questionsCount) {
+        this.questionsCount = questionsCount;
     }
 }

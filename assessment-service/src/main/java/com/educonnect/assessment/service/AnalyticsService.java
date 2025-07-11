@@ -24,10 +24,8 @@ public class AnalyticsService {
     private UserStreakRepository userStreakRepository;
 
     public Map<String, Object> getUserDashboard(Period period, Long subjectId) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new IllegalStateException("User must be authenticated");
-        }
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
 
         Map<String, Object> dashboard = new HashMap<>();
         dashboard.put("overview", getUserOverview(userId, period, subjectId));
@@ -40,19 +38,15 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> getUserPerformance(Period period, Long subjectId, String type) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new IllegalStateException("User must be authenticated");
-        }
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
 
         return getUserPerformance(userId, period, subjectId);
     }
 
     public Map<String, Object> getUserProgress(Long subjectId, Period period) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new IllegalStateException("User must be authenticated");
-        }
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
 
         Map<String, Object> progress = new HashMap<>();
         progress.put("skillProgress", getSkillProgress(userId, subjectId));
@@ -65,10 +59,8 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> getUserRankings(String type, Long subjectId, Period period) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        if (userId == null) {
-            throw new IllegalStateException("User must be authenticated");
-        }
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
 
         return getUserRankings(userId, subjectId);
     }
