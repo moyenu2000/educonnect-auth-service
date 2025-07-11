@@ -29,11 +29,12 @@ ALTER DATABASE educonnect SET search_path TO public,assessment,discussion,social
 -- Wait a moment to ensure all tables are created
 -- Note: This data will be inserted after Hibernate creates the tables
 
--- Insert mock users (passwords are hashed with SHA256)
+-- Insert mock users (passwords are hashed with BCrypt for 'password123')
 INSERT INTO auth.users (user_name, email, password, full_name, bio, role, is_enable, is_verified, provider, created_at, updated_at) VALUES
-('john_doe', 'john.doe@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'John Doe', 'Computer Science student passionate about programming', 'STUDENT', true, true, 'LOCAL', NOW(), NOW()),
-('jane_smith', 'jane.smith@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Jane Smith', 'Mathematics teacher with 10 years experience', 'QUESTION_SETTER', true, true, 'LOCAL', NOW(), NOW()),
-('admin_user', 'admin@educonnect.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Admin User', 'Platform administrator', 'ADMIN', true, true, 'LOCAL', NOW(), NOW()),
+('john_doe', 'john.doe@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi6', 'John Doe', 'Computer Science student passionate about programming', 'STUDENT', true, true, 'LOCAL', NOW(), NOW()),
+('jane_smith', 'jane.smith@example.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi6', 'Jane Smith', 'Mathematics teacher with 10 years experience', 'QUESTION_SETTER', true, true, 'LOCAL', NOW(), NOW()),
+('myadmin', 'myadmin@educonnect.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi6', 'My Admin User', 'Platform administrator', 'ADMIN', true, true, 'LOCAL', NOW(), NOW()),
+('myqsetter', 'myqsetter@educonnect.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi6', 'My Question Setter', 'Question creator and setter', 'QUESTION_SETTER', true, true, 'LOCAL', NOW(), NOW()),
 ('sarah_wilson', 'sarah.wilson@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Sarah Wilson', 'Physics enthusiast and science lover', 'STUDENT', true, true, 'LOCAL', NOW(), NOW()),
 ('mike_johnson', 'mike.johnson@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Mike Johnson', 'Chemistry teacher and researcher', 'QUESTION_SETTER', true, true, 'LOCAL', NOW(), NOW()),
 ('emily_brown', 'emily.brown@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Emily Brown', 'High school student interested in biology', 'STUDENT', true, true, 'LOCAL', NOW(), NOW()),
@@ -252,11 +253,11 @@ INSERT INTO assessment.personalized_exam_questions (exam_id, question_ids) VALUE
 
 -- Insert daily questions
 INSERT INTO assessment.daily_questions (question_id, date, subject_id, difficulty, points, created_at) VALUES
-(1, CURRENT_DATE, 1, 'EASY', 1, NOW()),
-(5, CURRENT_DATE - INTERVAL '1 day', 2, 'EASY', 2, NOW() - INTERVAL '1 day'),
-(9, CURRENT_DATE - INTERVAL '2 days', 3, 'EASY', 1, NOW() - INTERVAL '2 days'),
-(13, CURRENT_DATE - INTERVAL '3 days', 4, 'EASY', 1, NOW() - INTERVAL '3 days'),
-(17, CURRENT_DATE - INTERVAL '4 days', 8, 'EASY', 2, NOW() - INTERVAL '4 days');
+(49, CURRENT_DATE, 1, 'EASY', 1, NOW()),
+(50, CURRENT_DATE - INTERVAL '1 day', 1, 'MEDIUM', 2, NOW() - INTERVAL '1 day'),
+(51, CURRENT_DATE - INTERVAL '2 days', 1, 'EASY', 1, NOW() - INTERVAL '2 days'),
+(52, CURRENT_DATE - INTERVAL '3 days', 1, 'EASY', 1, NOW() - INTERVAL '3 days'),
+(53, CURRENT_DATE - INTERVAL '4 days', 6, 'MEDIUM', 2, NOW() - INTERVAL '4 days');
 
 -- Copy users to discussion service
 INSERT INTO discussion.users (id, username, email, full_name, bio, avatar_url, created_at, updated_at) VALUES

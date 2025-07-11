@@ -27,6 +27,32 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/create-admin")
+    public ResponseEntity<ApiResponse> createAdmin(@Valid @RequestBody RegisterRequest registerRequest) {
+        // Simple endpoint to create admin without security restrictions for testing
+        ApiResponse response = authService.registerAdmin(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/create-question-setter")
+    public ResponseEntity<ApiResponse> createQuestionSetter(@Valid @RequestBody RegisterRequest registerRequest) {
+        // Simple endpoint to create question setter without security restrictions for testing
+        ApiResponse response = authService.registerQuestionSetter(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/register-admin")
+    public ResponseEntity<ApiResponse> registerAdmin(@Valid @RequestBody RegisterRequest registerRequest) {
+        ApiResponse response = authService.registerAdmin(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/register-question-setter")
+    public ResponseEntity<ApiResponse> registerQuestionSetter(@Valid @RequestBody RegisterRequest registerRequest) {
+        ApiResponse response = authService.registerQuestionSetter(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {

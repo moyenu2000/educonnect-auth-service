@@ -57,6 +57,11 @@ cd discussion-service && ./mvnw clean package
 
 # Build with specific profile
 ./mvnw clean package -Dspring.profiles.active=docker
+
+# Build and run locally (without Docker)
+cd auth && ./mvnw spring-boot:run
+cd assessment-service && ./mvnw spring-boot:run -Dspring.profiles.active=test
+cd discussion-service && ./mvnw spring-boot:run -Dspring.profiles.active=test
 ```
 
 ## Service-Specific Details
@@ -99,9 +104,13 @@ cd discussion-service && ./mvnw clean package
 - Hibernate auto-generates tables with `ddl-auto=update`
 
 ### API Testing
-- Postman collections available for each service
+- Postman collections available for each service:
+  - `auth-api.postman_collection.json` (Auth Service)
+  - `discussion-service-postman-collection.json` (Discussion Service)
+  - `assessment-service-postman-collection.json` (Assessment Service)
 - API test scripts: `discussion-service-api-tests.sh`
 - All services expect JWT Bearer tokens for protected endpoints
+- Update JWT tokens in test scripts after logging in via Auth Service
 
 ## Common Development Patterns
 
@@ -140,10 +149,13 @@ Consistent pagination across services using `PagedResponse<T>`:
 
 ### Required Environment Variables
 - `DB_PASSWORD`: PostgreSQL password
+- `DB_USER`: PostgreSQL username (defaults to 'educonnect')
 - `JWT_SECRET`: JWT signing secret (base64 encoded)
 - `MAIL_USERNAME` & `MAIL_PASSWORD`: SMTP credentials
 - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: OAuth2 credentials
 - `RABBITMQ_PASSWORD`: RabbitMQ password
+- `RABBITMQ_USER`: RabbitMQ username (defaults to 'educonnect')
+- `FRONTEND_URL`: Frontend application URL (defaults to 'http://localhost:3000')
 
 ### Development vs Production
 - Use `SPRING_PROFILES_ACTIVE=docker` for container deployment
@@ -166,6 +178,7 @@ Consistent pagination across services using `PagedResponse<T>`:
 - Redis caching enabled for Assessment Service
 - Database connection pooling configured via Hikari
 - Rate limiting implemented in Assessment Service
+- WebSocket support for real-time features in Discussion and Assessment services
 
 ## API Endpoints Structure
 

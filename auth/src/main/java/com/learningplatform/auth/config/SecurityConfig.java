@@ -60,15 +60,8 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                                .requestMatchers("/auth/**").permitAll()  // Temporarily allow all auth endpoints
                                                 .requestMatchers(
-                                                                "/auth/login",
-                                                                "/auth/register",
-                                                                "/auth/refresh-token",
-                                                                "/auth/verify-email",
-                                                                "/auth/resend-verification",
-                                                                "/auth/forgot-password",
-                                                                "/auth/reset-password",
-                                                                "/auth/verify-2fa",
                                                                 "/oauth2/**",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
@@ -80,7 +73,6 @@ public class SecurityConfig {
                                                                 "/api/v1/actuator/health",
                                                                 "/api/v1/actuator/health/**")
                                                 .permitAll()
-                                                .requestMatchers("/auth/admin/**").hasRole("ADMIN")
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
                                                 .authorizationEndpoint(authorization -> authorization

@@ -71,6 +71,66 @@ public class AuthService {
     }
 
     @Transactional
+    public ApiResponse registerAdmin(RegisterRequest request) {
+        // Check if user already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username is already taken!");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email is already in use!");
+        }
+
+        // Create new admin user - NO EMAIL VERIFICATION REQUIRED
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .role(UserRole.ADMIN) // Register as ADMIN
+                .enabled(true)
+                .verified(true) // Auto-verified
+                .provider(AuthProvider.LOCAL)
+                .build();
+
+        user = userRepository.save(user);
+
+        log.info("Admin user registered successfully: {}", user.getUsername());
+
+        return new ApiResponse(true, "Admin user registered successfully. No email verification required.");
+    }
+
+    @Transactional
+    public ApiResponse registerQuestionSetter(RegisterRequest request) {
+        // Check if user already exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username is already taken!");
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new BadRequestException("Email is already in use!");
+        }
+
+        // Create new question setter user - NO EMAIL VERIFICATION REQUIRED
+        User user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .fullName(request.getFullName())
+                .role(UserRole.QUESTION_SETTER) // Register as QUESTION_SETTER
+                .enabled(true)
+                .verified(true) // Auto-verified
+                .provider(AuthProvider.LOCAL)
+                .build();
+
+        user = userRepository.save(user);
+
+        log.info("Question setter user registered successfully: {}", user.getUsername());
+
+        return new ApiResponse(true, "Question setter user registered successfully. No email verification required.");
+    }
+
+    @Transactional
     public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         User user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
                 .orElseThrow(() -> new BadRequestException("User not found"));
