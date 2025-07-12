@@ -45,7 +45,9 @@
       "Bash(docker-compose restart:*)",
       "Bash(docker-compose:*)",
       "Bash(docker stop:*)",
-      "Bash(docker rm:*)"
+      "Bash(docker rm:*)",
+      "Bash(echo:*)",
+      "Bash(./test-all-assessment-apis.sh:*)"
     ],
     "deny": []
   }

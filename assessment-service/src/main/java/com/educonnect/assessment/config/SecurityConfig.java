@@ -1,8 +1,9 @@
 package com.educonnect.assessment.config;
 
 import com.educonnect.assessment.security.JwtAuthenticationEntryPoint;
-import com.educonnect.assessment.security.JwtAuthenticationFilter;
+import com.educonnect.assessment.security.JwtAuthenticationFilterFixed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -26,7 +27,8 @@ public class SecurityConfig {
     private JwtAuthenticationEntryPoint unauthorizedHandler;
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Qualifier("jwtAuthenticationFilterFixed")
+    private JwtAuthenticationFilterFixed jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -40,10 +42,10 @@ public class SecurityConfig {
                         .requestMatchers("/topics/public/by-subject/**").permitAll()
                         .requestMatchers("/daily-questions/public").permitAll()
                         .requestMatchers("/leaderboard/public").permitAll()
+                        .requestMatchers("/test/**").permitAll()
                         
-                        // Health check endpoints
+                        // Health check endpoints  
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/v1/actuator/**").permitAll()
                         
                         // WebSocket endpoints
                         .requestMatchers("/ws/**").permitAll()

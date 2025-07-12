@@ -1,6 +1,7 @@
 package com.educonnect.assessment.entity;
 
 import com.educonnect.assessment.enums.Difficulty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ public class DailyQuestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "questionId", insertable = false, updatable = false)
+    @JsonIgnore
     private Question question;
 
     @NotNull

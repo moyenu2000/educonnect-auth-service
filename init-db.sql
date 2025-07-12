@@ -43,7 +43,8 @@ INSERT INTO auth.users (user_name, email, password, full_name, bio, role, is_ena
 ('robert_taylor', 'robert.taylor@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Robert Taylor', 'Geography teacher and traveler', 'QUESTION_SETTER', true, true, 'LOCAL', NOW(), NOW()),
 ('anna_martinez', 'anna.martinez@example.com', '$2a$10$N1EXMPL3H4SH3DF0RT3ST1NG', 'Anna Martinez', 'Art student with creative passion', 'STUDENT', true, true, 'LOCAL', NOW(), NOW());
 
--- Insert mock subjects
+-- Wait for assessment service to create tables first
+-- Insert subjects using proper enum values
 INSERT INTO assessment.subjects (name, description, class_level, display_order, is_active, created_at, updated_at) VALUES
 ('Mathematics', 'Core mathematical concepts and problem solving', 'CLASS_10', 1, true, NOW(), NOW()),
 ('Physics', 'Fundamental principles of physics and mechanics', 'CLASS_10', 2, true, NOW(), NOW()),

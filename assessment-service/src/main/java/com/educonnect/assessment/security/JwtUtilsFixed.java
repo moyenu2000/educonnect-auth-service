@@ -9,29 +9,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.List;
 
-// @Component - Disabled in favor of JwtUtilsFixed
-public class JwtUtils {
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+@Component("jwtUtilsFixed")
+public class JwtUtilsFixed {
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtilsFixed.class);
 
-    @Value("${app.jwt.secret}")
+    // Use multiple possible property names to ensure compatibility
+    @Value("${app.jwt.secret:${jwt.secret:dGhpcyBpcyBhIHZlcnkgc2VjdXJlIHNlY3JldCBrZXkgZm9yIGp3dCB0b2tlbiBnZW5lcmF0aW9uIHdoaWNoIHNob3VsZCBiZSBjaGFuZ2VkIGluIHByb2R1Y3Rpb24=}}")
     private String jwtSecret;
 
-    @Value("${app.jwt.expiration}")
-    private int jwtExpirationInMs;
-
     private SecretKey getSigningKey() {
-        // Use the same default JWT secret as the auth service
-        String secretToUse = (jwtSecret != null && !jwtSecret.isEmpty()) 
-            ? jwtSecret 
-            : "dGhpcyBpcyBhIHZlcnkgc2VjdXJlIHNlY3JldCBrZXkgZm9yIGp3dCB0b2tlbiBnZW5lcmF0aW9uIHdoaWNoIHNob3VsZCBiZSBjaGFuZ2VkIGluIHByb2R1Y3Rpb24=";
-        
-        logger.debug("JWT secret status: configured={}, length={}", 
-            jwtSecret != null, secretToUse.length());
-        
-        byte[] keyBytes = Decoders.BASE64.decode(secretToUse);
+        logger.debug("Using JWT secret with length: {}", jwtSecret.length());
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -82,10 +71,12 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
+            logger.debug("Validating JWT token...");
             Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(authToken);
+            logger.debug("JWT token validation successful");
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
@@ -95,20 +86,9 @@ public class JwtUtils {
             logger.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("JWT validation error: {}", e.getMessage());
         }
         return false;
-    }
-
-    public boolean isTokenExpired(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .verifyWith(getSigningKey())
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-            return claims.getExpiration().before(new Date());
-        } catch (Exception e) {
-            return true;
-        }
     }
 }

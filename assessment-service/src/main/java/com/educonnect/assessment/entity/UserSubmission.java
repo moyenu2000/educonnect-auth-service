@@ -1,5 +1,6 @@
 package com.educonnect.assessment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ public class UserSubmission {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "questionId", insertable = false, updatable = false)
+    @JsonIgnore
     private Question question;
 
     @NotNull
