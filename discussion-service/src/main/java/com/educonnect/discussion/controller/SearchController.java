@@ -2,6 +2,7 @@ package com.educonnect.discussion.controller;
 
 import com.educonnect.discussion.dto.ApiResponse;
 import com.educonnect.discussion.dto.DiscussionDto;
+import com.educonnect.discussion.dto.GroupDto;
 import com.educonnect.discussion.dto.PagedResponse;
 import com.educonnect.discussion.dto.UserDto;
 import com.educonnect.discussion.entity.Group;
@@ -51,7 +52,7 @@ public class SearchController {
     }
 
     @GetMapping("/groups")
-    public ResponseEntity<ApiResponse<PagedResponse<Group>>> searchGroups(
+    public ResponseEntity<ApiResponse<PagedResponse<GroupDto>>> searchGroups(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -61,7 +62,19 @@ public class SearchController {
         Pageable pageable = PageRequest.of(page, size);
         PagedResponse<Group> groups = groupService.searchGroups(q, type, pageable);
         
-        return ResponseEntity.ok(ApiResponse.success(groups));
+        // Convert to DTOs to avoid Hibernate serialization issues
+        PagedResponse<GroupDto> groupDtos = new PagedResponse<>(
+            groups.getContent().stream().map(GroupDto::fromEntity).toList(),
+            groups.getTotalElements(),
+            groups.getTotalPages(),
+            groups.getCurrentPage(),
+            groups.getSize(),
+            groups.isFirst(),
+            groups.isLast(),
+            groups.isEmpty()
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(groupDtos));
     }
 
     @GetMapping("/users")

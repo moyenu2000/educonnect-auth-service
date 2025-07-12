@@ -18,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/groups")
@@ -30,7 +31,7 @@ public class GroupController {
     private DiscussionService discussionService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<PagedResponse<Group>>> getGroups(
+    public ResponseEntity<ApiResponse<PagedResponse<GroupDto>>> getGroups(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) GroupType type,
@@ -43,41 +44,53 @@ public class GroupController {
         
         PagedResponse<Group> groups = groupService.getGroups(type, subjectId, joined, pageable, currentUserId);
         
-        return ResponseEntity.ok(ApiResponse.success(groups));
+        // Convert to DTOs to avoid Hibernate serialization issues
+        PagedResponse<GroupDto> groupDtos = new PagedResponse<>(
+            groups.getContent().stream().map(GroupDto::fromEntity).toList(),
+            groups.getTotalElements(),
+            groups.getTotalPages(),
+            groups.getCurrentPage(),
+            groups.getSize(),
+            groups.isFirst(),
+            groups.isLast(),
+            groups.isEmpty()
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(groupDtos));
     }
 
     @GetMapping("/{groupId}")
-    public ResponseEntity<ApiResponse<Group>> getGroup(
+    public ResponseEntity<ApiResponse<GroupDto>> getGroup(
             @PathVariable Long groupId,
             @CurrentUser UserPrincipal currentUser) {
         
         Long currentUserId = currentUser != null ? currentUser.getId() : null;
         Group group = groupService.getGroupById(groupId, currentUserId);
         
-        return ResponseEntity.ok(ApiResponse.success(group));
+        return ResponseEntity.ok(ApiResponse.success(GroupDto.fromEntity(group)));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<Group>> createGroup(
+    public ResponseEntity<ApiResponse<GroupDto>> createGroup(
             @Valid @RequestBody GroupRequest request,
             @CurrentUser UserPrincipal currentUser) {
         
         Group group = groupService.createGroup(request, currentUser.getId());
         
-        return ResponseEntity.ok(ApiResponse.success(group, "Group created successfully"));
+        return ResponseEntity.ok(ApiResponse.success(GroupDto.fromEntity(group), "Group created successfully"));
     }
 
     @PutMapping("/{groupId}")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<Group>> updateGroup(
+    public ResponseEntity<ApiResponse<GroupDto>> updateGroup(
             @PathVariable Long groupId,
             @Valid @RequestBody GroupRequest request,
             @CurrentUser UserPrincipal currentUser) {
         
         Group group = groupService.updateGroup(groupId, request, currentUser.getId());
         
-        return ResponseEntity.ok(ApiResponse.success(group, "Group updated successfully"));
+        return ResponseEntity.ok(ApiResponse.success(GroupDto.fromEntity(group), "Group updated successfully"));
     }
 
     @PostMapping("/{groupId}/join")

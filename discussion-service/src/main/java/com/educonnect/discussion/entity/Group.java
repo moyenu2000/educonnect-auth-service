@@ -2,6 +2,8 @@ package com.educonnect.discussion.entity;
 
 import com.educonnect.discussion.enums.ClassLevel;
 import com.educonnect.discussion.enums.GroupType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
     @Index(name = "idx_group_private", columnList = "is_private"),
     @Index(name = "idx_group_created", columnList = "created_at")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Group {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,6 +60,7 @@ public class Group {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id", nullable = false)
+    @JsonIgnore
     private User createdBy;
 
     @Column(name = "created_at", nullable = false, updatable = false)

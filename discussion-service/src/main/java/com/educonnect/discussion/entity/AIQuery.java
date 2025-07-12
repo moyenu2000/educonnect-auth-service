@@ -1,5 +1,7 @@
 package com.educonnect.discussion.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +15,7 @@ import java.util.List;
     @Index(name = "idx_ai_query_subject", columnList = "subject_id"),
     @Index(name = "idx_ai_query_created", columnList = "created_at")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AIQuery {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +52,7 @@ public class AIQuery {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -9,7 +9,10 @@ import com.educonnect.discussion.exception.ResourceNotFoundException;
 import com.educonnect.discussion.repository.AIQueryRepository;
 import com.educonnect.discussion.repository.UserRepository;
 import com.educonnect.discussion.service.AIService;
+import com.educonnect.discussion.service.GeminiService;
 import com.educonnect.discussion.service.UserSyncService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +26,8 @@ import java.util.List;
 @Transactional
 public class AIServiceImpl implements AIService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AIServiceImpl.class);
+
     @Autowired
     private AIQueryRepository aiQueryRepository;
 
@@ -32,12 +37,18 @@ public class AIServiceImpl implements AIService {
     @Autowired
     private UserSyncService userSyncService;
 
+    @Autowired
+    private GeminiService geminiService;
+
     @Override
     public AIQueryResponse askAI(AIQueryRequest request, Long userId) {
         User user = userSyncService.getOrCreateUser(userId);
 
-        // Simulate AI processing (in real implementation, this would call an actual AI service)
-        AIQueryResponse response = processAIQuery(request);
+        logger.info("Processing AI request for user {} - Type: {}, Question: {}", 
+                   userId, request.getType(), request.getQuestion().substring(0, Math.min(request.getQuestion().length(), 50)) + "...");
+
+        // Call real Gemini AI service
+        AIQueryResponse response = processAIQueryWithGemini(request);
 
         // Save query to history
         AIQuery aiQuery = new AIQuery();
@@ -53,6 +64,7 @@ public class AIServiceImpl implements AIService {
 
         aiQueryRepository.save(aiQuery);
 
+        logger.info("Successfully processed and saved AI query with ID: {}", aiQuery.getId());
         return response;
     }
 
@@ -62,33 +74,85 @@ public class AIServiceImpl implements AIService {
         return PagedResponse.of(queriesPage);
     }
 
-    private AIQueryResponse processAIQuery(AIQueryRequest request) {
-        // This is a mock implementation. In a real system, this would:
-        // 1. Call an external AI service (OpenAI, Google AI, etc.)
-        // 2. Process the question with context and subject information
-        // 3. Return structured response with confidence scores
+    private AIQueryResponse processAIQueryWithGemini(AIQueryRequest request) {
+        try {
+            // Call Gemini AI service
+            String aiGeneratedAnswer = geminiService.generateContent(request);
+            
+            // Calculate confidence based on response quality
+            Double confidence = calculateConfidence(aiGeneratedAnswer, request);
+            
+            // Generate relevant sources
+            List<String> sources = generateRelevantSources(request);
+            
+            // Generate follow-up questions
+            List<String> followUpQuestions = generateFollowUpQuestions(request.getType());
 
-        String answer = generateMockAnswer(request.getQuestion(), request.getType());
-        List<String> sources = Arrays.asList(
-            "Educational Database Reference #1",
-            "Academic Source #2",
-            "Curriculum Standard Reference"
-        );
-        Double confidence = 0.85; // Mock confidence score
-        List<String> followUpQuestions = generateFollowUpQuestions(request.getType());
-
-        return new AIQueryResponse(answer, sources, confidence, followUpQuestions);
+            logger.info("Successfully generated AI response with {} characters", aiGeneratedAnswer.length());
+            return new AIQueryResponse(aiGeneratedAnswer, sources, confidence, followUpQuestions);
+            
+        } catch (Exception e) {
+            logger.error("Error processing AI query with Gemini: ", e);
+            // Fallback to a helpful error response
+            return createFallbackResponse(request);
+        }
     }
 
-    private String generateMockAnswer(String question, String type) {
-        return switch (type.toUpperCase()) {
-            case "CONCEPT" -> "This concept can be understood as... [AI-generated explanation based on: " + question + "]";
-            case "PROBLEM" -> "To solve this problem, follow these steps... [AI-generated solution for: " + question + "]";
-            case "EXPLANATION" -> "Let me explain this in detail... [AI-generated explanation for: " + question + "]";
-            case "HOMEWORK" -> "Here's how to approach this homework question... [AI-generated guidance for: " + question + "]";
-            default -> "I can help you with that. [AI-generated response for: " + question + "]";
+    private Double calculateConfidence(String answer, AIQueryRequest request) {
+        // Simple confidence calculation based on response length and content
+        if (answer == null || answer.trim().length() < 20) {
+            return 0.3;
+        } else if (answer.length() > 100 && answer.contains(getKeyTerms(request))) {
+            return 0.9;
+        } else if (answer.length() > 50) {
+            return 0.75;
+        } else {
+            return 0.6;
+        }
+    }
+
+    private String getKeyTerms(AIQueryRequest request) {
+        // Extract key terms from the question for confidence assessment
+        return request.getQuestion().toLowerCase();
+    }
+
+    private List<String> generateRelevantSources(AIQueryRequest request) {
+        // Generate contextual sources based on request type and subject
+        return switch (request.getType().toUpperCase()) {
+            case "CONCEPT" -> Arrays.asList(
+                "Gemini AI - Concept Explanation",
+                "Educational Standards Database",
+                "Academic Reference Materials"
+            );
+            case "PROBLEM" -> Arrays.asList(
+                "Gemini AI - Problem Solving",
+                "Mathematical Reference Guide", 
+                "Step-by-Step Solution Methods"
+            );
+            case "HOMEWORK" -> Arrays.asList(
+                "Gemini AI - Educational Assistance",
+                "Study Guide Resources",
+                "Homework Help Database"
+            );
+            default -> Arrays.asList(
+                "Gemini AI - General Knowledge",
+                "Educational Resource Library",
+                "Academic Support Materials"
+            );
         };
     }
+
+    private AIQueryResponse createFallbackResponse(AIQueryRequest request) {
+        String fallbackAnswer = "I apologize, but I'm currently unable to process your request. Please try again later or contact your instructor for assistance with: " + request.getQuestion();
+        List<String> sources = Arrays.asList("System Fallback Response");
+        Double confidence = 0.1;
+        List<String> followUpQuestions = Arrays.asList(
+            "Would you like to try rephrasing your question?",
+            "Do you need help with a different topic?"
+        );
+        return new AIQueryResponse(fallbackAnswer, sources, confidence, followUpQuestions);
+    }
+
 
     private List<String> generateFollowUpQuestions(String type) {
         return switch (type.toUpperCase()) {
