@@ -1,8 +1,9 @@
 package com.educonnect.discussion.config;
 
 import com.educonnect.discussion.security.JwtAuthenticationEntryPoint;
-import com.educonnect.discussion.security.JwtAuthenticationFilter;
+import com.educonnect.discussion.security.JwtAuthenticationFilterFixed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -27,7 +28,8 @@ public class SecurityConfig {
     private JwtAuthenticationEntryPoint unauthorizedHandler;
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    @Qualifier("jwtAuthenticationFilterFixed")
+    private JwtAuthenticationFilterFixed jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,24 +40,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints - no authentication required
                         .requestMatchers("/discussions/public").permitAll()
-                        .requestMatchers("/discussions/{discussionId}/public").permitAll()
-                        .requestMatchers("/search/**").permitAll()
+                        .requestMatchers("/discussions/*/public").permitAll()
                         
                         // Health check endpoints
                         .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/api/v1/actuator/**").permitAll()
                         
                         // WebSocket endpoints
                         .requestMatchers("/ws/**").permitAll()
                         
-                        // Allow GET requests to discussions without authentication
-                        .requestMatchers(HttpMethod.GET, "/discussions").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/discussions/{discussionId}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/discussions/{discussionId}/answers").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/groups").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/groups/{groupId}").permitAll()
-                        
-                        // All other endpoints require authentication
+                        // All other endpoints require authentication (role-specific access handled by method-level security)
                         .anyRequest().authenticated()
                 );
 
