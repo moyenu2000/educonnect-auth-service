@@ -9,6 +9,7 @@ import com.educonnect.assessment.exception.BadRequestException;
 import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.repository.*;
 import com.educonnect.assessment.service.PracticeProblemService;
+import com.educonnect.assessment.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,6 +37,9 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
 
     @Autowired
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private QuestionService questionService;
 
     @Override
     public Page<PracticeProblemDto> getProblems(Long subjectId, Long topicId, Difficulty difficulty,
@@ -215,7 +219,15 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
     public PracticeProblemDto convertToDto(PracticeProblem problem, Long userId) {
         PracticeProblemDto dto = new PracticeProblemDto();
         dto.setId(problem.getId());
-        dto.setQuestion(problem.getQuestion());
+        
+        // Convert Question entity to QuestionResponse DTO to avoid serialization issues
+        Question question = questionRepository.findByIdAndIsActiveTrue(problem.getQuestionId())
+                .orElse(null);
+        if (question != null) {
+            QuestionResponse questionResponse = questionService.convertToResponse(question);
+            dto.setQuestion(questionResponse);
+        }
+        
         dto.setDifficulty(problem.getDifficulty());
         dto.setTopicId(problem.getTopicId());
         dto.setSubjectId(problem.getSubjectId());
@@ -270,6 +282,32 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
         problem.setSubjectId(question.getSubjectId());
         problem.setType(question.getType());
         problem.setPoints(question.getPoints());
+
+        practiceProblemRepository.save(problem);
+    }
+
+    @Override
+    public void createProblemFromQuestionWithDetails(Long questionId, String hintText, Integer hintLevel, String solutionSteps) {
+        Question question = questionRepository.findByIdAndIsActiveTrue(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with ID: " + questionId));
+
+        // Check if practice problem already exists for this question
+        if (practiceProblemRepository.existsByQuestionId(questionId)) {
+            throw new BadRequestException("Practice problem already exists for question ID: " + questionId);
+        }
+
+        PracticeProblem problem = new PracticeProblem();
+        problem.setQuestionId(questionId);
+        problem.setDifficulty(question.getDifficulty());
+        problem.setTopicId(question.getTopicId());
+        problem.setSubjectId(question.getSubjectId());
+        problem.setType(question.getType());
+        problem.setPoints(question.getPoints());
+        
+        // Set custom hint and solution details
+        problem.setHintText(hintText);
+        problem.setHintLevel(hintLevel != null ? hintLevel : 1);
+        problem.setSolutionSteps(solutionSteps);
 
         practiceProblemRepository.save(problem);
     }

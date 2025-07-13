@@ -35,6 +35,14 @@ public class QuestionRequest {
 
     private List<String> attachments;
 
+    private Boolean createPracticeProblem = false;
+
+    private String hintText;
+
+    private Integer hintLevel = 1;
+
+    private String solutionSteps;
+
     public String getText() {
         return text;
     }
@@ -121,5 +129,37 @@ public class QuestionRequest {
 
     public void setAttachments(List<String> attachments) {
         this.attachments = attachments;
+    }
+
+    public Boolean getCreatePracticeProblem() {
+        return createPracticeProblem;
+    }
+
+    public void setCreatePracticeProblem(Boolean createPracticeProblem) {
+        this.createPracticeProblem = createPracticeProblem;
+    }
+
+    public String getHintText() {
+        return hintText;
+    }
+
+    public void setHintText(String hintText) {
+        this.hintText = hintText;
+    }
+
+    public Integer getHintLevel() {
+        return hintLevel;
+    }
+
+    public void setHintLevel(Integer hintLevel) {
+        this.hintLevel = hintLevel;
+    }
+
+    public String getSolutionSteps() {
+        return solutionSteps;
+    }
+
+    public void setSolutionSteps(String solutionSteps) {
+        this.solutionSteps = solutionSteps;
     }
 }

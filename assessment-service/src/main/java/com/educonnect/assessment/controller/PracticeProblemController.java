@@ -27,6 +27,7 @@ public class PracticeProblemController {
     private PracticeProblemService practiceProblemService;
 
     @GetMapping
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getProblems(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -67,6 +68,7 @@ public class PracticeProblemController {
     }
 
     @GetMapping("/{problemId}")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<PracticeProblemDto>> getProblemById(@PathVariable Long problemId) {
         Long userId = SecurityUtils.getCurrentUserId().orElse(null);
         PracticeProblemDto problem = practiceProblemService.getProblemById(problemId, userId);

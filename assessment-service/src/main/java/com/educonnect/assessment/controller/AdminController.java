@@ -4,6 +4,8 @@ import com.educonnect.assessment.dto.ApiResponse;
 import com.educonnect.assessment.enums.Period;
 import com.educonnect.assessment.service.AnalyticsService;
 import com.educonnect.assessment.service.DailyQuestionService;
+import com.educonnect.assessment.service.PracticeProblemService;
+import com.educonnect.assessment.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +25,12 @@ public class AdminController {
 
     @Autowired
     private DailyQuestionService dailyQuestionService;
+
+    @Autowired
+    private PracticeProblemService practiceProblemService;
+
+    @Autowired
+    private QuestionService questionService;
 
     @GetMapping("/analytics")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAdminAnalytics(
@@ -71,6 +79,36 @@ public class AdminController {
         );
         
         return ResponseEntity.ok(ApiResponse.success(mockContest, "Contest created successfully"));
+    }
+
+    @PostMapping("/create-practice-problems")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createPracticeProblems(
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(defaultValue = "20") int count) {
+        
+        // Get random questions to convert to practice problems
+        var questions = questionService.getRandomQuestions(subjectId, null, count);
+        
+        int created = 0;
+        int skipped = 0;
+        
+        for (var question : questions) {
+            try {
+                practiceProblemService.createProblemFromQuestion(question.getId());
+                created++;
+            } catch (Exception e) {
+                skipped++;
+            }
+        }
+        
+        Map<String, Object> result = Map.of(
+            "created", created,
+            "skipped", skipped,
+            "total", questions.size(),
+            "message", String.format("Created %d practice problems from %d questions", created, questions.size())
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(result, "Practice problems created successfully"));
     }
 
     // Inner class for request DTO

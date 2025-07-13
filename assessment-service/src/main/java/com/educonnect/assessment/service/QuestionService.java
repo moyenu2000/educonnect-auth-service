@@ -39,6 +39,9 @@ public class QuestionService {
     @Autowired
     private TopicRepository topicRepository;
 
+    @Autowired
+    private PracticeProblemService practiceProblemService;
+
     public PagedResponse<Question> getAllQuestions(int page, int size, Long subjectId, Long topicId, 
                                                  Difficulty difficulty, QuestionType type, String search) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -112,7 +115,24 @@ public class QuestionService {
         question.setAttachments(request.getAttachments());
         question.setCreatedBy(currentUserId);
 
-        return questionRepository.save(question);
+        Question savedQuestion = questionRepository.save(question);
+
+        // Create practice problem if requested
+        if (request.getCreatePracticeProblem() != null && request.getCreatePracticeProblem()) {
+            try {
+                practiceProblemService.createProblemFromQuestionWithDetails(
+                    savedQuestion.getId(), 
+                    request.getHintText(),
+                    request.getHintLevel(),
+                    request.getSolutionSteps()
+                );
+            } catch (Exception e) {
+                // Log the error but don't fail the question creation
+                System.err.println("Failed to create practice problem for question " + savedQuestion.getId() + ": " + e.getMessage());
+            }
+        }
+
+        return savedQuestion;
     }
 
     public Question updateQuestion(Long id, QuestionRequest request) {

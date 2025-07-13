@@ -32,24 +32,27 @@
 ### Questions Management
 
 #### GET `/questions`
-Get paginated questions with filters
-- **Auth**: ADMIN, QUESTION_SETTER, STUDENT
+Get paginated questions with filters (Admin/Question Setter only)
+- **Auth**: ADMIN, QUESTION_SETTER
 - **Query**: `page=0&size=20&subjectId={id}&topicId={id}&difficulty=EASY|MEDIUM|HARD|EXPERT&type=MCQ|TRUE_FALSE|FILL_BLANK|NUMERIC|ESSAY&search={term}`
 - **Response**: `ApiResponse<Map<String, Object>>`
+- **Note**: Restricted to administrators for question management
 
 #### GET `/questions/random`
-Get random questions
-- **Auth**: ADMIN, QUESTION_SETTER, STUDENT  
+Get random questions (Admin/Question Setter only)
+- **Auth**: ADMIN, QUESTION_SETTER  
 - **Query**: `subjectId={id}&difficulty={level}&count=10`
 - **Response**: `ApiResponse<List<Question>>`
+- **Note**: Restricted to administrators for question management
 
 #### GET `/questions/{questionId}`
-Get question by ID
-- **Auth**: ADMIN, QUESTION_SETTER, STUDENT
+Get question by ID (Admin/Question Setter only)
+- **Auth**: ADMIN, QUESTION_SETTER
 - **Response**: `ApiResponse<Question>`
+- **Note**: Restricted to administrators for question management
 
 #### POST `/questions`
-Create new question
+Create new question with optional practice problem creation
 - **Auth**: ADMIN, QUESTION_SETTER
 - **Body**:
 ```json
@@ -64,9 +67,14 @@ Create new question
   "explanation": "string",
   "points": "number",
   "tags": ["string"],
-  "attachments": ["string"]
+  "attachments": ["string"],
+  "createPracticeProblem": "boolean (optional, default: false)",
+  "hintText": "string (optional, used if createPracticeProblem is true)",
+  "hintLevel": "number (optional, default: 1, used if createPracticeProblem is true)",
+  "solutionSteps": "string (optional, used if createPracticeProblem is true)"
 }
 ```
+- **Note**: When `createPracticeProblem` is true, a corresponding practice problem will be automatically created for students
 
 #### PUT `/questions/{questionId}`
 Update question
@@ -381,36 +389,48 @@ Get user's daily question history
 - **Query**: `page=0&size=20&subjectId={id}&status={boolean}&difficulty={level}`
 - **Response**: `ApiResponse<PagedResponse<UserSubmission>>`
 
-### Practice Problems
+### Practice Problems (Student Access)
 
 #### GET `/practice-problems`
-Get practice problems with filters
-- **Auth**: Optional authentication
+Get practice problems with filters for students
+- **Auth**: STUDENT
 - **Query**: `page=0&size=10&subjectId={id}&topicId={id}&difficulty={level}&type={type}&status={status}&search={term}`
 - **Response**: `ApiResponse<Map<String, Object>>`
+- **Note**: Students can access practice problems to improve their skills
+- **Features**: Includes pagination, filtering, and user-specific progress tracking
 
 #### GET `/practice-problems/{problemId}`
-Get practice problem by ID
-- **Auth**: Optional authentication
+Get practice problem by ID for students
+- **Auth**: STUDENT
+- **Response**: `ApiResponse<PracticeProblemDto>`
+- **Note**: Returns problem details with user-specific tracking information
 
 #### POST `/practice-problems/{problemId}/submit`
-Submit solution
+Submit solution to practice problem
 - **Auth**: STUDENT
 - **Body**: `ProblemSubmissionRequest`
+- **Response**: `ApiResponse<ProblemSubmissionResponse>`
+- **Note**: Allows students to submit solutions and get immediate feedback
 
 #### GET `/practice-problems/{problemId}/hint`
-Get hint for problem
+Get hint for practice problem
 - **Auth**: STUDENT
 - **Query**: `hintLevel={level}`
+- **Response**: `ApiResponse<HintResponse>`
+- **Note**: Progressive hints to help students learn
 
 #### POST `/practice-problems/{problemId}/bookmark`
-Toggle bookmark for problem
+Toggle bookmark for practice problem
 - **Auth**: STUDENT
+- **Response**: `ApiResponse<Boolean>`
+- **Note**: Students can bookmark problems for later review
 
 #### GET `/practice-problems/recommendations`
-Get recommended problems
+Get recommended practice problems based on performance
 - **Auth**: STUDENT
 - **Query**: `count=5&subjectId={id}&difficulty={level}`
+- **Response**: `ApiResponse<Map<String, Object>>`
+- **Note**: AI-powered recommendations based on student's performance and learning patterns
 
 ### Analytics
 
@@ -475,6 +495,13 @@ Create live exam (mock implementation)
 #### POST `/admin/contests`
 Create contest (mock implementation)
 - **Auth**: ADMIN
+
+#### POST `/admin/create-practice-problems`
+Create practice problems from existing questions
+- **Auth**: ADMIN
+- **Query**: `subjectId={id}&count=20`
+- **Response**: `ApiResponse<Map<String, Object>>`
+- **Note**: Converts existing questions into practice problems for students
 
 ## WebSocket Endpoints
 
@@ -568,6 +595,28 @@ Create contest (mock implementation)
   "subjectId": "number",
   "subject": "Subject",
   "createdAt": "datetime"
+}
+```
+
+### Practice Problem
+```json
+{
+  "id": "number",
+  "questionId": "number",
+  "question": "Question",
+  "difficulty": "EASY|MEDIUM|HARD|EXPERT",
+  "hintText": "string",
+  "hintLevel": "number",
+  "solutionSteps": "string",
+  "userProgress": {
+    "isAttempted": "boolean",
+    "isCompleted": "boolean",
+    "lastAttemptedAt": "datetime",
+    "totalAttempts": "number",
+    "isBookmarked": "boolean"
+  },
+  "createdAt": "datetime",
+  "updatedAt": "datetime"
 }
 ```
 

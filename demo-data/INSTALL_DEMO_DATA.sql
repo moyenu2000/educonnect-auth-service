@@ -54,19 +54,23 @@ SELECT
 \i demo-data/assessment/06_contests_exams.sql
 
 \echo ''
-\echo '👤 Step 8: Syncing users to Discussion Service...'
+\echo '🎯 Step 8: Creating practice problems (Assessment Service)...'
+\i demo-data/assessment/07_practice_problems.sql
+
+\echo ''
+\echo '👤 Step 9: Syncing users to Discussion Service...'
 \i demo-data/discussion/07_discussion_users.sql
 
 \echo ''
-\echo '💬 Step 9: Setting up groups and discussions (Discussion Service)...'
+\echo '💬 Step 10: Setting up groups and discussions (Discussion Service)...'
 \i demo-data/discussion/08_groups_discussions.sql
 
 \echo ''
-\echo '💡 Step 10: Adding answers and interactions (Discussion Service)...'
+\echo '💡 Step 11: Adding answers and interactions (Discussion Service)...'
 \i demo-data/discussion/09_answers_interactions.sql
 
 \echo ''
-\echo '📱 Step 11: Creating messages and AI queries (Discussion Service)...'
+\echo '📱 Step 12: Creating messages and AI queries (Discussion Service)...'
 \i demo-data/discussion/10_messages_ai.sql
 
 \echo ''
@@ -94,6 +98,7 @@ SELECT '📝 ASSESSMENT SERVICE' as service;
 SELECT 'Subjects' as entity, COUNT(*) as total FROM assessment.subjects;
 SELECT 'Topics' as entity, COUNT(*) as total FROM assessment.topics;
 SELECT 'Questions' as entity, COUNT(*) as total FROM assessment.questions;
+SELECT 'Practice Problems' as entity, COUNT(*) as total FROM assessment.practice_problems;
 SELECT 'Question Options' as entity, COUNT(*) as total FROM assessment.question_options;
 SELECT 'User Submissions' as entity, COUNT(*) as total FROM assessment.user_submissions;
 SELECT 'Contests' as entity, COUNT(*) as total FROM assessment.contests;

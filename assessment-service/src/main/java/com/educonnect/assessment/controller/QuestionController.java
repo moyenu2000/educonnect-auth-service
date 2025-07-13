@@ -25,7 +25,7 @@ public class QuestionController {
     private QuestionService questionService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAllQuestions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -41,7 +41,7 @@ public class QuestionController {
     }
 
     @GetMapping("/random")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
     public ResponseEntity<ApiResponse<List<QuestionResponse>>> getRandomQuestions(
             @RequestParam(required = false) Long subjectId,
             @RequestParam(required = false) Difficulty difficulty,
@@ -59,7 +59,7 @@ public class QuestionController {
     }
 
     @GetMapping("/{questionId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
     public ResponseEntity<ApiResponse<QuestionResponse>> getQuestionById(@PathVariable Long questionId) {
         QuestionResponse question = questionService.getQuestionResponseById(questionId);
         return ResponseEntity.ok(ApiResponse.success(question));

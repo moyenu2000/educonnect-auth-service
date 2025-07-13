@@ -56,6 +56,15 @@ public class PracticeProblem {
     @Column(nullable = false)
     private Integer points = 10;
 
+    @Column(name = "hint_text")
+    private String hintText;
+
+    @Column(name = "hint_level")
+    private Integer hintLevel = 1;
+
+    @Column(name = "solution_steps", columnDefinition = "TEXT")
+    private String solutionSteps;
+
     @ElementCollection
     @CollectionTable(name = "practice_problem_hints", joinColumns = @JoinColumn(name = "problem_id"))
     @Column(name = "hint_text")
@@ -165,6 +174,30 @@ public class PracticeProblem {
 
     public void setPoints(Integer points) {
         this.points = points;
+    }
+
+    public String getHintText() {
+        return hintText;
+    }
+
+    public void setHintText(String hintText) {
+        this.hintText = hintText;
+    }
+
+    public Integer getHintLevel() {
+        return hintLevel;
+    }
+
+    public void setHintLevel(Integer hintLevel) {
+        this.hintLevel = hintLevel;
+    }
+
+    public String getSolutionSteps() {
+        return solutionSteps;
+    }
+
+    public void setSolutionSteps(String solutionSteps) {
+        this.solutionSteps = solutionSteps;
     }
 
     public List<String> getHints() {

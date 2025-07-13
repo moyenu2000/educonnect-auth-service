@@ -57,4 +57,6 @@ public interface PracticeProblemRepository extends JpaRepository<PracticeProblem
     long countBySubjectIdAndIsActiveTrue(Long subjectId);
     
     long countByTopicIdAndIsActiveTrue(Long topicId);
+    
+    boolean existsByQuestionId(Long questionId);
 }

@@ -29,5 +29,7 @@ public interface PracticeProblemService {
     
     void createProblemFromQuestion(Long questionId);
     
+    void createProblemFromQuestionWithDetails(Long questionId, String hintText, Integer hintLevel, String solutionSteps);
+    
     void updateProblemDifficulty(Long problemId, Difficulty difficulty);
 }

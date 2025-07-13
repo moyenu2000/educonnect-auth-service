@@ -1,6 +1,6 @@
 package com.educonnect.assessment.dto;
 
-import com.educonnect.assessment.entity.Question;
+import com.educonnect.assessment.dto.QuestionResponse;
 import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.ProblemStatus;
 import com.educonnect.assessment.enums.QuestionType;
@@ -10,7 +10,7 @@ import java.util.List;
 
 public class PracticeProblemDto {
     private Long id;
-    private Question question;
+    private QuestionResponse question;
     private Difficulty difficulty;
     private Long topicId;
     private Long subjectId;
@@ -32,11 +32,11 @@ public class PracticeProblemDto {
         this.id = id;
     }
 
-    public Question getQuestion() {
+    public QuestionResponse getQuestion() {
         return question;
     }
 
-    public void setQuestion(Question question) {
+    public void setQuestion(QuestionResponse question) {
         this.question = question;
     }
 
