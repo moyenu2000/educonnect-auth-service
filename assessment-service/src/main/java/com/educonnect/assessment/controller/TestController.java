@@ -1,7 +1,8 @@
 package com.educonnect.assessment.controller;
 
-import com.educonnect.assessment.security.JwtUtils;
+import com.educonnect.assessment.security.JwtUtilsFixed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,7 +11,8 @@ import org.springframework.web.bind.annotation.*;
 public class TestController {
 
     @Autowired
-    private JwtUtils jwtUtils;
+    @Qualifier("jwtUtilsFixed")
+    private JwtUtilsFixed jwtUtils;
 
     @GetMapping("/jwt-config")
     public ResponseEntity<String> testJwtConfig() {

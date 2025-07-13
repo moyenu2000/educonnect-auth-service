@@ -27,7 +27,6 @@ public class DailyQuestionController {
     private DailyQuestionService dailyQuestionService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestions(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) Long subjectId,

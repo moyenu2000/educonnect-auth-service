@@ -47,7 +47,9 @@
       "Bash(docker stop:*)",
       "Bash(docker rm:*)",
       "Bash(echo:*)",
-      "Bash(./test-all-assessment-apis.sh:*)"
+      "Bash(./test-all-assessment-apis.sh:*)",
+      "Bash(docker cp:*)",
+      "Bash(./test-discussion-working.sh:*)"
     ],
     "deny": []
   }

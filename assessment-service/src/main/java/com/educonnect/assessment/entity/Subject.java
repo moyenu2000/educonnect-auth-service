@@ -41,7 +41,7 @@ public class Subject {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonIgnore
     private List<Topic> topics;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

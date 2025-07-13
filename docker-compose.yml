@@ -81,9 +81,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 120s
 
 
   # Discussion Service
@@ -106,8 +107,12 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:8081
       - ASSESSMENT_SERVICE_URL=http://assessment-service:8083
       - JWT_SECRET=${JWT_SECRET}
+      - FILE_UPLOAD_DIR=/app/uploads
+      - FILE_BASE_URL=http://localhost:8082/api/v1/files
     ports:
       - "8082:8082"
+    volumes:
+      - discussion_uploads:/app/uploads
     depends_on:
       - postgres
       - redis
@@ -118,9 +123,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/api/v1/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 120s
 
   # Assessment Service
   assessment-service:
@@ -155,9 +161,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/api/v1/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 180s
 
   # API Gateway (Optional - for production) - COMMENTED OUT
   # api-gateway:
@@ -208,6 +215,8 @@ volumes:
   redis_data:
     driver: local
   rabbitmq_data:
+    driver: local
+  discussion_uploads:
     driver: local
   prometheus_data:
     driver: local

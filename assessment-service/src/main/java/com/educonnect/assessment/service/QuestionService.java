@@ -2,6 +2,8 @@ package com.educonnect.assessment.service;
 
 import com.educonnect.assessment.dto.PagedResponse;
 import com.educonnect.assessment.dto.QuestionRequest;
+import com.educonnect.assessment.dto.QuestionResponse;
+import com.educonnect.assessment.dto.QuestionOption;
 import com.educonnect.assessment.entity.Question;
 import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.QuestionType;
@@ -21,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @Transactional
@@ -193,5 +197,102 @@ public class QuestionService {
         Pageable pageable = PageRequest.of(0, 5);
         Page<Question> questions = questionRepository.findByIsActiveTrue(pageable);
         return questions.getContent();
+    }
+
+    // Conversion methods for DTOs
+    public QuestionResponse convertToResponse(Question question) {
+        QuestionResponse response = new QuestionResponse();
+        response.setId(question.getId());
+        response.setText(question.getText());
+        response.setType(question.getType());
+        response.setSubjectId(question.getSubjectId());
+        response.setTopicId(question.getTopicId());
+        response.setDifficulty(question.getDifficulty());
+        response.setPoints(question.getPoints());
+        response.setTags(question.getTags());
+        response.setAttachments(question.getAttachments());
+        response.setIsActive(question.getIsActive());
+        response.setCreatedBy(question.getCreatedBy());
+        response.setCreatedAt(question.getCreatedAt());
+        response.setUpdatedAt(question.getUpdatedAt());
+
+        // Convert options with IDs
+        if (question.getOptions() != null) {
+            List<QuestionOption> optionsWithIds = IntStream.range(0, question.getOptions().size())
+                    .mapToObj(i -> new QuestionOption((long) (i + 1), question.getOptions().get(i)))
+                    .collect(Collectors.toList());
+            response.setOptions(optionsWithIds);
+        }
+
+        // Add subject and topic names if available
+        if (question.getSubject() != null) {
+            response.setSubjectName(question.getSubject().getName());
+        }
+        if (question.getTopic() != null) {
+            response.setTopicName(question.getTopic().getName());
+        }
+
+        return response;
+    }
+
+    public List<QuestionResponse> convertToResponseList(List<Question> questions) {
+        return questions.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public PagedResponse<QuestionResponse> convertToPagedResponse(Page<Question> questionPage) {
+        List<QuestionResponse> responses = convertToResponseList(questionPage.getContent());
+        return new PagedResponse<>(
+                responses,
+                (int) questionPage.getTotalElements(),
+                questionPage.getTotalPages(),
+                questionPage.getNumber(),
+                questionPage.getSize()
+        );
+    }
+
+    // Enhanced methods returning DTOs
+    @Transactional(readOnly = true)
+    public QuestionResponse getQuestionResponseById(Long id) {
+        Question question = getActiveQuestionById(id);
+        return convertToResponse(question);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuestionResponse> getRandomQuestionResponses(Long subjectId, Difficulty difficulty, int count) {
+        List<Question> questions = getRandomQuestions(subjectId, difficulty, count);
+        return convertToResponseList(questions);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuestionResponse> getPublicDailyQuestionResponses() {
+        List<Question> questions = getPublicDailyQuestions();
+        return convertToResponseList(questions);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getQuestionsWithFiltersEnhanced(int page, int size, Long subjectId, Long topicId, 
+                                                             Difficulty difficulty, QuestionType type, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        
+        Page<Question> questions = questionRepository.findFilteredQuestions(
+                subjectId, topicId, difficulty, type, search, pageable);
+
+        PagedResponse<QuestionResponse> pagedQuestions = convertToPagedResponse(questions);
+        
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("difficulties", Difficulty.values());
+        filters.put("types", QuestionType.values());
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("questions", pagedQuestions.getContent());
+        result.put("totalElements", pagedQuestions.getTotalElements());
+        result.put("totalPages", pagedQuestions.getTotalPages());
+        result.put("currentPage", pagedQuestions.getCurrentPage());
+        result.put("size", pagedQuestions.getSize());
+        result.put("filters", filters);
+        
+        return result;
     }
 }

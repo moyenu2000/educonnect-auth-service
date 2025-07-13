@@ -2,6 +2,7 @@ package com.educonnect.assessment.controller;
 
 import com.educonnect.assessment.dto.ApiResponse;
 import com.educonnect.assessment.dto.QuestionRequest;
+import com.educonnect.assessment.dto.QuestionResponse;
 import com.educonnect.assessment.entity.Question;
 import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.QuestionType;
@@ -34,52 +35,54 @@ public class QuestionController {
             @RequestParam(required = false) QuestionType type,
             @RequestParam(required = false) String search) {
         
-        Map<String, Object> result = questionService.getQuestionsWithFilters(
+        Map<String, Object> result = questionService.getQuestionsWithFiltersEnhanced(
                 page, size, subjectId, topicId, difficulty, type, search);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @GetMapping("/random")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<List<Question>>> getRandomQuestions(
+    public ResponseEntity<ApiResponse<List<QuestionResponse>>> getRandomQuestions(
             @RequestParam(required = false) Long subjectId,
             @RequestParam(required = false) Difficulty difficulty,
             @RequestParam(defaultValue = "10") int count) {
         
-        List<Question> randomQuestions = questionService.getRandomQuestions(subjectId, difficulty, count);
+        List<QuestionResponse> randomQuestions = questionService.getRandomQuestionResponses(subjectId, difficulty, count);
         return ResponseEntity.ok(ApiResponse.success(randomQuestions));
     }
 
     @GetMapping("/public/daily")
-    public ResponseEntity<ApiResponse<List<Question>>> getPublicDailyQuestions() {
+    public ResponseEntity<ApiResponse<List<QuestionResponse>>> getPublicDailyQuestions() {
         // Get today's daily questions that are public
-        List<Question> dailyQuestions = questionService.getPublicDailyQuestions();
+        List<QuestionResponse> dailyQuestions = questionService.getPublicDailyQuestionResponses();
         return ResponseEntity.ok(ApiResponse.success(dailyQuestions));
     }
 
     @GetMapping("/{questionId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<Question>> getQuestionById(@PathVariable Long questionId) {
-        Question question = questionService.getActiveQuestionById(questionId);
+    public ResponseEntity<ApiResponse<QuestionResponse>> getQuestionById(@PathVariable Long questionId) {
+        QuestionResponse question = questionService.getQuestionResponseById(questionId);
         return ResponseEntity.ok(ApiResponse.success(question));
     }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
-    public ResponseEntity<ApiResponse<Question>> createQuestion(@Valid @RequestBody QuestionRequest request) {
+    public ResponseEntity<ApiResponse<QuestionResponse>> createQuestion(@Valid @RequestBody QuestionRequest request) {
         Question question = questionService.createQuestion(request);
+        QuestionResponse response = questionService.convertToResponse(question);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(question, "Question created successfully"));
+                .body(ApiResponse.success(response, "Question created successfully"));
     }
 
     @PutMapping("/{questionId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
-    public ResponseEntity<ApiResponse<Question>> updateQuestion(
+    public ResponseEntity<ApiResponse<QuestionResponse>> updateQuestion(
             @PathVariable Long questionId,
             @Valid @RequestBody QuestionRequest request) {
         
         Question question = questionService.updateQuestion(questionId, request);
-        return ResponseEntity.ok(ApiResponse.success(question, "Question updated successfully"));
+        QuestionResponse response = questionService.convertToResponse(question);
+        return ResponseEntity.ok(ApiResponse.success(response, "Question updated successfully"));
     }
 
     @DeleteMapping("/{questionId}")

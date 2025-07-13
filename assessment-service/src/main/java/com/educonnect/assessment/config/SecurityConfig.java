@@ -40,7 +40,8 @@ public class SecurityConfig {
                         // Public endpoints - no authentication required
                         .requestMatchers("/subjects/public").permitAll()
                         .requestMatchers("/topics/public/by-subject/**").permitAll()
-                        .requestMatchers("/daily-questions/public").permitAll()
+                        .requestMatchers("/daily-questions/**").permitAll()
+                        .requestMatchers("/questions/public/**").permitAll()
                         .requestMatchers("/leaderboard/public").permitAll()
                         .requestMatchers("/test/**").permitAll()
                         

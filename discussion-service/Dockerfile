@@ -27,6 +27,9 @@ RUN ./mvnw clean package -DskipTests
 # Copy the built jar
 RUN cp target/*.jar app.jar
 
+# Create uploads directory for file storage
+RUN mkdir -p /app/uploads && chmod 755 /app/uploads
+
 # Expose port
 EXPOSE 8082
 
