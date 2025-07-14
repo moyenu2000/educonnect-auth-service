@@ -244,12 +244,14 @@ public class QuestionService {
             response.setOptions(optionsWithIds);
         }
 
-        // Add subject and topic names if available
-        if (question.getSubject() != null) {
-            response.setSubjectName(question.getSubject().getName());
+        // Add subject and topic names by querying repositories directly to avoid lazy loading issues
+        if (question.getSubjectId() != null) {
+            subjectRepository.findById(question.getSubjectId())
+                    .ifPresent(subject -> response.setSubjectName(subject.getName()));
         }
-        if (question.getTopic() != null) {
-            response.setTopicName(question.getTopic().getName());
+        if (question.getTopicId() != null) {
+            topicRepository.findById(question.getTopicId())
+                    .ifPresent(topic -> response.setTopicName(topic.getName()));
         }
 
         return response;

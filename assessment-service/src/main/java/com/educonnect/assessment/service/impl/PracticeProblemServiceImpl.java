@@ -1,6 +1,7 @@
 package com.educonnect.assessment.service.impl;
 
 import com.educonnect.assessment.dto.*;
+import com.educonnect.assessment.dto.QuestionOption;
 import com.educonnect.assessment.entity.*;
 import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.ProblemStatus;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @Transactional
@@ -42,6 +44,7 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
     private QuestionService questionService;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PracticeProblemDto> getProblems(Long subjectId, Long topicId, Difficulty difficulty,
                                                QuestionType type, ProblemStatus status, String search,
                                                Long userId, Pageable pageable) {
@@ -66,6 +69,7 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PracticeProblemDto getProblemById(Long problemId, Long userId) {
         PracticeProblem problem = practiceProblemRepository.findByIdAndIsActiveTrue(problemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Practice problem not found with ID: " + problemId));
@@ -187,6 +191,7 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PracticeProblemDto> getRecommendations(Integer count, Long subjectId, Difficulty difficulty, Long userId, Pageable pageable) {
         // Get user's solved problems to avoid recommending them
         List<Long> solvedProblemIds = problemSubmissionRepository.findByUserId(userId, PageRequest.of(0, 1000))
@@ -216,6 +221,7 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PracticeProblemDto convertToDto(PracticeProblem problem, Long userId) {
         PracticeProblemDto dto = new PracticeProblemDto();
         dto.setId(problem.getId());
@@ -224,8 +230,25 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
         Question question = questionRepository.findByIdAndIsActiveTrue(problem.getQuestionId())
                 .orElse(null);
         if (question != null) {
-            QuestionResponse questionResponse = questionService.convertToResponse(question);
-            dto.setQuestion(questionResponse);
+            try {
+                QuestionResponse questionResponse = questionService.convertToResponse(question);
+                dto.setQuestion(questionResponse);
+            } catch (Exception e) {
+                // If there's an issue with question conversion, create a minimal response
+                QuestionResponse minimalResponse = new QuestionResponse();
+                minimalResponse.setId(question.getId());
+                minimalResponse.setText(question.getText());
+                minimalResponse.setType(question.getType());
+                minimalResponse.setDifficulty(question.getDifficulty());
+                minimalResponse.setPoints(question.getPoints());
+                if (question.getOptions() != null) {
+                    List<QuestionOption> optionsWithIds = IntStream.range(0, question.getOptions().size())
+                            .mapToObj(i -> new QuestionOption((long) (i + 1), question.getOptions().get(i)))
+                            .collect(Collectors.toList());
+                    minimalResponse.setOptions(optionsWithIds);
+                }
+                dto.setQuestion(minimalResponse);
+            }
         }
         
         dto.setDifficulty(problem.getDifficulty());

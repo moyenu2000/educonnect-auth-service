@@ -54,4 +54,110 @@ public interface ProblemSubmissionRepository extends JpaRepository<ProblemSubmis
            "ps.submittedAt >= :startDate ORDER BY ps.submittedAt DESC")
     List<ProblemSubmission> findRecentSubmissions(@Param("userId") Long userId, 
                                                   @Param("startDate") LocalDateTime startDate);
+    
+    // Analytics queries for real data
+    @Query(value = "SELECT pp.difficulty, COUNT(ps.id), " +
+           "COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "WHERE ps.user_id = :userId " +
+           "AND (:subjectId IS NULL OR pp.subject_id = :subjectId) " +
+           "AND ps.submitted_at >= :startDate " +
+           "GROUP BY pp.difficulty", nativeQuery = true)
+    List<Object[]> getAccuracyByDifficulty(@Param("userId") Long userId, 
+                                           @Param("subjectId") Long subjectId,
+                                           @Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT pp.subject_id, s.name, COUNT(ps.id), " +
+           "COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "JOIN assessment.subjects s ON pp.subject_id = s.id " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate " +
+           "GROUP BY pp.subject_id, s.name", nativeQuery = true)
+    List<Object[]> getAccuracyBySubject(@Param("userId") Long userId, 
+                                        @Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT pp.topic_id, t.name, COUNT(ps.id), " +
+           "COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "JOIN assessment.topics t ON pp.topic_id = t.id " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate " +
+           "AND (:subjectId IS NULL OR pp.subject_id = :subjectId) " +
+           "GROUP BY pp.topic_id, t.name", nativeQuery = true)
+    List<Object[]> getAccuracyByTopic(@Param("userId") Long userId, 
+                                      @Param("subjectId") Long subjectId,
+                                      @Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT AVG(ps.time_taken), pp.difficulty " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate " +
+           "AND (:subjectId IS NULL OR pp.subject_id = :subjectId) " +
+           "GROUP BY pp.difficulty", nativeQuery = true)
+    List<Object[]> getAverageTimeByDifficulty(@Param("userId") Long userId, 
+                                              @Param("subjectId") Long subjectId,
+                                              @Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT DATE(ps.submitted_at), COUNT(ps.id), " +
+           "COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0), " +
+           "COALESCE(AVG(ps.time_taken), 0) " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate " +
+           "AND (:subjectId IS NULL OR pp.subject_id = :subjectId) " +
+           "GROUP BY DATE(ps.submitted_at) ORDER BY DATE(ps.submitted_at)", nativeQuery = true)
+    List<Object[]> getDailyTrends(@Param("userId") Long userId, 
+                                  @Param("subjectId") Long subjectId,
+                                  @Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT COALESCE(SUM(ps.points_earned), 0) FROM assessment.problem_submissions ps " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate", nativeQuery = true)
+    Long getTotalPointsByUser(@Param("userId") Long userId, 
+                              @Param("startDate") LocalDateTime startDate);
+    
+    // Ranking queries
+    @Query(value = "SELECT ps.user_id, SUM(ps.points_earned) as totalPoints " +
+           "FROM assessment.problem_submissions ps " +
+           "WHERE ps.submitted_at >= :startDate " +
+           "GROUP BY ps.user_id ORDER BY totalPoints DESC", nativeQuery = true)
+    List<Object[]> getGlobalRankings(@Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT ps.user_id, SUM(ps.points_earned) as totalPoints " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "WHERE pp.subject_id = :subjectId AND ps.submitted_at >= :startDate " +
+           "GROUP BY ps.user_id ORDER BY totalPoints DESC", nativeQuery = true)
+    List<Object[]> getSubjectRankings(@Param("subjectId") Long subjectId,
+                                      @Param("startDate") LocalDateTime startDate);
+    
+    // Weak/Strong areas analysis
+    @Query(value = "SELECT t.name, " +
+           "CAST(COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) AS DOUBLE) / " +
+           "CAST(COUNT(ps.id) AS DOUBLE) * 100 as accuracy " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "JOIN assessment.topics t ON pp.topic_id = t.id " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate " +
+           "AND (:subjectId IS NULL OR pp.subject_id = :subjectId) " +
+           "GROUP BY t.name HAVING COUNT(ps.id) >= 3 " +
+           "ORDER BY accuracy ASC", nativeQuery = true)
+    List<Object[]> getWeakTopics(@Param("userId") Long userId, 
+                                 @Param("subjectId") Long subjectId,
+                                 @Param("startDate") LocalDateTime startDate);
+    
+    @Query(value = "SELECT t.name, " +
+           "CAST(COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) AS DOUBLE) / " +
+           "CAST(COUNT(ps.id) AS DOUBLE) * 100 as accuracy " +
+           "FROM assessment.problem_submissions ps " +
+           "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
+           "JOIN assessment.topics t ON pp.topic_id = t.id " +
+           "WHERE ps.user_id = :userId AND ps.submitted_at >= :startDate " +
+           "AND (:subjectId IS NULL OR pp.subject_id = :subjectId) " +
+           "GROUP BY t.name HAVING COUNT(ps.id) >= 3 " +
+           "ORDER BY accuracy DESC", nativeQuery = true)
+    List<Object[]> getStrongTopics(@Param("userId") Long userId, 
+                                   @Param("subjectId") Long subjectId,
+                                   @Param("startDate") LocalDateTime startDate);
 }

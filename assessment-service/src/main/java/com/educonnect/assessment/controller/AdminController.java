@@ -111,6 +111,59 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(result, "Practice problems created successfully"));
     }
 
+    @PostMapping("/create-practice-problems-from-ids")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createPracticeProblemsFromIds(
+            @RequestBody List<Long> questionIds) {
+        
+        int created = 0;
+        int skipped = 0;
+        
+        for (Long questionId : questionIds) {
+            try {
+                practiceProblemService.createProblemFromQuestion(questionId);
+                created++;
+            } catch (Exception e) {
+                skipped++;
+            }
+        }
+        
+        Map<String, Object> result = Map.of(
+            "created", created,
+            "skipped", skipped,
+            "total", questionIds.size(),
+            "message", String.format("Created %d practice problems from %d question IDs", created, questionIds.size())
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(result, "Practice problems created successfully"));
+    }
+
+    @GetMapping("/practice-problems-test")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> testPracticeProblems(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        
+        try {
+            var pageable = org.springframework.data.domain.PageRequest.of(page, size);
+            var problemPage = practiceProblemService.getProblems(null, null, null, null, null, null, null, pageable);
+            
+            Map<String, Object> response = Map.of(
+                "problems", problemPage.getContent(),
+                "totalElements", problemPage.getTotalElements(),
+                "totalPages", problemPage.getTotalPages(),
+                "currentPage", page,
+                "size", size
+            );
+            
+            return ResponseEntity.ok(ApiResponse.success(response, "Practice problems retrieved successfully"));
+        } catch (Exception e) {
+            Map<String, Object> errorInfo = Map.of(
+                "error", e.getMessage(),
+                "cause", e.getCause() != null ? e.getCause().getMessage() : "Unknown"
+            );
+            return ResponseEntity.ok(ApiResponse.success(errorInfo, "Error occurred while fetching practice problems"));
+        }
+    }
+
     // Inner class for request DTO
     public static class SetDailyQuestionsRequest {
         private LocalDate date;

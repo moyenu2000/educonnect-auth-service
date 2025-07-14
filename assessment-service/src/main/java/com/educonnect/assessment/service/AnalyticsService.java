@@ -1,6 +1,10 @@
 package com.educonnect.assessment.service;
 
+import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.Period;
+import com.educonnect.assessment.repository.ProblemSubmissionRepository;
+import com.educonnect.assessment.repository.SubjectRepository;
+import com.educonnect.assessment.repository.TopicRepository;
 import com.educonnect.assessment.repository.UserSubmissionRepository;
 import com.educonnect.assessment.repository.UserStreakRepository;
 import com.educonnect.assessment.util.SecurityUtils;
@@ -8,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -22,6 +28,15 @@ public class AnalyticsService {
 
     @Autowired
     private UserStreakRepository userStreakRepository;
+    
+    @Autowired
+    private ProblemSubmissionRepository problemSubmissionRepository;
+    
+    @Autowired
+    private SubjectRepository subjectRepository;
+    
+    @Autowired
+    private TopicRepository topicRepository;
 
     public Map<String, Object> getUserDashboard(Period period, Long subjectId) {
         Long userId = SecurityUtils.getCurrentUserId()
@@ -30,7 +45,14 @@ public class AnalyticsService {
         Map<String, Object> dashboard = new HashMap<>();
         dashboard.put("overview", getUserOverview(userId, period, subjectId));
         dashboard.put("streaks", getUserStreaks(userId, subjectId));
-        dashboard.put("performance", getUserPerformance(userId, period, subjectId));
+        Map<String, Object> performance = new HashMap<>();
+        LocalDateTime startDate = getStartDateForPeriod(period);
+        performance.put("accuracy", getAccuracyData(userId, subjectId, startDate));
+        performance.put("speed", getSpeedData(userId, subjectId, startDate));
+        performance.put("difficulty", getDifficultyData(userId, subjectId, startDate));
+        performance.put("topics", getTopicData(userId, subjectId, startDate));
+        performance.put("trends", getTrendData(userId, subjectId, startDate));
+        dashboard.put("performance", performance);
         dashboard.put("rankings", getUserRankings(userId, subjectId));
         dashboard.put("recommendations", getUserRecommendations(userId, subjectId));
 
@@ -41,7 +63,16 @@ public class AnalyticsService {
         Long userId = SecurityUtils.getCurrentUserId()
                 .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
 
-        return getUserPerformance(userId, period, subjectId);
+        Map<String, Object> performance = new HashMap<>();
+        LocalDateTime startDate = getStartDateForPeriod(period);
+        
+        performance.put("accuracy", getAccuracyData(userId, subjectId, startDate));
+        performance.put("speed", getSpeedData(userId, subjectId, startDate));
+        performance.put("difficulty", getDifficultyData(userId, subjectId, startDate));
+        performance.put("topics", getTopicData(userId, subjectId, startDate));
+        performance.put("trends", getTrendData(userId, subjectId, startDate));
+        
+        return performance;
     }
 
     public Map<String, Object> getUserProgress(Long subjectId, Period period) {
@@ -78,14 +109,40 @@ public class AnalyticsService {
 
     private Map<String, Object> getUserOverview(Long userId, Period period, Long subjectId) {
         Map<String, Object> overview = new HashMap<>();
+        LocalDateTime startDate = getStartDateForPeriod(period);
         
-        long totalQuestions = userSubmissionRepository.countTotalDailyAnswers(userId);
-        long correctAnswers = userSubmissionRepository.countCorrectDailyAnswers(userId);
+        // Get simple counts for both types of submissions
+        long totalUserSubmissions = userSubmissionRepository.countTotalSubmissionsByUserAndPeriod(userId, subjectId, startDate);
+        long correctUserSubmissions = userSubmissionRepository.countCorrectSubmissionsByUserAndPeriod(userId, subjectId, startDate);
+        
+        long totalProblemSubmissions = problemSubmissionRepository.countTotalSubmissionsByUser(userId);
+        long correctProblemSubmissions = problemSubmissionRepository.countCorrectSubmissionsByUser(userId);
+        
+        long totalQuestions = totalUserSubmissions + totalProblemSubmissions;
+        long correctAnswers = correctUserSubmissions + correctProblemSubmissions;
+        
+        // Calculate real points
+        Long userPoints = userSubmissionRepository.getTotalPointsByUserAndPeriod(userId, subjectId, startDate);
+        Long problemPoints = problemSubmissionRepository.getTotalPointsByUser(userId, startDate);
+        long totalPoints = (userPoints != null ? userPoints : 0) + (problemPoints != null ? problemPoints : 0);
+        
+        // Calculate average time
+        Double userAvgTime = userSubmissionRepository.getAverageTimeByUserAndPeriod(userId, subjectId, startDate);
+        Double problemAvgTime = problemSubmissionRepository.getAverageTimeByUser(userId);
+        double averageTime = 0;
+        if (userAvgTime != null && problemAvgTime != null) {
+            averageTime = (userAvgTime + problemAvgTime) / 2;
+        } else if (userAvgTime != null) {
+            averageTime = userAvgTime;
+        } else if (problemAvgTime != null) {
+            averageTime = problemAvgTime;
+        }
         
         overview.put("totalQuestions", totalQuestions);
         overview.put("correctAnswers", correctAnswers);
-        overview.put("accuracy", totalQuestions > 0 ? (double) correctAnswers / totalQuestions * 100 : 0);
-        overview.put("totalPoints", correctAnswers * 10); // Mock points calculation
+        overview.put("accuracy", totalQuestions > 0 ? Math.round((double) correctAnswers / totalQuestions * 100 * 100.0) / 100.0 : 0);
+        overview.put("averageTime", Math.round(averageTime));
+        overview.put("totalPoints", totalPoints);
         overview.put("rank", calculateUserRank(userId));
         overview.put("level", calculateUserLevel(userId));
         
@@ -108,118 +165,257 @@ public class AnalyticsService {
 
     private Map<String, Object> getUserPerformance(Long userId, Period period, Long subjectId) {
         Map<String, Object> performance = new HashMap<>();
+        LocalDateTime startDate = getStartDateForPeriod(period);
         
-        // Mock performance data
-        performance.put("accuracy", generateAccuracyData());
-        performance.put("speed", generateSpeedData());
-        performance.put("difficulty", generateDifficultyData());
-        performance.put("topics", generateTopicData());
-        performance.put("trends", generateTrendData());
+        performance.put("accuracy", getAccuracyData(userId, subjectId, startDate));
+        performance.put("speed", getSpeedData(userId, subjectId, startDate));
+        performance.put("difficulty", getDifficultyData(userId, subjectId, startDate));
+        performance.put("topics", getTopicData(userId, subjectId, startDate));
+        performance.put("trends", getTrendData(userId, subjectId, startDate));
         
         return performance;
     }
 
     private Map<String, Object> getUserRankings(Long userId, Long subjectId) {
         Map<String, Object> rankings = new HashMap<>();
+        LocalDateTime startDate = getStartDateForPeriod(Period.ALL_TIME);
         
-        rankings.put("globalRank", calculateUserRank(userId));
-        rankings.put("subjectRanks", generateSubjectRanks(userId));
-        rankings.put("classRank", calculateUserRank(userId) % 50 + 1);
-        rankings.put("percentile", calculatePercentile(userId));
+        // Calculate global rank based on points
+        int globalRank = calculateGlobalRank(userId, startDate);
+        rankings.put("globalRank", globalRank);
+        
+        // Subject-wise rankings
+        rankings.put("subjectRanks", getSubjectRanks(userId, startDate));
+        
+        // Mock class rank (can be implemented with class/group system)
+        rankings.put("classRank", globalRank % 50 + 1);
+        
+        // Calculate percentile
+        rankings.put("percentile", calculatePercentile(globalRank));
+        
+        // Mock history (can be implemented with historical rank tracking)
         rankings.put("history", generateRankHistory());
         
         return rankings;
     }
 
     private List<String> getUserRecommendations(Long userId, Long subjectId) {
-        List<String> recommendations = new ArrayList<>();
-        recommendations.add("Practice more difficult questions to improve your ranking");
-        recommendations.add("Focus on Mathematics - your weakest subject");
-        recommendations.add("Maintain your daily streak for better performance");
-        return recommendations;
+        return getProgressRecommendations(userId, subjectId);
     }
 
     private Map<String, Object> getSkillProgress(Long userId, Long subjectId) {
         Map<String, Object> skillProgress = new HashMap<>();
-        skillProgress.put("mathematics", 75);
-        skillProgress.put("science", 82);
-        skillProgress.put("english", 68);
-        skillProgress.put("history", 90);
+        LocalDateTime startDate = getStartDateForPeriod(Period.MONTHLY);
+        
+        // Get real subject-wise accuracy data
+        List<Object[]> subjectData = problemSubmissionRepository.getAccuracyBySubject(userId, startDate);
+        for (Object[] row : subjectData) {
+            String subjectName = (String) row[1];
+            Long total = (Long) row[2];
+            Long correct = (Long) row[3];
+            double accuracy = total > 0 ? (double) correct / total * 100 : 0;
+            skillProgress.put(subjectName.toLowerCase(), Math.round(accuracy));
+        }
+        
         return skillProgress;
     }
 
     private Map<String, Object> getTopicMastery(Long userId, Long subjectId) {
         Map<String, Object> topicMastery = new HashMap<>();
-        topicMastery.put("algebra", 85);
-        topicMastery.put("geometry", 70);
-        topicMastery.put("physics", 78);
-        topicMastery.put("chemistry", 92);
+        LocalDateTime startDate = getStartDateForPeriod(Period.MONTHLY);
+        
+        // Get real topic-wise accuracy data
+        List<Object[]> topicData = problemSubmissionRepository.getAccuracyByTopic(userId, subjectId, startDate);
+        for (Object[] row : topicData) {
+            String topicName = (String) row[1];
+            Long total = (Long) row[2];
+            Long correct = (Long) row[3];
+            double accuracy = total > 0 ? (double) correct / total * 100 : 0;
+            topicMastery.put(topicName.toLowerCase().replace(" ", ""), Math.round(accuracy));
+        }
+        
         return topicMastery;
     }
 
     private List<String> getWeakAreas(Long userId, Long subjectId) {
-        List<String> weakAreas = new ArrayList<>();
-        weakAreas.add("Quadratic Equations");
-        weakAreas.add("Organic Chemistry");
-        weakAreas.add("Grammar Rules");
-        return weakAreas;
+        LocalDateTime startDate = getStartDateForPeriod(Period.MONTHLY);
+        List<Object[]> weakTopics = problemSubmissionRepository.getWeakTopics(userId, subjectId, startDate);
+        
+        return weakTopics.stream()
+                .limit(5) // Top 5 weak areas
+                .map(row -> (String) row[0])
+                .collect(Collectors.toList());
     }
 
     private List<String> getStrongAreas(Long userId, Long subjectId) {
-        List<String> strongAreas = new ArrayList<>();
-        strongAreas.add("Linear Equations");
-        strongAreas.add("Physics Laws");
-        strongAreas.add("Historical Events");
-        return strongAreas;
+        LocalDateTime startDate = getStartDateForPeriod(Period.MONTHLY);
+        List<Object[]> strongTopics = problemSubmissionRepository.getStrongTopics(userId, subjectId, startDate);
+        
+        return strongTopics.stream()
+                .limit(5) // Top 5 strong areas
+                .map(row -> (String) row[0])
+                .collect(Collectors.toList());
     }
 
     private List<String> getProgressRecommendations(Long userId, Long subjectId) {
-        return getUserRecommendations(userId, subjectId);
+        List<String> recommendations = new ArrayList<>();
+        LocalDateTime startDate = getStartDateForPeriod(Period.MONTHLY);
+        
+        // Get user's weak areas for recommendations
+        List<String> weakAreas = getWeakAreas(userId, subjectId);
+        
+        if (!weakAreas.isEmpty()) {
+            recommendations.add("Focus more practice on " + weakAreas.get(0) + " - your weakest topic");
+        }
+        
+        // Check accuracy and suggest improvements
+        long totalQuestions = problemSubmissionRepository.countTotalSubmissionsByUser(userId);
+        long correctAnswers = problemSubmissionRepository.countCorrectSubmissionsByUser(userId);
+        double accuracy = totalQuestions > 0 ? (double) correctAnswers / totalQuestions * 100 : 0;
+        
+        if (accuracy < 70) {
+            recommendations.add("Your overall accuracy is " + Math.round(accuracy) + "%. Try reviewing fundamentals before attempting harder problems");
+        } else if (accuracy > 85) {
+            recommendations.add("Great accuracy! Consider attempting more difficult problems to challenge yourself");
+        }
+        
+        // Check average time
+        Double avgTime = problemSubmissionRepository.getAverageTimeByUser(userId);
+        if (avgTime != null && avgTime > 120) { // More than 2 minutes
+            recommendations.add("Work on improving your problem-solving speed. Current average: " + Math.round(avgTime) + " seconds");
+        }
+        
+        // Check streak
+        Integer currentStreak = userStreakRepository.getTotalActiveStreak(userId);
+        if (currentStreak != null && currentStreak < 3) {
+            recommendations.add("Build a daily practice streak to improve consistency");
+        }
+        
+        return recommendations;
     }
 
-    // Mock data generators
-    private Map<String, Object> generateAccuracyData() {
+    // Real data generators
+    private Map<String, Object> getAccuracyData(Long userId, Long subjectId, LocalDateTime startDate) {
         Map<String, Object> accuracy = new HashMap<>();
-        accuracy.put("overall", 78.5);
-        accuracy.put("bySubject", Map.of("math", 75, "science", 82, "english", 68));
-        accuracy.put("trend", "improving");
+        
+        // Overall accuracy combining both submission types
+        long totalUserSubmissions = userSubmissionRepository.countTotalSubmissionsByUserAndPeriod(userId, subjectId, startDate);
+        long correctUserSubmissions = userSubmissionRepository.countCorrectSubmissionsByUserAndPeriod(userId, subjectId, startDate);
+        long totalProblemSubmissions = problemSubmissionRepository.countTotalSubmissionsByUser(userId);
+        long correctProblemSubmissions = problemSubmissionRepository.countCorrectSubmissionsByUser(userId);
+        
+        long totalSubmissions = totalUserSubmissions + totalProblemSubmissions;
+        long totalCorrect = correctUserSubmissions + correctProblemSubmissions;
+        
+        double overallAccuracy = totalSubmissions > 0 ? (double) totalCorrect / totalSubmissions * 100 : 0;
+        accuracy.put("overall", Math.round(overallAccuracy * 100.0) / 100.0);
+        
+        // Accuracy by subject
+        Map<String, Double> subjectAccuracy = new HashMap<>();
+        List<Object[]> subjectData = problemSubmissionRepository.getAccuracyBySubject(userId, startDate);
+        for (Object[] row : subjectData) {
+            String subjectName = (String) row[1];
+            Long total = (Long) row[2];
+            Long correct = (Long) row[3];
+            double acc = total > 0 ? (double) correct / total * 100 : 0;
+            subjectAccuracy.put(subjectName.toLowerCase(), (double) Math.round(acc));
+        }
+        accuracy.put("bySubject", subjectAccuracy);
+        
+        // Simple trend analysis
+        accuracy.put("trend", overallAccuracy > 75 ? "improving" : overallAccuracy > 50 ? "stable" : "needs_improvement");
+        
         return accuracy;
     }
 
-    private Map<String, Object> generateSpeedData() {
+    private Map<String, Object> getSpeedData(Long userId, Long subjectId, LocalDateTime startDate) {
         Map<String, Object> speed = new HashMap<>();
-        speed.put("averageTime", 45); // seconds
-        speed.put("improvement", 15); // percentage
-        speed.put("comparison", "above_average");
+        
+        Double userAvgTime = userSubmissionRepository.getAverageTimeByUserAndPeriod(userId, subjectId, startDate);
+        Double problemAvgTime = problemSubmissionRepository.getAverageTimeByUser(userId);
+        
+        double averageTime = 0;
+        if (userAvgTime != null && problemAvgTime != null) {
+            averageTime = (userAvgTime + problemAvgTime) / 2;
+        } else if (userAvgTime != null) {
+            averageTime = userAvgTime;
+        } else if (problemAvgTime != null) {
+            averageTime = problemAvgTime;
+        }
+        
+        speed.put("averageTime", Math.round(averageTime));
+        speed.put("improvement", averageTime < 60 ? 20 : averageTime < 120 ? 10 : 0); // Mock improvement
+        speed.put("comparison", averageTime < 60 ? "above_average" : "average");
+        
         return speed;
     }
 
-    private Map<String, Object> generateDifficultyData() {
-        Map<String, Object> difficulty = new HashMap<>();
-        difficulty.put("easy", 95);
-        difficulty.put("medium", 75);
-        difficulty.put("hard", 45);
-        difficulty.put("expert", 20);
-        return difficulty;
+    private Map<String, Object> getDifficultyData(Long userId, Long subjectId, LocalDateTime startDate) {
+        Map<String, Double> difficulty = new HashMap<>();
+        
+        // Get difficulty-wise accuracy from problem submissions
+        List<Object[]> difficultyData = problemSubmissionRepository.getAccuracyByDifficulty(userId, subjectId, startDate);
+        for (Object[] row : difficultyData) {
+            Difficulty diff = (Difficulty) row[0];
+            Long total = (Long) row[1];
+            Long correct = (Long) row[2];
+            double accuracy = total > 0 ? (double) correct / total * 100 : 0;
+            difficulty.put(diff.name().toLowerCase(), (double) Math.round(accuracy));
+        }
+        
+        // Add default values for missing difficulties
+        if (!difficulty.containsKey("easy")) difficulty.put("easy", 0.0);
+        if (!difficulty.containsKey("medium")) difficulty.put("medium", 0.0);
+        if (!difficulty.containsKey("hard")) difficulty.put("hard", 0.0);
+        
+        return new HashMap<>(Map.of(
+            "easy", difficulty.get("easy"),
+            "medium", difficulty.get("medium"),
+            "hard", difficulty.get("hard")
+        ));
     }
 
-    private Map<String, Object> generateTopicData() {
+    private Map<String, Object> getTopicData(Long userId, Long subjectId, LocalDateTime startDate) {
         Map<String, Object> topics = new HashMap<>();
-        topics.put("strongestTopic", "Linear Algebra");
-        topics.put("weakestTopic", "Quadratic Equations");
-        topics.put("masteryLevels", Map.of("algebra", 75, "geometry", 68, "calculus", 52));
+        
+        List<String> strongAreas = getStrongAreas(userId, subjectId);
+        List<String> weakAreas = getWeakAreas(userId, subjectId);
+        
+        topics.put("strongestTopic", strongAreas.isEmpty() ? "N/A" : strongAreas.get(0));
+        topics.put("weakestTopic", weakAreas.isEmpty() ? "N/A" : weakAreas.get(0));
+        
+        // Topic mastery levels
+        Map<String, Double> masteryLevels = new HashMap<>();
+        List<Object[]> topicData = problemSubmissionRepository.getAccuracyByTopic(userId, subjectId, startDate);
+        for (Object[] row : topicData) {
+            String topicName = (String) row[1];
+            Long total = (Long) row[2];
+            Long correct = (Long) row[3];
+            double accuracy = total > 0 ? (double) correct / total * 100 : 0;
+            masteryLevels.put(topicName.toLowerCase().replace(" ", ""), (double) Math.round(accuracy));
+        }
+        topics.put("masteryLevels", masteryLevels);
+        
         return topics;
     }
 
-    private List<Map<String, Object>> generateTrendData() {
+    private List<Map<String, Object>> getTrendData(Long userId, Long subjectId, LocalDateTime startDate) {
         List<Map<String, Object>> trends = new ArrayList<>();
-        for (int i = 0; i < 7; i++) {
+        
+        List<Object[]> dailyTrends = problemSubmissionRepository.getDailyTrends(userId, subjectId, startDate);
+        for (Object[] row : dailyTrends) {
             Map<String, Object> trend = new HashMap<>();
-            trend.put("date", "2024-01-" + (i + 1));
-            trend.put("accuracy", 70 + i * 2);
-            trend.put("questionsAnswered", 10 + i);
+            trend.put("date", row[0].toString());
+            trend.put("questionsAnswered", ((Long) row[1]).intValue());
+            
+            Long total = (Long) row[1];
+            Long correct = (Long) row[2];
+            double accuracy = total > 0 ? (double) correct / total * 100 : 0;
+            trend.put("accuracy", Math.round(accuracy));
+            
             trends.add(trend);
         }
+        
         return trends;
     }
 
@@ -235,16 +431,38 @@ public class AnalyticsService {
         return history;
     }
 
-    private List<Map<String, Object>> generateSubjectRanks(Long userId) {
+    private List<Map<String, Object>> getSubjectRanks(Long userId, LocalDateTime startDate) {
         List<Map<String, Object>> ranks = new ArrayList<>();
-        String[] subjects = {"Mathematics", "Science", "English", "History"};
-        for (int i = 0; i < subjects.length; i++) {
+        
+        // Get all subjects the user has attempted
+        List<Object[]> subjectData = problemSubmissionRepository.getAccuracyBySubject(userId, startDate);
+        
+        for (Object[] row : subjectData) {
+            Long subjectId = (Long) row[0];
+            String subjectName = (String) row[1];
+            
+            // Get subject-specific rankings
+            List<Object[]> subjectRankings = problemSubmissionRepository.getSubjectRankings(subjectId, startDate);
+            
+            int userRank = 1;
+            int totalUsers = subjectRankings.size();
+            
+            // Find user's rank in this subject
+            for (int i = 0; i < subjectRankings.size(); i++) {
+                Long rankedUserId = (Long) subjectRankings.get(i)[0];
+                if (rankedUserId.equals(userId)) {
+                    userRank = i + 1;
+                    break;
+                }
+            }
+            
             Map<String, Object> rank = new HashMap<>();
-            rank.put("subject", subjects[i]);
-            rank.put("rank", (userId.intValue() + i) % 100 + 1);
-            rank.put("totalUsers", 1000);
+            rank.put("subject", subjectName);
+            rank.put("rank", userRank);
+            rank.put("totalUsers", Math.max(totalUsers, 10)); // Ensure minimum total users
             ranks.add(rank);
         }
+        
         return ranks;
     }
 
@@ -297,15 +515,48 @@ public class AnalyticsService {
     }
 
     // Helper methods
+    private LocalDateTime getStartDateForPeriod(Period period) {
+        LocalDateTime now = LocalDateTime.now();
+        return switch (period) {
+            case DAILY -> now.minusDays(1);
+            case WEEKLY -> now.minusWeeks(1);
+            case MONTHLY -> now.minusMonths(1);
+            case YEARLY -> now.minusYears(1);
+            case ALL_TIME -> LocalDateTime.of(2020, 1, 1, 0, 0); // Very old date
+            default -> now.minusMonths(1);
+        };
+    }
+    
+    private int calculateGlobalRank(Long userId, LocalDateTime startDate) {
+        // Get all users ranked by points (combining both submission types)
+        List<Object[]> globalRankings = problemSubmissionRepository.getGlobalRankings(startDate);
+        
+        for (int i = 0; i < globalRankings.size(); i++) {
+            Long rankedUserId = (Long) globalRankings.get(i)[0];
+            if (rankedUserId.equals(userId)) {
+                return i + 1;
+            }
+        }
+        
+        // If user not found in rankings, return a default based on user ID
+        return Math.max(1, userId.intValue() % 1000 + 1);
+    }
+    
     private int calculateUserRank(Long userId) {
-        return userId.intValue() % 100 + 1;
+        return calculateGlobalRank(userId, getStartDateForPeriod(Period.ALL_TIME));
     }
 
     private int calculateUserLevel(Long userId) {
-        return (userId.intValue() % 50) + 1;
+        // Calculate level based on total points earned
+        Long totalPoints = problemSubmissionRepository.getTotalPointsByUser(userId, getStartDateForPeriod(Period.ALL_TIME));
+        if (totalPoints == null) totalPoints = 0L;
+        
+        // Level calculation: every 100 points = 1 level
+        return Math.max(1, (int) (totalPoints / 100) + 1);
     }
 
-    private double calculatePercentile(Long userId) {
-        return Math.max(100 - (userId % 100), 10);
+    private double calculatePercentile(int rank) {
+        // Estimate percentile based on rank (assuming 1000 total users)
+        return Math.max(10, 100 - ((double) rank / 10));
     }
 }

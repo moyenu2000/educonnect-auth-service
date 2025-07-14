@@ -75,4 +75,58 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
             @Param("userId") Long userId, 
             @Param("contestStatus") ContestStatus contestStatus, 
             Pageable pageable);
+    
+    // Combined analytics queries for all submissions (daily, exam, contest)
+    @Query("SELECT COUNT(us) FROM UserSubmission us WHERE us.userId = :userId " +
+           "AND us.submittedAt >= :startDate " +
+           "AND (:subjectId IS NULL OR us.question.subjectId = :subjectId)")
+    long countTotalSubmissionsByUserAndPeriod(@Param("userId") Long userId,
+                                              @Param("subjectId") Long subjectId,
+                                              @Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT COUNT(us) FROM UserSubmission us WHERE us.userId = :userId " +
+           "AND us.isCorrect = true AND us.submittedAt >= :startDate " +
+           "AND (:subjectId IS NULL OR us.question.subjectId = :subjectId)")
+    long countCorrectSubmissionsByUserAndPeriod(@Param("userId") Long userId,
+                                                @Param("subjectId") Long subjectId,
+                                                @Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT AVG(us.timeTaken) FROM UserSubmission us WHERE us.userId = :userId " +
+           "AND us.submittedAt >= :startDate " +
+           "AND (:subjectId IS NULL OR us.question.subjectId = :subjectId)")
+    Double getAverageTimeByUserAndPeriod(@Param("userId") Long userId,
+                                         @Param("subjectId") Long subjectId,
+                                         @Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT SUM(us.pointsEarned) FROM UserSubmission us WHERE us.userId = :userId " +
+           "AND us.submittedAt >= :startDate " +
+           "AND (:subjectId IS NULL OR us.question.subjectId = :subjectId)")
+    Long getTotalPointsByUserAndPeriod(@Param("userId") Long userId,
+                                       @Param("subjectId") Long subjectId,
+                                       @Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT us.question.difficulty, COUNT(us), " +
+           "COALESCE(SUM(CASE WHEN us.isCorrect = true THEN 1 ELSE 0 END), 0) " +
+           "FROM UserSubmission us " +
+           "WHERE us.userId = :userId AND us.submittedAt >= :startDate " +
+           "AND (:subjectId IS NULL OR us.question.subjectId = :subjectId) " +
+           "GROUP BY us.question.difficulty")
+    List<Object[]> getAccuracyByDifficultyAndPeriod(@Param("userId") Long userId,
+                                                    @Param("subjectId") Long subjectId,
+                                                    @Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT us.question.subjectId, s.name, COUNT(us), " +
+           "COALESCE(SUM(CASE WHEN us.isCorrect = true THEN 1 ELSE 0 END), 0) " +
+           "FROM UserSubmission us JOIN Subject s ON us.question.subjectId = s.id " +
+           "WHERE us.userId = :userId AND us.submittedAt >= :startDate " +
+           "GROUP BY us.question.subjectId, s.name")
+    List<Object[]> getAccuracyBySubjectAndPeriod(@Param("userId") Long userId,
+                                                 @Param("startDate") LocalDateTime startDate);
+    
+    // Global rankings for all submissions
+    @Query("SELECT us.userId, SUM(us.pointsEarned) as totalPoints " +
+           "FROM UserSubmission us " +
+           "WHERE us.submittedAt >= :startDate " +
+           "GROUP BY us.userId ORDER BY totalPoints DESC")
+    List<Object[]> getGlobalRankingsAllSubmissions(@Param("startDate") LocalDateTime startDate);
 }
