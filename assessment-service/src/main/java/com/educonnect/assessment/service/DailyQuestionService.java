@@ -61,6 +61,65 @@ public class DailyQuestionService {
         return result;
     }
 
+    public Map<String, Object> getDailyQuestionDetails(LocalDate date, Long subjectId, 
+                                                     ClassLevel classLevel, Difficulty difficulty) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestions(
+                date, subjectId, classLevel, difficulty);
+
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated"));
+
+        // Convert to detailed response with question content and submission status
+        List<Map<String, Object>> questionDetails = dailyQuestions.stream()
+                .map(dq -> {
+                    Map<String, Object> details = new HashMap<>();
+                    Question question = dq.getQuestion();
+                    
+                    if (question != null) {
+                        details.put("id", dq.getId());
+                        details.put("questionId", dq.getQuestionId());
+                        details.put("questionText", question.getQuestionText());
+                        details.put("options", question.getOptions());
+                        details.put("difficulty", dq.getDifficulty());
+                        details.put("points", dq.getPoints());
+                        details.put("subjectId", dq.getSubjectId());
+                        details.put("date", dq.getDate());
+                        
+                        // Check if user has attempted this question
+                        Optional<UserSubmission> submission = userSubmissionRepository
+                                .findByUserIdAndQuestionIdAndIsDailyQuestion(userId, dq.getQuestionId(), true);
+                        
+                        details.put("attempted", submission.isPresent());
+                        if (submission.isPresent()) {
+                            details.put("correct", submission.get().getIsCorrect());
+                            details.put("userAnswer", submission.get().getAnswer());
+                            details.put("pointsEarned", submission.get().getPointsEarned());
+                            details.put("submittedAt", submission.get().getSubmittedAt());
+                        } else {
+                            details.put("correct", false);
+                        }
+                    }
+                    
+                    return details;
+                })
+                .toList();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("questions", questionDetails);
+        result.put("totalQuestions", questionDetails.size());
+        result.put("date", date);
+
+        // Add streak info
+        Map<String, Object> streakInfo = getUserStreakInfo(userId, subjectId);
+        result.put("streakInfo", streakInfo);
+
+        return result;
+    }
+
     public List<DailyQuestion> getPublicDailyQuestions() {
         LocalDate today = LocalDate.now();
         List<DailyQuestion> todayQuestions = dailyQuestionRepository.findByDate(today);

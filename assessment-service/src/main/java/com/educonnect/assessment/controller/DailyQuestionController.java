@@ -89,6 +89,18 @@ public class DailyQuestionController {
         return ResponseEntity.ok(ApiResponse.success(stats));
     }
 
+    @GetMapping("/details")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestionDetails(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) ClassLevel classLevel,
+            @RequestParam(required = false) Difficulty difficulty) {
+        
+        Map<String, Object> result = dailyQuestionService.getDailyQuestionDetails(date, subjectId, classLevel, difficulty);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
     @GetMapping("/history")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<PagedResponse<UserSubmission>>> getDailyQuestionHistory(
