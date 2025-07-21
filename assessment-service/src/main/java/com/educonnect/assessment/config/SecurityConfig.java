@@ -39,9 +39,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // Public endpoints - no authentication required
                         .requestMatchers("/subjects/public").permitAll()
+                        .requestMatchers("/subjects").permitAll() // Allow basic subjects access
                         .requestMatchers("/topics/public/by-subject/**").permitAll()
                         .requestMatchers("/daily-questions/**").permitAll()
                         .requestMatchers("/questions/public/**").permitAll()
+                        .requestMatchers("/questions").permitAll() // Allow basic questions access
                         .requestMatchers("/leaderboard/public").permitAll()
                         .requestMatchers("/test/**").permitAll()
                         

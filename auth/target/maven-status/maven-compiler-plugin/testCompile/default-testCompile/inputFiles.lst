@@ -1,0 +1,9 @@
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/AuthApplicationTests.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/config/TestSecurityConfig.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/repository/RefreshTokenRepositoryTest.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/security/CustomUserPrincipalTest.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/security/JwtUtilsTest.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/service/AuthServiceTest.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/service/EmailServiceTest.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/service/TwoFactorAuthServiceTest.java
+/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/test/java/com/learningplatform/auth/util/CookieUtilsTest.java

@@ -9,7 +9,7 @@
       "name": "app.oauth2",
       "type": "com.learningplatform.auth.config.AppProperties$OAuth2",
       "sourceType": "com.learningplatform.auth.config.AppProperties",
-      "sourceMethod": "public com.learningplatform.auth.config.AppProperties.OAuth2 getOauth2() "
+      "sourceMethod": "getOauth2()"
     }
   ],
   "properties": [

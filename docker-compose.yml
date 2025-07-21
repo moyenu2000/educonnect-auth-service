@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -35,7 +35,7 @@ services:
     container_name: educonnect-rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-educonnect}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-educonnect123}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -62,7 +62,7 @@ services:
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
       - APP_BASE_URL=http://auth-service:8081
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - MAIL_USERNAME=${MAIL_USERNAME}
@@ -103,7 +103,7 @@ services:
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
       - AUTH_SERVICE_URL=http://auth-service:8081
       - ASSESSMENT_SERVICE_URL=http://assessment-service:8083
       - JWT_SECRET=${JWT_SECRET}
@@ -144,7 +144,7 @@ services:
       - SPRING_RABBITMQ_HOST=rabbitmq
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
       - AUTH_SERVICE_URL=http://auth-service:8081
       - DISCUSSION_SERVICE_URL=http://discussion-service:8082
       - JWT_SECRET=${JWT_SECRET}

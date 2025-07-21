@@ -49,7 +49,8 @@
       "Bash(echo:*)",
       "Bash(./test-all-assessment-apis.sh:*)",
       "Bash(docker cp:*)",
-      "Bash(./test-discussion-working.sh:*)"
+      "Bash(./test-discussion-working.sh:*)",
+      "Bash(docker system prune:*)"
     ],
     "deny": []
   }

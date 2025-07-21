@@ -1,0 +1,368 @@
+================================================================================
+                              USER SEARCH API - COMPLETE GUIDE
+================================================================================
+
+BASE URL: http://localhost:8082/api/v1
+AUTHENTICATION: Bearer JWT token (STUDENT role required)
+
+================================================================================
+                                USER SEARCH ENDPOINT
+================================================================================
+
+METHOD: GET
+ENDPOINT: /search/users
+
+PURPOSE: Search for users by username or full name to find people for messaging,
+         group invitations, or general user discovery.
+
+SEARCH CRITERIA:
+- Searches in: username, fullName fields
+- Case-insensitive partial matching
+- Uses SQL LIKE with % wildcards
+
+QUERY PARAMETERS:
+- q (required): Search query string
+- page (optional, default: 0): Page number for pagination
+- size (optional, default: 20): Number of results per page
+
+================================================================================
+                              REQUEST EXAMPLES
+================================================================================
+
+1. BASIC USER SEARCH:
+GET /api/v1/search/users?q=john
+
+2. SEARCH WITH PAGINATION:
+GET /api/v1/search/users?q=student&page=0&size=10
+
+3. SEARCH BY PARTIAL USERNAME:
+GET /api/v1/search/users?q=john_d
+
+4. SEARCH BY PARTIAL NAME:
+GET /api/v1/search/users?q=Smith
+
+5. SEARCH BY EMAIL-LIKE PATTERN:
+GET /api/v1/search/users?q=gmail
+
+================================================================================
+                             RESPONSE FORMAT
+================================================================================
+
+SUCCESS RESPONSE (200):
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "username": "john_doe",
+        "email": "john.doe@example.com",
+        "fullName": "John Doe",
+        "bio": "Computer Science student interested in AI and machine learning",
+        "avatarUrl": "https://example.com/avatars/john_doe.jpg",
+        "createdAt": "2025-01-15T10:30:00",
+        "updatedAt": "2025-07-14T08:45:00"
+      },
+      {
+        "id": 2,
+        "username": "johnny_smith",
+        "email": "johnny.smith@university.edu",
+        "fullName": "Johnny Smith",
+        "bio": "Mathematics major, love solving complex problems",
+        "avatarUrl": null,
+        "createdAt": "2025-02-20T14:20:00",
+        "updatedAt": "2025-07-13T16:30:00"
+      },
+      {
+        "id": 3,
+        "username": "john_wilson",
+        "email": "j.wilson@student.edu",
+        "fullName": "John Wilson",
+        "bio": "Physics student researching quantum computing",
+        "avatarUrl": "https://example.com/avatars/wilson.png",
+        "createdAt": "2025-03-10T09:15:00",
+        "updatedAt": "2025-07-14T12:00:00"
+      }
+    ],
+    "totalElements": 15,
+    "totalPages": 2,
+    "currentPage": 0,
+    "size": 10,
+    "first": true,
+    "last": false,
+    "empty": false
+  },
+  "message": null,
+  "error": null
+}
+
+EMPTY RESULTS RESPONSE (200):
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 20,
+    "first": true,
+    "last": true,
+    "empty": true
+  },
+  "message": null,
+  "error": null
+}
+
+================================================================================
+                               RESPONSE FIELDS
+================================================================================
+
+USER OBJECT FIELDS:
+- id: Unique user identifier (Long)
+- username: User's unique username (String)
+- email: User's email address (String)
+- fullName: User's display name (String)
+- bio: User's biography/description (String, nullable)
+- avatarUrl: URL to user's profile picture (String, nullable)
+- createdAt: Account creation timestamp (ISO DateTime)
+- updatedAt: Last account update timestamp (ISO DateTime)
+
+PAGINATION FIELDS:
+- content: Array of user objects
+- totalElements: Total number of matching users
+- totalPages: Total number of pages
+- currentPage: Current page number (0-indexed)
+- size: Number of items per page
+- first: Boolean indicating if this is the first page
+- last: Boolean indicating if this is the last page
+- empty: Boolean indicating if results are empty
+
+================================================================================
+                                ERROR RESPONSES
+================================================================================
+
+MISSING QUERY PARAMETER (400):
+{
+  "success": false,
+  "data": null,
+  "message": "Required parameter 'q' is missing",
+  "error": "Bad Request"
+}
+
+AUTHENTICATION REQUIRED (401):
+{
+  "success": false,
+  "data": null,
+  "message": "Authentication required",
+  "error": "JWT token missing or invalid"
+}
+
+INSUFFICIENT PRIVILEGES (403):
+{
+  "success": false,
+  "data": null,
+  "message": "Access denied",
+  "error": "STUDENT role required"
+}
+
+INVALID PAGE PARAMETER (400):
+{
+  "success": false,
+  "data": null,
+  "message": "Invalid pagination parameters",
+  "error": "Page number must be >= 0"
+}
+
+================================================================================
+                                 CURL EXAMPLES
+================================================================================
+
+1. BASIC SEARCH:
+curl -X GET "http://localhost:8082/api/v1/search/users?q=john" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+2. SEARCH WITH PAGINATION:
+curl -X GET "http://localhost:8082/api/v1/search/users?q=student&page=1&size=5" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+3. SEARCH FOR SPECIFIC USERNAME:
+curl -X GET "http://localhost:8082/api/v1/search/users?q=john_doe" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+4. SEARCH BY PARTIAL NAME:
+curl -X GET "http://localhost:8082/api/v1/search/users?q=Smith" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+================================================================================
+                              JAVASCRIPT EXAMPLES
+================================================================================
+
+1. BASIC SEARCH FUNCTION:
+async function searchUsers(query, page = 0, size = 20) {
+  try {
+    const response = await fetch(
+      `http://localhost:8082/api/v1/search/users?q=${encodeURIComponent(query)}&page=${page}&size=${size}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error searching users:', error);
+    throw error;
+  }
+}
+
+2. SEARCH WITH DEBOUNCING (FOR LIVE SEARCH):
+let searchTimeout;
+
+function debouncedUserSearch(query, callback, delay = 300) {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    if (query.length >= 2) {
+      try {
+        const result = await searchUsers(query);
+        callback(result.data);
+      } catch (error) {
+        callback({ content: [], empty: true });
+      }
+    } else {
+      callback({ content: [], empty: true });
+    }
+  }, delay);
+}
+
+3. REACT HOOK EXAMPLE:
+import { useState, useEffect } from 'react';
+
+function useUserSearch(query) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (query.length < 2) {
+      setUsers([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    searchUsers(query)
+      .then(response => {
+        setUsers(response.data.content);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [query]);
+
+  return { users, loading, error };
+}
+
+4. PAGINATION EXAMPLE:
+class UserSearchPagination {
+  constructor() {
+    this.currentPage = 0;
+    this.pageSize = 10;
+    this.query = '';
+  }
+
+  async search(query, page = 0) {
+    this.query = query;
+    this.currentPage = page;
+    
+    const response = await searchUsers(query, page, this.pageSize);
+    return response.data;
+  }
+
+  async nextPage() {
+    return this.search(this.query, this.currentPage + 1);
+  }
+
+  async previousPage() {
+    if (this.currentPage > 0) {
+      return this.search(this.query, this.currentPage - 1);
+    }
+    return null;
+  }
+}
+
+================================================================================
+                                 USE CASES
+================================================================================
+
+1. MESSAGE RECIPIENT SEARCH:
+- User types in search box to find someone to message
+- Show matching users with profile pictures and names
+- Click user to start conversation
+
+2. GROUP MEMBER INVITATION:
+- Search for users to invite to study groups
+- Display user info to help identify correct person
+- Add selected users to group invitation list
+
+3. USER DIRECTORY/DISCOVERY:
+- Browse and discover other students
+- Find study partners or classmates
+- Connect with users with similar interests
+
+4. MENTION/TAG FUNCTIONALITY:
+- Search users when typing @ mentions in discussions
+- Auto-complete user names in comments
+- Tag relevant users in discussions
+
+5. FRIEND/CONNECTION SYSTEM:
+- Find and connect with other users
+- Build network of study partners
+- Follow interesting users
+
+================================================================================
+                              IMPLEMENTATION NOTES
+================================================================================
+
+SEARCH BEHAVIOR:
+- Search is case-insensitive
+- Partial matching on username and fullName fields
+- Uses SQL LIKE with % wildcards: WHERE username LIKE '%query%' OR fullName LIKE '%query%'
+- No email search for privacy reasons (only username and fullName)
+
+PERFORMANCE CONSIDERATIONS:
+- Results are paginated to prevent large response sizes
+- Default page size is 20, maximum recommended is 50
+- Consider implementing search result caching for frequent queries
+- Database indexes should be present on username and fullName fields
+
+SECURITY CONSIDERATIONS:
+- Requires STUDENT role authentication
+- No sensitive information (like email in some cases) exposed unnecessarily
+- Query parameter is sanitized to prevent SQL injection
+- Rate limiting should be implemented to prevent abuse
+
+FRONTEND INTEGRATION TIPS:
+- Implement debounced search for live search functionality
+- Show loading states during search requests
+- Handle empty results gracefully
+- Display user avatars and names for better UX
+- Consider infinite scroll for large result sets
+
+================================================================================
+
+This API provides comprehensive user search functionality for finding other users
+in the EduConnect platform. It supports messaging, group invitations, user discovery,
+and other social features within the educational environment.
+
+================================================================================

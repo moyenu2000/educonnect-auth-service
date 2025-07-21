@@ -1,0 +1,427 @@
+================================================================================
+                        DISCUSSIONS SERVICE REQUEST/RESPONSE FORMAT
+================================================================================
+
+BASE URL: http://localhost:8082/api/v1
+AUTHENTICATION: Bearer JWT token (STUDENT role required for CRUD operations)
+
+================================================================================
+                            1. GET ALL DISCUSSIONS
+================================================================================
+
+METHOD: GET
+ENDPOINT: /discussions
+
+PARAMETERS:
+- page (default: 0): Page number
+- size (default: 20): Items per page
+- type (optional): QUESTION, HELP, GENERAL, ANNOUNCEMENT
+- subjectId (optional): Filter by subject
+- topicId (optional): Filter by topic
+- classLevel (optional): Filter by class level
+- sortBy (default: NEWEST): Sort order
+
+REQUEST:
+GET /discussions?page=0&size=10&type=QUESTION&subjectId=1&sortBy=NEWEST
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "title": "How to solve quadratic equations?",
+        "content": "I'm struggling with understanding the quadratic formula...",
+        "type": "QUESTION",
+        "author": {
+          "id": 1,
+          "username": "student123",
+          "email": "student@example.com"
+        },
+        "subjectId": 1,
+        "topicId": 5,
+        "classLevel": "HIGH_SCHOOL",
+        "tags": ["mathematics", "algebra"],
+        "attachments": [],
+        "isAnonymous": false,
+        "upvotesCount": 5,
+        "downvotesCount": 0,
+        "answersCount": 3,
+        "viewsCount": 25,
+        "hasAcceptedAnswer": true,
+        "status": "ACTIVE",
+        "groupId": null,
+        "createdAt": "2025-07-14T10:30:00",
+        "updatedAt": "2025-07-14T11:45:00",
+        "upvoted": false,
+        "downvoted": false,
+        "bookmarked": true
+      }
+    ],
+    "totalElements": 50,
+    "totalPages": 5,
+    "currentPage": 0,
+    "size": 10,
+    "first": true,
+    "last": false,
+    "empty": false
+  }
+}
+
+================================================================================
+                           2. GET SINGLE DISCUSSION
+================================================================================
+
+METHOD: GET
+ENDPOINT: /discussions/{discussionId}
+
+REQUEST:
+GET /discussions/1
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "title": "How to solve quadratic equations?",
+    "content": "I'm struggling with understanding the quadratic formula. Can someone explain the steps clearly?",
+    "type": "QUESTION",
+    "author": {
+      "id": 1,
+      "username": "student123",
+      "email": "student@example.com"
+    },
+    "subjectId": 1,
+    "topicId": 5,
+    "classLevel": "HIGH_SCHOOL",
+    "tags": ["mathematics", "algebra", "quadratic"],
+    "attachments": [],
+    "isAnonymous": false,
+    "upvotesCount": 5,
+    "downvotesCount": 0,
+    "answersCount": 3,
+    "viewsCount": 26,
+    "hasAcceptedAnswer": true,
+    "status": "ACTIVE",
+    "groupId": null,
+    "createdAt": "2025-07-14T10:30:00",
+    "updatedAt": "2025-07-14T11:45:00",
+    "upvoted": false,
+    "downvoted": false,
+    "bookmarked": true
+  }
+}
+
+================================================================================
+                           3. CREATE DISCUSSION
+================================================================================
+
+METHOD: POST
+ENDPOINT: /discussions
+AUTHENTICATION: Required (STUDENT role)
+
+REQUEST:
+{
+  "title": "Need help with calculus derivatives",
+  "content": "I'm having trouble understanding the concept of derivatives in calculus. Can someone explain the basic rules?",
+  "type": "QUESTION",
+  "subjectId": 1,
+  "topicId": 8,
+  "classLevel": "COLLEGE",
+  "tags": ["calculus", "derivatives", "mathematics"],
+  "attachments": [],
+  "isAnonymous": false
+}
+
+FIELDS:
+- title (required): Discussion title
+- content (required): Discussion content/description
+- type (required): QUESTION, HELP, GENERAL, ANNOUNCEMENT
+- subjectId (optional): Subject ID
+- topicId (optional): Topic ID
+- classLevel (optional): Class level
+- tags (optional): Array of tags
+- attachments (optional): Array of attachment URLs
+- isAnonymous (optional, default: false): Anonymous posting
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "title": "Need help with calculus derivatives",
+    "content": "I'm having trouble understanding the concept of derivatives in calculus...",
+    "type": "QUESTION",
+    "author": {
+      "id": 1,
+      "username": "student123",
+      "email": "student@example.com"
+    },
+    "subjectId": 1,
+    "topicId": 8,
+    "classLevel": "COLLEGE",
+    "tags": ["calculus", "derivatives", "mathematics"],
+    "attachments": [],
+    "isAnonymous": false,
+    "upvotesCount": 0,
+    "downvotesCount": 0,
+    "answersCount": 0,
+    "viewsCount": 1,
+    "hasAcceptedAnswer": false,
+    "status": "ACTIVE",
+    "groupId": null,
+    "createdAt": "2025-07-14T12:00:00",
+    "updatedAt": "2025-07-14T12:00:00",
+    "upvoted": false,
+    "downvoted": false,
+    "bookmarked": false
+  },
+  "message": "Discussion created successfully"
+}
+
+================================================================================
+                           4. UPDATE DISCUSSION
+================================================================================
+
+METHOD: PUT
+ENDPOINT: /discussions/{discussionId}
+AUTHENTICATION: Required (STUDENT role, own discussions only)
+
+REQUEST:
+PUT /discussions/2
+{
+  "title": "Need help with calculus derivatives - Updated",
+  "content": "I'm having trouble understanding derivatives. Specifically, I need help with the power rule and chain rule.",
+  "type": "QUESTION",
+  "subjectId": 1,
+  "topicId": 8,
+  "classLevel": "COLLEGE",
+  "tags": ["calculus", "derivatives", "power-rule", "chain-rule"],
+  "attachments": [],
+  "isAnonymous": false
+}
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "title": "Need help with calculus derivatives - Updated",
+    "content": "I'm having trouble understanding derivatives. Specifically, I need help with the power rule and chain rule.",
+    "type": "QUESTION",
+    "author": {
+      "id": 1,
+      "username": "student123",
+      "email": "student@example.com"
+    },
+    "subjectId": 1,
+    "topicId": 8,
+    "classLevel": "COLLEGE",
+    "tags": ["calculus", "derivatives", "power-rule", "chain-rule"],
+    "attachments": [],
+    "isAnonymous": false,
+    "upvotesCount": 0,
+    "downvotesCount": 0,
+    "answersCount": 0,
+    "viewsCount": 1,
+    "hasAcceptedAnswer": false,
+    "status": "ACTIVE",
+    "groupId": null,
+    "createdAt": "2025-07-14T12:00:00",
+    "updatedAt": "2025-07-14T12:30:00",
+    "upvoted": false,
+    "downvoted": false,
+    "bookmarked": false
+  },
+  "message": "Discussion updated successfully"
+}
+
+================================================================================
+                           5. DELETE DISCUSSION
+================================================================================
+
+METHOD: DELETE
+ENDPOINT: /discussions/{discussionId}
+AUTHENTICATION: Required (STUDENT role, own discussions only)
+
+REQUEST:
+DELETE /discussions/2
+
+RESPONSE:
+{
+  "success": true,
+  "data": "Discussion deleted successfully",
+  "message": null,
+  "error": null
+}
+
+================================================================================
+                           6. UPVOTE DISCUSSION
+================================================================================
+
+METHOD: POST
+ENDPOINT: /discussions/{discussionId}/upvote
+AUTHENTICATION: Required (STUDENT role)
+
+REQUEST:
+POST /discussions/1/upvote
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "upvoted": true,
+    "message": "Discussion upvoted successfully"
+  }
+}
+
+================================================================================
+                          7. DOWNVOTE DISCUSSION
+================================================================================
+
+METHOD: POST
+ENDPOINT: /discussions/{discussionId}/downvote
+AUTHENTICATION: Required (STUDENT role)
+
+REQUEST:
+POST /discussions/1/downvote
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "downvoted": true,
+    "message": "Discussion downvoted successfully"
+  }
+}
+
+================================================================================
+                          8. BOOKMARK DISCUSSION
+================================================================================
+
+METHOD: POST
+ENDPOINT: /discussions/{discussionId}/bookmark
+AUTHENTICATION: Required (STUDENT role)
+
+REQUEST:
+POST /discussions/1/bookmark
+
+RESPONSE:
+{
+  "success": true,
+  "data": {
+    "bookmarked": true,
+    "message": "Discussion bookmark toggled successfully"
+  }
+}
+
+================================================================================
+                         9. GET PUBLIC DISCUSSIONS
+================================================================================
+
+METHOD: GET
+ENDPOINT: /discussions/public
+AUTHENTICATION: Not required
+
+PARAMETERS: Same as GET /discussions
+
+REQUEST:
+GET /discussions/public?page=0&size=5&type=GENERAL
+
+RESPONSE: Same format as GET /discussions
+
+================================================================================
+                        10. GET PUBLIC DISCUSSION
+================================================================================
+
+METHOD: GET
+ENDPOINT: /discussions/{discussionId}/public
+AUTHENTICATION: Not required
+
+REQUEST:
+GET /discussions/1/public
+
+RESPONSE: Same format as GET /discussions/{discussionId}
+
+================================================================================
+                                CURL EXAMPLES
+================================================================================
+
+1. GET DISCUSSIONS:
+curl -X GET "http://localhost:8082/api/v1/discussions?page=0&size=10&type=QUESTION" \
+  -H "Authorization: Bearer <jwt-token>"
+
+2. CREATE DISCUSSION:
+curl -X POST http://localhost:8082/api/v1/discussions \
+  -H "Authorization: Bearer <jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Help with physics",
+    "content": "Need help understanding motion equations",
+    "type": "QUESTION",
+    "subjectId": 2,
+    "tags": ["physics", "motion"]
+  }'
+
+3. UPVOTE DISCUSSION:
+curl -X POST http://localhost:8082/api/v1/discussions/1/upvote \
+  -H "Authorization: Bearer <jwt-token>"
+
+4. GET PUBLIC DISCUSSIONS:
+curl -X GET "http://localhost:8082/api/v1/discussions/public?page=0&size=5"
+
+================================================================================
+                               ERROR RESPONSES
+================================================================================
+
+AUTHENTICATION ERROR (401):
+{
+  "success": false,
+  "data": null,
+  "message": "Authentication required",
+  "error": "JWT token missing or invalid"
+}
+
+VALIDATION ERROR (400):
+{
+  "success": false,
+  "data": null,
+  "message": "Validation failed",
+  "error": "Title is required"
+}
+
+NOT FOUND ERROR (404):
+{
+  "success": false,
+  "data": null,
+  "message": "Discussion not found",
+  "error": "No discussion found with ID: 999"
+}
+
+UNAUTHORIZED ACCESS (403):
+{
+  "success": false,
+  "data": null,
+  "message": "Access denied",
+  "error": "You can only modify your own discussions"
+}
+
+================================================================================
+
+DISCUSSION TYPES:
+- QUESTION: Student asking for help
+- HELP: Request for assistance
+- GENERAL: General discussion topics
+- ANNOUNCEMENT: Important announcements
+
+CLASS LEVELS:
+- ELEMENTARY, MIDDLE_SCHOOL, HIGH_SCHOOL, COLLEGE, GRADUATE
+
+SORT OPTIONS:
+- NEWEST: Most recent first
+- OLDEST: Oldest first
+- MOST_UPVOTED: Highest upvotes first
+- MOST_ANSWERED: Most answers first
+
+================================================================================

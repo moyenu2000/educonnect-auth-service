@@ -34,4 +34,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Modifying
     @Query("UPDATE Message m SET m.isRead = true WHERE m.conversation.id = :conversationId AND m.recipient.id = :userId")
     void markAllAsReadInConversation(@Param("conversationId") Long conversationId, @Param("userId") Long userId);
+    
+    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND m.id != :excludeId " +
+           "ORDER BY m.createdAt DESC")
+    Page<Message> findTopByConversationIdAndIdNotOrderByCreatedAtDesc(
+        @Param("conversationId") Long conversationId, 
+        @Param("excludeId") Long excludeId,
+        Pageable pageable
+    );
 }

@@ -82,7 +82,7 @@ public class DailyQuestionService {
                     if (question != null) {
                         details.put("id", dq.getId());
                         details.put("questionId", dq.getQuestionId());
-                        details.put("questionText", question.getQuestionText());
+                        details.put("questionText", question.getText());
                         details.put("options", question.getOptions());
                         details.put("difficulty", dq.getDifficulty());
                         details.put("points", dq.getPoints());

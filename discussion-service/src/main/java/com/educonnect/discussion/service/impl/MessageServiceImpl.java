@@ -15,6 +15,7 @@ import com.educonnect.discussion.repository.UserRepository;
 import com.educonnect.discussion.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -147,6 +148,27 @@ public class MessageServiceImpl implements MessageService {
             throw new UnauthorizedException("You can only delete your own messages");
         }
         
+        Conversation conversation = message.getConversation();
+        
+        // Check if this message is the last message in the conversation
+        if (conversation.getLastMessage() != null && 
+            conversation.getLastMessage().getId().equals(messageId)) {
+            
+            // Find the previous message in the conversation to set as new last message
+            Page<Message> previousMessages = messageRepository
+                .findTopByConversationIdAndIdNotOrderByCreatedAtDesc(
+                    conversation.getId(), messageId, PageRequest.of(0, 1));
+            
+            // Update conversation's last message
+            if (!previousMessages.isEmpty()) {
+                conversation.setLastMessage(previousMessages.getContent().get(0));
+            } else {
+                conversation.setLastMessage(null);
+            }
+            conversationRepository.save(conversation);
+        }
+        
+        // Now safe to delete the message
         messageRepository.delete(message);
     }
 

@@ -17,6 +17,7 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
     Page<Conversation> findByParticipantsId(@Param("userId") Long userId, Pageable pageable);
     
     @Query("SELECT c FROM Conversation c WHERE SIZE(c.participants) = 2 AND " +
-           ":user1Id MEMBER OF c.participants AND :user2Id MEMBER OF c.participants")
+           "EXISTS (SELECT p1 FROM c.participants p1 WHERE p1.id = :user1Id) AND " +
+           "EXISTS (SELECT p2 FROM c.participants p2 WHERE p2.id = :user2Id)")
     Optional<Conversation> findDirectConversation(@Param("user1Id") Long user1Id, @Param("user2Id") Long user2Id);
 }

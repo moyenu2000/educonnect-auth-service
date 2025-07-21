@@ -34,6 +34,7 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
+    private final UserEventPublisher userEventPublisher;
 
     @Transactional
     public ApiResponse register(RegisterRequest request) {
@@ -63,6 +64,9 @@ public class AuthService {
         user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
 
         user = userRepository.save(user);
+
+        // Publish user created event
+        userEventPublisher.publishUserCreated(user);
 
         // Send verification email
         emailService.sendVerificationEmail(user);
@@ -95,6 +99,9 @@ public class AuthService {
 
         user = userRepository.save(user);
 
+        // Publish user created event
+        userEventPublisher.publishUserCreated(user);
+
         log.info("Admin user registered successfully: {}", user.getUsername());
 
         return new ApiResponse(true, "Admin user registered successfully. No email verification required.");
@@ -124,6 +131,9 @@ public class AuthService {
                 .build();
 
         user = userRepository.save(user);
+
+        // Publish user created event
+        userEventPublisher.publishUserCreated(user);
 
         log.info("Question setter user registered successfully: {}", user.getUsername());
 
@@ -345,6 +355,9 @@ public class AuthService {
 
         user = userRepository.save(user);
 
+        // Publish user updated event
+        userEventPublisher.publishUserUpdated(user);
+
         return mapUserToResponse(user);
     }
 
@@ -358,8 +371,12 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        String oldRole = user.getRole().name();
         user.setRole(UserRole.valueOf(role.toUpperCase()));
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        // Publish user role changed event
+        userEventPublisher.publishUserRoleChanged(user, oldRole);
 
         return new ApiResponse(true, "User role updated successfully");
     }
@@ -370,7 +387,10 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setEnabled(enabled);
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        // Publish user updated event for status change
+        userEventPublisher.publishUserUpdated(user);
 
         return new ApiResponse(true, "User status updated successfully");
     }

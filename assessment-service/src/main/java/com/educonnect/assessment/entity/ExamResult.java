@@ -1,3 +1,6 @@
+//ExamResult.java
+
+
 package com.educonnect.assessment.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
