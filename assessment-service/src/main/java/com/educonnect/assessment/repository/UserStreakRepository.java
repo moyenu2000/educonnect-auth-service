@@ -29,4 +29,8 @@ public interface UserStreakRepository extends JpaRepository<UserStreak, Long> {
     
     @Query("SELECT SUM(us.currentStreak) FROM UserStreak us WHERE us.userId = :userId AND us.isActive = true")
     Integer getTotalActiveStreak(@Param("userId") Long userId);
+    
+    // Admin analytics queries - real data only
+    @Query("SELECT COUNT(DISTINCT us.userId) FROM UserStreak us WHERE us.isActive = true AND us.currentStreak > 0")
+    long countUsersWithActiveStreaks();
 }

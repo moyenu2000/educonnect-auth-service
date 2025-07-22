@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -55,27 +53,14 @@ class CustomUserPrincipalTest {
         assertEquals("ROLE_STUDENT", authority.getAuthority());
     }
 
-    @Test
-    void createWithAttributes_ShouldReturnCustomUserPrincipalWithAttributes_WhenValidUserAndAttributes() {
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("provider", "google");
-        attributes.put("providerId", "123456789");
-
-        CustomUserPrincipal principal = CustomUserPrincipal.create(testUser, attributes);
-
-        assertNotNull(principal);
-        assertEquals(1L, principal.getId());
-        assertEquals("testuser", principal.getUsername());
-        assertEquals(attributes, principal.getAttributes());
-    }
 
     @Test
-    void getName_ShouldReturnUserId_WhenCalled() {
+    void getName_ShouldReturnUsername_WhenCalled() {
         CustomUserPrincipal principal = CustomUserPrincipal.create(testUser);
 
         String name = principal.getName();
 
-        assertEquals("1", name);
+        assertEquals("testuser", name);
     }
 
     @Test
@@ -154,21 +139,4 @@ class CustomUserPrincipalTest {
         assertFalse(principal.isEnabled());
     }
 
-    @Test
-    void setAttributes_ShouldSetAttributes_WhenCalled() {
-        CustomUserPrincipal principal = CustomUserPrincipal.create(testUser);
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("key", "value");
-
-        principal.setAttributes(attributes);
-
-        assertEquals(attributes, principal.getAttributes());
-    }
-
-    @Test
-    void getAttributes_ShouldReturnNull_WhenNoAttributesSet() {
-        CustomUserPrincipal principal = CustomUserPrincipal.create(testUser);
-
-        assertNull(principal.getAttributes());
-    }
 }

@@ -39,4 +39,14 @@ public interface LiveExamRepository extends JpaRepository<LiveExam, Long> {
     @Query("SELECT COUNT(le) FROM LiveExam le WHERE le.scheduledAt BETWEEN :startDate AND :endDate")
     long countByScheduledAtBetween(@Param("startDate") LocalDateTime startDate, 
                                    @Param("endDate") LocalDateTime endDate);
+    
+    // Admin analytics queries - real data only
+    @Query("SELECT COUNT(le) FROM LiveExam le")
+    long countTotalExams();
+    
+    @Query("SELECT COUNT(le) FROM LiveExam le WHERE le.status = 'LIVE'")
+    long countActiveExams();
+    
+    @Query("SELECT COUNT(le) FROM LiveExam le WHERE le.status = 'COMPLETED'")
+    long countCompletedExams();
 }

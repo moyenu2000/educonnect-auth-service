@@ -10,7 +10,9 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -160,4 +162,36 @@ public interface ProblemSubmissionRepository extends JpaRepository<ProblemSubmis
     List<Object[]> getStrongTopics(@Param("userId") Long userId, 
                                    @Param("subjectId") Long subjectId,
                                    @Param("startDate") LocalDateTime startDate);
+    
+    // Admin analytics queries - real data only
+    @Query("SELECT COUNT(DISTINCT ps.userId) FROM ProblemSubmission ps")
+    long countDistinctUsers();
+    
+    @Query("SELECT COUNT(DISTINCT ps.userId) FROM ProblemSubmission ps WHERE ps.submittedAt >= :startDate")
+    long countActiveUsersInPeriod(@Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT COUNT(ps) FROM ProblemSubmission ps")
+    long countTotalSubmissions();
+    
+    @Query("SELECT COUNT(ps) FROM ProblemSubmission ps WHERE ps.isCorrect = true")
+    long countCorrectSubmissions();
+    
+    @Query("SELECT COUNT(ps) FROM ProblemSubmission ps WHERE ps.submittedAt >= :startDate")
+    long getSubmissionsInPeriod(@Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT AVG(ps.timeTaken) FROM ProblemSubmission ps")
+    Double getAverageTime();
+    
+    @Query("SELECT p.difficulty, COUNT(ps) FROM ProblemSubmission ps " +
+           "JOIN ps.problem p GROUP BY p.difficulty")
+    List<Object[]> getDifficultyDistributionRaw();
+    
+    default Map<String, Long> getDifficultyDistribution() {
+        List<Object[]> raw = getDifficultyDistributionRaw();
+        Map<String, Long> result = new HashMap<>();
+        for (Object[] row : raw) {
+            result.put(row[0].toString(), (Long) row[1]);
+        }
+        return result;
+    }
 }

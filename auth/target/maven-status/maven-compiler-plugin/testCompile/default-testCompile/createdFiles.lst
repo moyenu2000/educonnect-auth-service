@@ -1,3 +1,10 @@
-com/learningplatform/auth/config/TestSecurityConfig.class
 com/learningplatform/auth/AuthApplicationTests.class
+com/learningplatform/auth/util/CookieUtilsTest$TestSerializableObject.class
+com/learningplatform/auth/service/TwoFactorAuthServiceTest.class
+com/learningplatform/auth/util/CookieUtilsTest.class
+com/learningplatform/auth/security/JwtUtilsTest.class
+com/learningplatform/auth/security/CustomUserPrincipalTest.class
+com/learningplatform/auth/service/AuthServiceTest.class
+com/learningplatform/auth/service/EmailServiceTest.class
+com/learningplatform/auth/config/TestSecurityConfig.class
 com/learningplatform/auth/repository/RefreshTokenRepositoryTest.class

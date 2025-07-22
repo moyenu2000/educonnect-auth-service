@@ -460,16 +460,33 @@ Response:
 {
   "success": true,
   "data": {
-    "totalUsers": 1,
-    "totalQuestions": 2,
-    "totalSubjects": 6,
-    "totalTopics": 1,
-    "activeContests": 0,
-    "dailyActiveUsers": 0,
-    "weeklyStats": {
-      "newUsers": 0,
-      "questionsAnswered": 0,
-      "testsCompleted": 0
+    "userStats": {
+      "totalUsers": 18,
+      "activeUsers": 8,
+      "newUsersThisWeek": 3,
+      "retentionRate": 44.44
+    },
+    "examStats": {
+      "totalExams": 5,
+      "activeExams": 2,
+      "completionRate": 60.0,
+      "averageScore": 75.5
+    },
+    "performanceStats": {
+      "overallAccuracy": 80.0,
+      "averageTime": 65,
+      "difficultyDistribution": {
+        "easy": 50,
+        "medium": 35,
+        "hard": 15,
+        "expert": 0
+      }
+    },
+    "engagementStats": {
+      "dailyActiveUsers": 8,
+      "avgSessionTime": 12,
+      "questionsPerDay": 25,
+      "streakParticipation": 42.0
     }
   }
 }

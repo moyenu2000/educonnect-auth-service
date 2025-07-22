@@ -54,7 +54,7 @@ public class User {
     @Column(name = "provider_id")
     private String providerId;
     
-    @Column(name = "two_factor_enabled")
+    @Column(name = "two_factor_enabled", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean twoFactorEnabled = false;
     
     @Column(name = "two_factor_secret")
@@ -83,8 +83,8 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
     
-    @Column(name = "failed_login_attempts")
-    private int failedLoginAttempts = 0;
+    @Column(name = "failed_login_attempts", columnDefinition = "INTEGER DEFAULT 0")
+    private Integer failedLoginAttempts = 0;
     
     @Column(name = "locked_until")
     private LocalDateTime lockedUntil;
@@ -97,6 +97,9 @@ public class User {
     }
     
     public void incrementFailedAttempts() {
+        if (this.failedLoginAttempts == null) {
+            this.failedLoginAttempts = 0;
+        }
         this.failedLoginAttempts++;
         if (this.failedLoginAttempts >= 5) {
             this.lockedUntil = LocalDateTime.now().plusMinutes(30);

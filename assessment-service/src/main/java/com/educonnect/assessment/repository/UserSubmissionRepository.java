@@ -129,4 +129,25 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
            "WHERE us.submittedAt >= :startDate " +
            "GROUP BY us.userId ORDER BY totalPoints DESC")
     List<Object[]> getGlobalRankingsAllSubmissions(@Param("startDate") LocalDateTime startDate);
+    
+    // Admin analytics queries - real data only
+    @Query("SELECT COUNT(DISTINCT us.userId) FROM UserSubmission us")
+    long countDistinctUsers();
+    
+    @Query("SELECT COUNT(DISTINCT us.userId) FROM UserSubmission us WHERE us.submittedAt >= :startDate")
+    long countActiveUsersInPeriod(@Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT COUNT(DISTINCT us.userId) FROM UserSubmission us " +
+           "WHERE us.userId IN (SELECT MIN(us2.userId) FROM UserSubmission us2 " +
+           "WHERE us2.submittedAt >= :startDate GROUP BY us2.userId)")
+    long countNewUsersInPeriod(@Param("startDate") LocalDateTime startDate);
+    
+    @Query("SELECT AVG(us.pointsEarned) FROM UserSubmission us WHERE us.isCorrect = true")
+    Double getAverageScore();
+    
+    @Query("SELECT COUNT(us) FROM UserSubmission us")
+    long getTotalSubmissions();
+    
+    @Query("SELECT COUNT(us) FROM UserSubmission us WHERE us.submittedAt >= :startDate")
+    long getSubmissionsInPeriod(@Param("startDate") LocalDateTime startDate);
 }

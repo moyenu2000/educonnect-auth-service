@@ -2,6 +2,7 @@ package com.educonnect.assessment.service;
 
 import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.Period;
+import com.educonnect.assessment.repository.LiveExamRepository;
 import com.educonnect.assessment.repository.ProblemSubmissionRepository;
 import com.educonnect.assessment.repository.SubjectRepository;
 import com.educonnect.assessment.repository.TopicRepository;
@@ -37,6 +38,9 @@ public class AnalyticsService {
     
     @Autowired
     private TopicRepository topicRepository;
+    
+    @Autowired
+    private LiveExamRepository liveExamRepository;
 
     public Map<String, Object> getUserDashboard(Period period, Long subjectId) {
         Long userId = SecurityUtils.getCurrentUserId()
@@ -158,7 +162,7 @@ public class AnalyticsService {
         streaks.put("currentStreak", totalStreak);
         streaks.put("longestStreak", userStreakRepository.findLongestStreakByUser(userId)
                 .map(s -> s.getLongestStreak()).orElse(0));
-        streaks.put("streakHistory", generateMockStreakHistory());
+        streaks.put("streakHistory", new ArrayList<>()); // Remove mock data - use real streak history if needed
         
         return streaks;
     }
@@ -193,8 +197,8 @@ public class AnalyticsService {
         // Calculate percentile
         rankings.put("percentile", calculatePercentile(globalRank));
         
-        // Mock history (can be implemented with historical rank tracking)
-        rankings.put("history", generateRankHistory());
+        // Remove mock history - use real rank tracking if needed
+        rankings.put("history", new ArrayList<>());
         
         return rankings;
     }
@@ -419,17 +423,6 @@ public class AnalyticsService {
         return trends;
     }
 
-    private List<Map<String, Object>> generateMockStreakHistory() {
-        List<Map<String, Object>> history = new ArrayList<>();
-        for (int i = 0; i < 30; i++) {
-            Map<String, Object> day = new HashMap<>();
-            day.put("date", "2024-01-" + (i + 1));
-            day.put("completed", i % 7 != 0); // Skip Sundays
-            day.put("score", i % 7 != 0 ? 80 + (i % 20) : 0);
-            history.add(day);
-        }
-        return history;
-    }
 
     private List<Map<String, Object>> getSubjectRanks(Long userId, LocalDateTime startDate) {
         List<Map<String, Object>> ranks = new ArrayList<>();
@@ -466,51 +459,148 @@ public class AnalyticsService {
         return ranks;
     }
 
-    private List<Map<String, Object>> generateRankHistory() {
-        List<Map<String, Object>> history = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("date", "2024-01-" + (i + 1));
-            entry.put("rank", 50 + (i % 10));
-            entry.put("change", i % 3 == 0 ? "up" : i % 3 == 1 ? "down" : "same");
-            history.add(entry);
-        }
-        return history;
-    }
 
-    // Admin mock data
+    // Admin analytics with real database data only
     private Map<String, Object> getUserStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalUsers", 10000);
-        stats.put("activeUsers", 8500);
-        stats.put("newUsersThisWeek", 150);
-        stats.put("retentionRate", 85.5);
+        
+        // Get actual user counts from auth service/database
+        // Note: These would typically come from the auth service
+        // For now, returning actual counts that can be calculated
+        
+        // Total users who have made submissions (real data)
+        long totalUsersWithSubmissions = userSubmissionRepository.countDistinctUsers();
+        long totalUsersWithProblemSubmissions = problemSubmissionRepository.countDistinctUsers();
+        long totalUniqueUsers = Math.max(totalUsersWithSubmissions, totalUsersWithProblemSubmissions);
+        
+        // Users active in last week (real data)
+        LocalDateTime weekAgo = LocalDateTime.now().minusWeeks(1);
+        long activeUsersThisWeek = userSubmissionRepository.countActiveUsersInPeriod(weekAgo);
+        long activeProblemUsersThisWeek = problemSubmissionRepository.countActiveUsersInPeriod(weekAgo);
+        long totalActiveUsers = Math.max(activeUsersThisWeek, activeProblemUsersThisWeek);
+        
+        // New users this week (users who made their first submission this week)
+        long newUsersThisWeek = userSubmissionRepository.countNewUsersInPeriod(weekAgo);
+        
+        stats.put("totalUsers", totalUniqueUsers);
+        stats.put("activeUsers", totalActiveUsers);
+        stats.put("newUsersThisWeek", newUsersThisWeek);
+        stats.put("retentionRate", totalUniqueUsers > 0 ? 
+            Math.round((double) totalActiveUsers / totalUniqueUsers * 100 * 100.0) / 100.0 : 0.0);
+        
         return stats;
     }
 
     private Map<String, Object> getExamStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalExams", 500);
-        stats.put("activeExams", 25);
-        stats.put("completionRate", 78.2);
-        stats.put("averageScore", 76.5);
+        
+        // Get real exam data from database queries
+        long totalExams = liveExamRepository.countTotalExams();
+        long activeExams = liveExamRepository.countActiveExams();
+        long completedExams = liveExamRepository.countCompletedExams();
+        
+        // Calculate completion rate
+        double completionRate = totalExams > 0 ? (double) completedExams / totalExams * 100 : 0.0;
+        
+        // Get average score from user submissions
+        Double averageScore = userSubmissionRepository.getAverageScore();
+        
+        stats.put("totalExams", totalExams);
+        stats.put("activeExams", activeExams);
+        stats.put("completionRate", Math.round(completionRate * 100.0) / 100.0);
+        stats.put("averageScore", averageScore != null ? Math.round(averageScore * 100.0) / 100.0 : 0.0);
+        
         return stats;
     }
 
     private Map<String, Object> getPerformanceStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("overallAccuracy", 74.8);
-        stats.put("averageTime", 42);
-        stats.put("difficultyDistribution", Map.of("easy", 40, "medium", 35, "hard", 20, "expert", 5));
+        
+        // Calculate real performance stats from our submissions data
+        long totalSubmissions = userSubmissionRepository.getTotalSubmissions();
+        long totalProblemSubmissions = problemSubmissionRepository.countTotalSubmissions();
+        long allSubmissions = totalSubmissions + totalProblemSubmissions;
+        
+        // Calculate overall accuracy from real data
+        long correctUserSubmissions = userSubmissionRepository.countCorrectSubmissionsByUserAndPeriod(
+            null, null, getStartDateForPeriod(Period.ALL_TIME));
+        long correctProblemSubmissions = problemSubmissionRepository.countCorrectSubmissions();
+        long totalCorrect = correctUserSubmissions + correctProblemSubmissions;
+        
+        double overallAccuracy = allSubmissions > 0 ? (double) totalCorrect / allSubmissions * 100 : 0.0;
+        
+        // Get real average time from both submission types
+        Double userAvgTime = userSubmissionRepository.getAverageTimeByUserAndPeriod(
+            null, null, getStartDateForPeriod(Period.ALL_TIME));
+        Double problemAvgTime = problemSubmissionRepository.getAverageTime();
+        
+        double averageTime = 0;
+        if (userAvgTime != null && problemAvgTime != null) {
+            averageTime = (userAvgTime + problemAvgTime) / 2;
+        } else if (userAvgTime != null) {
+            averageTime = userAvgTime;
+        } else if (problemAvgTime != null) {
+            averageTime = problemAvgTime;
+        }
+        
+        // Get real difficulty distribution from problem submissions
+        Map<String, Long> difficultyMap = problemSubmissionRepository.getDifficultyDistribution();
+        Map<String, Integer> difficultyDistribution = new HashMap<>();
+        long totalDifficultySubmissions = difficultyMap.values().stream().mapToLong(Long::longValue).sum();
+        
+        if (totalDifficultySubmissions > 0) {
+            difficultyDistribution.put("easy", 
+                (int) Math.round((double) difficultyMap.getOrDefault("EASY", 0L) / totalDifficultySubmissions * 100));
+            difficultyDistribution.put("medium", 
+                (int) Math.round((double) difficultyMap.getOrDefault("MEDIUM", 0L) / totalDifficultySubmissions * 100));
+            difficultyDistribution.put("hard", 
+                (int) Math.round((double) difficultyMap.getOrDefault("HARD", 0L) / totalDifficultySubmissions * 100));
+            difficultyDistribution.put("expert", 
+                (int) Math.round((double) difficultyMap.getOrDefault("EXPERT", 0L) / totalDifficultySubmissions * 100));
+        } else {
+            difficultyDistribution.put("easy", 0);
+            difficultyDistribution.put("medium", 0);
+            difficultyDistribution.put("hard", 0);
+            difficultyDistribution.put("expert", 0);
+        }
+        
+        stats.put("overallAccuracy", Math.round(overallAccuracy * 100.0) / 100.0);
+        stats.put("averageTime", Math.round(averageTime));
+        stats.put("difficultyDistribution", difficultyDistribution);
+        
         return stats;
     }
 
     private Map<String, Object> getEngagementStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("dailyActiveUsers", 2500);
-        stats.put("avgSessionTime", 25); // minutes
-        stats.put("questionsPerDay", 15000);
-        stats.put("streakParticipation", 65.8);
+        
+        // Real engagement stats from database
+        LocalDateTime today = LocalDateTime.now().minusDays(1);
+        long dailyActiveUsers = userSubmissionRepository.countActiveUsersInPeriod(today);
+        long dailyProblemActiveUsers = problemSubmissionRepository.countActiveUsersInPeriod(today);
+        long totalDailyActive = Math.max(dailyActiveUsers, dailyProblemActiveUsers);
+        
+        // Questions answered in the last day
+        long dailyUserSubmissions = userSubmissionRepository.getSubmissionsInPeriod(today);
+        long dailyProblemSubmissions = problemSubmissionRepository.getSubmissionsInPeriod(today);
+        long questionsPerDay = dailyUserSubmissions + dailyProblemSubmissions;
+        
+        // Streak participation - users with active streaks
+        long totalUsers = userSubmissionRepository.countDistinctUsers();
+        long usersWithStreaks = userStreakRepository.countUsersWithActiveStreaks();
+        double streakParticipation = totalUsers > 0 ? (double) usersWithStreaks / totalUsers * 100 : 0.0;
+        
+        // Average session time (estimated from average time per question)
+        Double avgTimePerQuestion = userSubmissionRepository.getAverageTimeByUserAndPeriod(
+            null, null, getStartDateForPeriod(Period.ALL_TIME));
+        int avgSessionTime = avgTimePerQuestion != null ? 
+            Math.max(5, Math.min(30, (int) (avgTimePerQuestion / 60 * 3))) : 10; // Convert to minutes, estimate 3 questions per session
+        
+        stats.put("dailyActiveUsers", totalDailyActive);
+        stats.put("avgSessionTime", avgSessionTime);
+        stats.put("questionsPerDay", questionsPerDay);
+        stats.put("streakParticipation", Math.round(streakParticipation * 100.0) / 100.0);
+        
         return stats;
     }
 
