@@ -1,6 +1,5 @@
 com/learningplatform/auth/AuthApplication.class
 com/learningplatform/auth/dto/TwoFactorSetupResponse$TwoFactorSetupResponseBuilder.class
-com/learningplatform/auth/security/OAuth2AuthenticationFailureHandler.class
 com/learningplatform/auth/service/ScheduledTasks.class
 com/learningplatform/auth/config/AppProperties.class
 com/learningplatform/auth/exception/ResourceNotFoundException.class
@@ -10,13 +9,11 @@ com/learningplatform/auth/dto/UpdateRoleRequest.class
 com/learningplatform/auth/dto/AuthResponse.class
 com/learningplatform/auth/entity/RefreshToken.class
 com/learningplatform/auth/dto/TwoFactorSetupResponse.class
-com/learningplatform/auth/security/CustomOAuth2UserService.class
 com/learningplatform/auth/dto/ChangePasswordRequest.class
 com/learningplatform/auth/service/UserEventPublisher.class
 com/learningplatform/auth/event/UserEventSimple.class
 com/learningplatform/auth/dto/UserResponse.class
 com/learningplatform/auth/service/EmailService.class
-com/learningplatform/auth/security/OAuth2AuthenticationSuccessHandler.class
 com/learningplatform/auth/security/oauth2/OAuth2UserInfo.class
 com/learningplatform/auth/security/JwtAuthenticationEntryPoint.class
 com/learningplatform/auth/security/oauth2/OAuth2UserInfoFactory.class
@@ -27,7 +24,6 @@ com/learningplatform/auth/dto/ForgotPasswordRequest.class
 com/learningplatform/auth/security/oauth2/GoogleOAuth2UserInfo.class
 com/learningplatform/auth/config/SecurityConfig.class
 com/learningplatform/auth/dto/TwoFactorVerificationRequest.class
-com/learningplatform/auth/security/HttpCookieOAuth2AuthorizationRequestRepository.class
 com/learningplatform/auth/dto/ApiResponse.class
 com/learningplatform/auth/dto/UpdateProfileRequest.class
 com/learningplatform/auth/service/TwoFactorAuthService.class

@@ -27,9 +27,6 @@ public class SecurityConfig {
         private final CustomUserDetailsService customUserDetailsService;
         private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
-        private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
-        private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
-        private final CustomOAuth2UserService customOAuth2UserService;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -60,9 +57,8 @@ public class SecurityConfig {
                                                 .authenticationEntryPoint(jwtAuthenticationEntryPoint))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                                .requestMatchers("/auth/**").permitAll()  // Temporarily allow all auth endpoints
+                                                .requestMatchers("/auth/**").permitAll()
                                                 .requestMatchers(
-                                                                "/oauth2/**",
                                                                 "/v3/api-docs/**",
                                                                 "/swagger-ui/**",
                                                                 "/swagger-ui.html",
@@ -74,15 +70,6 @@ public class SecurityConfig {
                                                                 "/api/v1/actuator/health/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
-                                .oauth2Login(oauth2 -> oauth2
-                                                .authorizationEndpoint(authorization -> authorization
-                                                                .baseUri("/oauth2/authorize"))
-                                                .redirectionEndpoint(redirection -> redirection
-                                                                .baseUri("/oauth2/callback/*"))
-                                                .userInfoEndpoint(userInfo -> userInfo
-                                                                .userService(customOAuth2UserService))
-                                                .successHandler(oAuth2AuthenticationSuccessHandler)
-                                                .failureHandler(oAuth2AuthenticationFailureHandler))
                                 .authenticationProvider(authenticationProvider())
                                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1,0 +1,406 @@
+# AUTH SERVICE API REFERENCE
+Base URL: http://localhost:8081/api/v1
+
+## AUTHENTICATION & REGISTRATION
+
+### 1. User Registration
+POST /auth/register
+Request:
+{
+  "username": "testuser123",
+  "email": "user@example.com", 
+  "password": "Test12345",
+  "fullName": "Test User"
+}
+Response:
+{
+  "success": true,
+  "message": "User registered successfully. Please check your email to verify your account."
+}
+
+### 2. Admin Registration
+POST /auth/create-admin
+Request:
+{
+  "username": "admin123",
+  "email": "admin@example.com",
+  "password": "Admin12345", 
+  "fullName": "Admin User"
+}
+Response:
+{
+  "success": true,
+  "message": "Admin user registered successfully. No email verification required."
+}
+
+### 3. Question Setter Registration
+POST /auth/create-question-setter
+Request:
+{
+  "username": "qs123",
+  "email": "qs@example.com",
+  "password": "QS12345",
+  "fullName": "Question Setter"
+}
+Response:
+{
+  "success": true,
+  "message": "Question setter user registered successfully. No email verification required."
+}
+
+### 4. Login
+POST /auth/login
+Request:
+{
+  "usernameOrEmail": "moyenuddin075@gmail.com",
+  "password": "newpassword123"
+}
+Response:
+{
+  "success": true,
+  "message": "Login successful",
+  "accessToken": "eyJhbGciOiJIUzUxMiJ9...",
+  "refreshToken": "4ed41da1-e404-4a5f-8d16-2c61a0f63faf",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "user": {
+    "id": 1,
+    "username": "moyen",
+    "email": "moyenuddin075@gmail.com",
+    "fullName": "Moyen Updated",
+    "bio": "Updated bio",
+    "avatarUrl": null,
+    "role": "STUDENT",
+    "verified": true,
+    "twoFactorEnabled": false,
+    "createdAt": "2025-07-14T08:55:57.988023"
+  },
+  "requiresTwoFactor": false,
+  "tempToken": null
+}
+
+### 5. Logout
+POST /auth/logout
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "refreshToken": "4ed41da1-e404-4a5f-8d16-2c61a0f63faf"
+}
+Response:
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+
+## TOKEN MANAGEMENT
+
+### 6. Refresh Token
+POST /auth/refresh-token
+Request:
+{
+  "refreshToken": "2dd3779d-d985-4602-b4cd-3a96efa7a954"
+}
+Response:
+{
+  "success": true,
+  "message": "Token refreshed successfully",
+  "accessToken": "eyJhbGciOiJIUzUxMiJ9...",
+  "refreshToken": "2dd3779d-d985-4602-b4cd-3a96efa7a954",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "user": {...},
+  "requiresTwoFactor": false,
+  "tempToken": null
+}
+
+### 7. Verify 2FA
+POST /auth/verify-2fa
+Request:
+{
+  "tempToken": "temp-token-string",
+  "code": "123456"
+}
+Response:
+{
+  "success": true,
+  "message": "2FA verification successful",
+  "accessToken": "eyJhbGciOiJIUzUxMiJ9...",
+  "refreshToken": "uuid-string",
+  "tokenType": "Bearer",
+  "expiresIn": 86400,
+  "user": {...}
+}
+
+## EMAIL VERIFICATION & PASSWORD RESET
+
+### 8. Verify Email
+GET /auth/verify-email?token=<verification-token>
+Response (Success):
+{
+  "success": true,
+  "message": "Email verified successfully"
+}
+Response (Invalid):
+{
+  "success": false,
+  "message": "Invalid verification token"
+}
+
+### 9. Resend Verification
+POST /auth/resend-verification
+Request:
+{
+  "email": "user@example.com"
+}
+Response:
+{
+  "success": false,
+  "message": "Email is already verified"
+}
+
+### 10. Forgot Password
+POST /auth/forgot-password
+Request:
+{
+  "email": "moyenuddin075@gmail.com"
+}
+Response:
+{
+  "success": true,
+  "message": "Password reset email sent successfully"
+}
+
+### 11. Reset Password
+POST /auth/reset-password
+Request:
+{
+  "token": "reset-token-from-email",
+  "password": "NewPassword123"
+}
+Response:
+{
+  "success": true,
+  "message": "Password reset successfully"
+}
+
+## USER PROFILE (Requires Authentication)
+
+### 12. Get Current User
+GET /auth/me
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "id": 1,
+  "username": "moyen",
+  "email": "moyenuddin075@gmail.com",
+  "fullName": "Moyen Updated",
+  "bio": "Updated bio",
+  "avatarUrl": null,
+  "role": "STUDENT",
+  "verified": true,
+  "twoFactorEnabled": false,
+  "createdAt": "2025-07-14T08:55:57.988023"
+}
+
+### 13. Update Profile
+PUT /auth/profile
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "fullName": "Updated Name",
+  "bio": "Updated bio text"
+}
+Response:
+{
+  "id": 1,
+  "username": "moyen",
+  "email": "moyenuddin075@gmail.com",
+  "fullName": "Updated Name",
+  "bio": "Updated bio text",
+  "avatarUrl": null,
+  "role": "STUDENT",
+  "verified": true,
+  "twoFactorEnabled": false,
+  "createdAt": "2025-07-14T08:55:57.988023"
+}
+
+### 14. Change Password
+POST /auth/change-password
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "currentPassword": "password123",
+  "newPassword": "newpassword123"
+}
+Response:
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+
+## TWO-FACTOR AUTHENTICATION (Requires Authentication)
+
+### 15. Enable 2FA
+POST /auth/2fa/enable
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "secret": "GCMYMUPZJA3SOPECUQR6S4QFDZB4OSKS",
+  "qrCodeUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADI...",
+  "manualEntryKey": "GCMY MUPZ JA3S OPEC UQR6 S4QF DZB4 OSKS"
+}
+
+### 16. Confirm 2FA Setup
+POST /auth/2fa/confirm
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "code": "123456"
+}
+Response:
+{
+  "success": true,
+  "message": "Two-factor authentication enabled successfully"
+}
+
+### 17. Disable 2FA
+POST /auth/2fa/disable
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "password": "current-password"
+}
+Response:
+{
+  "success": true,
+  "message": "Two-factor authentication disabled successfully"
+}
+
+## ADMIN ENDPOINTS (Requires ADMIN Role)
+
+### 18. Get All Users
+GET /auth/admin/users?page=0&size=10
+Headers: Authorization: Bearer <admin-token>
+Response:
+{
+  "content": [
+    {
+      "id": 1,
+      "username": "user1",
+      "email": "user1@example.com",
+      "fullName": "User One",
+      "role": "STUDENT",
+      "verified": true,
+      "enabled": true,
+      "createdAt": "2025-07-14T08:55:57.988023"
+    }
+  ],
+  "totalElements": 1,
+  "totalPages": 1,
+  "currentPage": 0,
+  "size": 10,
+  "first": true,
+  "last": true,
+  "empty": false
+}
+
+### 19. Update User Role
+PUT /auth/admin/users/{userId}/role
+Headers: Authorization: Bearer <admin-token>
+Request:
+{
+  "role": "ADMIN"
+}
+Response:
+{
+  "success": true,
+  "message": "User role updated successfully"
+}
+
+### 20. Update User Status
+PUT /auth/admin/users/{userId}/status
+Headers: Authorization: Bearer <admin-token>
+Request:
+{
+  "enabled": false
+}
+Response:
+{
+  "success": true,
+  "message": "User status updated successfully"
+}
+
+## HEALTH CHECK
+
+### 21. Health Check
+GET /actuator/health
+Response:
+{
+  "status": "UP",
+  "components": {
+    "db": {
+      "status": "UP",
+      "details": {
+        "database": "PostgreSQL",
+        "validationQuery": "SELECT 1",
+        "result": 1
+      }
+    },
+    "diskSpace": {
+      "status": "UP",
+      "details": {
+        "total": 250375106560,
+        "free": 109410455552,
+        "threshold": 10485760,
+        "path": "/app/.",
+        "exists": true
+      }
+    },
+    "mail": {
+      "status": "UP",
+      "details": {
+        "location": "smtp.gmail.com:587"
+      }
+    },
+    "ping": {
+      "status": "UP"
+    }
+  }
+}
+
+## ERROR RESPONSES
+
+### Validation Error (400)
+{
+  "error": "Validation Failed",
+  "errors": {
+    "usernameOrEmail": "Username or email is required"
+  },
+  "timestamp": "2025-07-21T19:13:54.778613986",
+  "status": 400
+}
+
+### Unauthorized (401)
+{
+  "success": false,
+  "message": "Access denied: Access Denied"
+}
+
+### Internal Server Error (500)
+{
+  "path": "uri=/api/v1/auth/register",
+  "error": "Internal Server Error", 
+  "message": "An unexpected error occurred",
+  "timestamp": "2025-07-21T19:22:59.183008238",
+  "status": 500
+}
+
+## NOTES
+- All authenticated endpoints require: Authorization: Bearer <token>
+- Passwords should not contain special characters like ! to avoid JSON parsing errors
+- Admin endpoints require ADMIN role
+- 2FA endpoints require authenticated user
+- Email verification required for regular users, not for admin/question setter
+- Base64 encoded JWT tokens contain user info (id, username, email, role)
+- Refresh tokens are UUIDs
+- Default token expiry: 24 hours (86400 seconds)

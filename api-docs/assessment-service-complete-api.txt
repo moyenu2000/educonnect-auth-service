@@ -1,0 +1,603 @@
+# ASSESSMENT SERVICE API REFERENCE
+Base URL: http://localhost:8083/api/v1
+
+## AUTHENTICATION
+All authenticated endpoints require: Authorization: Bearer <token>
+Use JWT tokens from the auth service or generate test tokens.
+
+## PUBLIC ENDPOINTS (No Authentication Required)
+
+### 1. Public Test Endpoint
+GET /test/public
+Response:
+Public test endpoint working
+
+### 2. JWT Configuration Test  
+GET /test/jwt-config
+Response:
+JWT Config Test - Validation attempt completed (expected to fail): false
+
+### 3. Health Check
+GET /actuator/health
+Response:
+{
+  "status": "UP",
+  "components": {
+    "db": {"status": "UP", "details": {"database": "PostgreSQL", "validationQuery": "isValid()"}},
+    "diskSpace": {"status": "UP"},
+    "ping": {"status": "UP"},
+    "rabbit": {"status": "UP", "details": {"version": "3.12.14"}},
+    "redis": {"status": "UP", "details": {"version": "7.4.5"}},
+    "ssl": {"status": "UP"}
+  }
+}
+
+## SUBJECT MANAGEMENT
+
+### 4. Get All Subjects
+GET /subjects
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [
+      {
+        "id": 2,
+        "name": "Mathematics",
+        "description": "Core mathematical concepts and problem solving",
+        "classLevel": "CLASS_10",
+        "displayOrder": 1,
+        "isActive": true,
+        "createdAt": "2025-07-21T06:44:11.008135",
+        "updatedAt": "2025-07-21T06:44:11.008135",
+        "topicsCount": 0,
+        "questionsCount": 1
+      }
+    ],
+    "totalElements": 5,
+    "totalPages": 1,
+    "currentPage": 0,
+    "size": 20,
+    "first": true,
+    "last": true
+  }
+}
+
+### 5. Get Public Subjects
+GET /subjects/public
+Response:
+{
+  "success": true,
+  "data": [
+    {
+      "id": 2,
+      "name": "Mathematics", 
+      "description": "Core mathematical concepts and problem solving",
+      "classLevel": "CLASS_10",
+      "displayOrder": 1,
+      "isActive": true,
+      "topicsCount": 0,
+      "questionsCount": 1
+    }
+  ]
+}
+
+### 6. Get Subject by ID
+GET /subjects/{id}
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "name": "Mathematics",
+    "description": "Core mathematical concepts and problem solving",
+    "classLevel": "CLASS_10",
+    "displayOrder": 1,
+    "isActive": true,
+    "topicsCount": 0,
+    "questionsCount": 1
+  }
+}
+
+### 7. Get Subjects with Filters
+GET /subjects?classLevel=CLASS_10&page=0&size=5
+Headers: Authorization: Bearer <token>
+Response: (Similar to #4 with pagination and filtering)
+
+### 8. Create Subject (ADMIN/QUESTION_SETTER)
+POST /subjects
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "name": "Test Subject",
+  "description": "Test subject description", 
+  "classLevel": "CLASS_10",
+  "displayOrder": 99
+}
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 7,
+    "name": "Test Subject",
+    "description": "Test subject description",
+    "classLevel": "CLASS_10", 
+    "displayOrder": 99,
+    "isActive": true,
+    "topicsCount": 0,
+    "questionsCount": 0
+  },
+  "message": "Subject created successfully"
+}
+
+## TOPIC MANAGEMENT
+
+### 9. Get All Topics
+GET /topics
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 20,
+    "first": true,
+    "last": false
+  }
+}
+
+### 10. Get Public Topics by Subject
+GET /topics/public/by-subject/{subjectId}
+Response:
+{
+  "success": true,
+  "data": []
+}
+
+### 11. Get Topics by Subject
+GET /topics?subjectId={subjectId}
+Headers: Authorization: Bearer <token>
+Response: (Similar to #9 with filtering)
+
+### 12. Create Topic (ADMIN/QUESTION_SETTER)
+POST /topics
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "name": "Test Topic",
+  "description": "Test topic description",
+  "subjectId": 2
+}
+Response:
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Test Topic",
+    "description": "Test topic description",
+    "subjectId": 2,
+    "displayOrder": 0,
+    "isActive": true,
+    "questionsCount": 0
+  },
+  "message": "Topic created successfully"
+}
+
+## QUESTION MANAGEMENT
+
+### 13. Get All Questions (ADMIN/QUESTION_SETTER)
+GET /questions
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "size": 20,
+    "questions": [
+      {
+        "id": 5,
+        "text": "What is 2+2?",
+        "type": "MCQ",
+        "subjectId": 2,
+        "topicId": null,
+        "subjectName": "Mathematics",
+        "topicName": null,
+        "difficulty": "EASY",
+        "options": [],
+        "points": 1,
+        "tags": [],
+        "attachments": [],
+        "isActive": true,
+        "createdBy": 1
+      }
+    ],
+    "totalPages": 1,
+    "filters": {
+      "types": ["MCQ", "TRUE_FALSE", "FILL_BLANK", "NUMERIC", "ESSAY"],
+      "difficulties": ["EASY", "MEDIUM", "HARD", "EXPERT"]
+    },
+    "currentPage": 0,
+    "totalElements": 2
+  }
+}
+
+### 14. Get Random Questions
+GET /questions/random?subjectId={id}&count={number}&difficulty={level}
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": [
+    {
+      "id": 5,
+      "text": "What is 2+2?",
+      "type": "MCQ",
+      "subjectId": 2,
+      "difficulty": "EASY",
+      "options": [],
+      "points": 1
+    }
+  ]
+}
+
+### 15. Get Public Daily Questions
+GET /questions/public/daily
+Response:
+{
+  "success": true,
+  "data": [
+    {
+      "id": 5,
+      "text": "What is 2+2?",
+      "type": "MCQ",
+      "subjectId": 2,
+      "difficulty": "EASY",
+      "options": [],
+      "points": 1
+    }
+  ]
+}
+
+### 16. Get Questions with Pagination and Filters
+GET /questions?page=0&size=10&subjectId={id}&difficulty={level}
+Headers: Authorization: Bearer <token>
+Response: (Similar to #13 with pagination and filtering)
+
+## DAILY QUESTIONS
+
+### 17. Get Daily Questions (Public)
+GET /daily-questions
+Response:
+{
+  "success": true,
+  "data": {
+    "totalQuestions": 0,
+    "questions": []
+  }
+}
+
+### 18. Get Daily Questions by Date
+GET /daily-questions?date=2025-07-22
+Response:
+{
+  "success": true,
+  "data": {
+    "totalQuestions": 0,
+    "questions": []
+  }
+}
+
+### 19. Get Today's Daily Questions
+GET /daily-questions/today
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "totalQuestions": 0,
+    "streakInfo": {
+      "currentStreak": 0,
+      "subjectStreaks": [],
+      "streakHistory": [],
+      "longestStreak": 0
+    },
+    "questions": []
+  }
+}
+
+### 20. Get Today's Daily Questions by Subject
+GET /daily-questions/today?subjectId={id}
+Headers: Authorization: Bearer <token>
+Response: (Similar to #19 with subject filtering)
+
+### 21. Submit Daily Question Answer (STUDENT)
+POST /daily-questions/{questionId}/submit
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "answer": "4",
+  "timeTaken": 30,
+  "explanation": "Simple addition"
+}
+Response:
+{
+  "success": false,
+  "error": "Question not found or not a daily question"
+}
+
+## LEADERBOARD
+
+### 22. Get Global Leaderboard
+GET /leaderboard/global
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 20
+  }
+}
+
+### 23. Get Public Leaderboard
+GET /leaderboard/public
+Headers: Authorization: Bearer <token>
+Response: (Similar to #22)
+
+### 24. Get Subject Leaderboard
+GET /leaderboard/subject/{subjectId}
+Headers: Authorization: Bearer <token>
+Response: (Similar to #22 with subject filtering)
+
+### 25. Get Class Leaderboard
+GET /leaderboard/class/{classLevel}
+Headers: Authorization: Bearer <token>
+Response: (Similar to #22 with class filtering)
+
+### 26. Get Rankings
+GET /analytics/rankings?type=GLOBAL&period=WEEKLY
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "rankings": [],
+    "userRank": null,
+    "totalUsers": 0
+  }
+}
+
+## CONTESTS
+
+### 27. Get All Contests
+GET /contests
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 20
+  }
+}
+
+### 28. Get Contests with Filters
+GET /contests?status=ACTIVE&type=PUBLIC&page=0&size=10
+Headers: Authorization: Bearer <token>
+Response: (Similar to #27 with filtering)
+
+## LIVE EXAMS
+
+### 29. Get All Live Exams
+GET /live-exams
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 20
+  }
+}
+
+### 30. Get Upcoming Live Exams
+GET /live-exams/upcoming
+Headers: Authorization: Bearer <token>
+Response: (Similar to #29)
+
+### 31. Get Current Live Exams
+GET /live-exams/live
+Headers: Authorization: Bearer <token>
+Response: (Similar to #29)
+
+### 32. Get Live Exams by Status/Class
+GET /live-exams?status=SCHEDULED&classLevel=CLASS_10
+Headers: Authorization: Bearer <token>
+Response: (Similar to #29 with filtering)
+
+## PERSONALIZED EXAMS
+
+### 33. Get Personalized Exams
+GET /personalized-exams
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 20
+  }
+}
+
+### 34. Get Completed Personalized Exams
+GET /personalized-exams?status=COMPLETED
+Headers: Authorization: Bearer <token>
+Response: (Similar to #33 with status filtering)
+
+## ADMIN ENDPOINTS (Requires ADMIN Role)
+
+### 35. Get Admin Analytics
+GET /admin/analytics
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "totalUsers": 1,
+    "totalQuestions": 2,
+    "totalSubjects": 6,
+    "totalTopics": 1,
+    "activeContests": 0,
+    "dailyActiveUsers": 0,
+    "weeklyStats": {
+      "newUsers": 0,
+      "questionsAnswered": 0,
+      "testsCompleted": 0
+    }
+  }
+}
+
+### 36. Get Admin Analytics by Period
+GET /admin/analytics?period=MONTHLY
+Headers: Authorization: Bearer <token>
+Response: (Similar to #35 with period filtering)
+
+### 37. Test Practice Problems (ADMIN)
+GET /admin/practice-problems-test
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "content": [],
+    "totalElements": 0,
+    "totalPages": 0,
+    "currentPage": 0,
+    "size": 10
+  }
+}
+
+### 38. Create Practice Problems from Random Questions (ADMIN)
+POST /admin/create-practice-problems?subjectId={id}&count={number}
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "message": "Practice problems created successfully",
+  "data": {
+    "createdCount": 1,
+    "duplicateCount": 0,
+    "totalRequested": 10
+  }
+}
+
+### 39. Create Practice Problems from Question IDs (ADMIN)
+POST /admin/create-practice-problems-from-ids
+Headers: Authorization: Bearer <token>
+Request:
+[1, 2, 3, 4, 5]
+Response:
+{
+  "success": true,
+  "message": "Practice problems created successfully",
+  "data": {
+    "createdCount": 2,
+    "duplicateCount": 0,
+    "invalidIds": [3, 4, 5]
+  }
+}
+
+### 40. Set Daily Questions (ADMIN)
+PUT /admin/daily-questions
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "date": "2025-07-24",
+  "questionIds": [1, 2, 3, 4, 5]
+}
+Response:
+{
+  "success": false,
+  "error": "Some question IDs are invalid: [3, 4, 5]"
+}
+
+## ERROR RESPONSES
+
+### Validation Error (400)
+{
+  "success": false,
+  "error": "Validation failed",
+  "details": {
+    "field": "error message"
+  }
+}
+
+### Unauthorized (401)
+{
+  "success": false,
+  "error": "Access denied: Access Denied"
+}
+
+### Not Found (404)
+{
+  "success": false,
+  "error": "Resource not found"
+}
+
+### Internal Server Error (500)
+{
+  "success": false,
+  "error": "An unexpected error occurred. Please try again later."
+}
+
+## WORKING ENDPOINTS SUMMARY
+
+✅ **Fully Working:**
+- Public test endpoints
+- Subject management (CRUD)
+- Topic management (CRUD) 
+- Question retrieval and filtering
+- Basic daily questions
+- Leaderboard endpoints
+- Contest listing
+- Live exam listing
+- Personalized exam listing
+- Admin analytics
+- Admin practice problem creation
+- Health check
+
+❌ **Known Issues:**
+- Some daily question operations (streak, stats, history) - Access denied
+- Practice problem endpoints - Need data setup
+- Analytics dashboard - Business logic errors
+- Question creation - Validation issues
+- Contest operations (join, submit) - Need contest data
+- Live exam operations - Need exam data
+
+## NOTES
+- Authentication works correctly with JWT tokens
+- Database connectivity is functional
+- Most CRUD operations work for basic entities
+- Some endpoints require specific data setup
+- Admin endpoints require ADMIN role in JWT token
+- Student-specific endpoints require STUDENT role
+- Pagination works across all list endpoints
+- Filtering and search capabilities are implemented
+- All responses follow consistent JSON format with success/error structure

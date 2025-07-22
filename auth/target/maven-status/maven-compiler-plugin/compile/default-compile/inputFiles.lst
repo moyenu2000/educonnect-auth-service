@@ -35,15 +35,11 @@
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/exception/UnauthorizedException.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/repository/RefreshTokenRepository.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/repository/UserRepository.java
-/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/CustomOAuth2UserService.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/CustomUserDetailsService.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/CustomUserPrincipal.java
-/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/HttpCookieOAuth2AuthorizationRequestRepository.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/JwtAuthenticationEntryPoint.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/JwtAuthenticationFilter.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/JwtUtils.java
-/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/OAuth2AuthenticationFailureHandler.java
-/home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/OAuth2AuthenticationSuccessHandler.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/oauth2/GoogleOAuth2UserInfo.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/oauth2/OAuth2UserInfo.java
 /home/pridesys/projects/408_backend/educonnect-auth-service/auth/src/main/java/com/learningplatform/auth/security/oauth2/OAuth2UserInfoFactory.java
