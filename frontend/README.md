@@ -84,7 +84,7 @@ src/
    ```
 
 4. **Access the application**
-   - URL: `http://localhost:3001` (or the port shown in terminal)
+   - URL: `http://localhost:3000` (or the port shown in terminal)
    - Login with existing users or create new accounts
 
 ### Backend Services Setup

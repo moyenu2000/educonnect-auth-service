@@ -10,6 +10,7 @@ import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.enums.QuestionType;
 import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.repository.QuestionRepository;
+import com.educonnect.assessment.repository.QuestionOptionRepository;
 import com.educonnect.assessment.repository.SubjectRepository;
 import com.educonnect.assessment.repository.TopicRepository;
 import com.educonnect.assessment.util.SecurityUtils;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -33,6 +35,9 @@ public class QuestionService {
 
     @Autowired
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private QuestionOptionRepository questionOptionRepository;
 
     @Autowired
     private SubjectRepository subjectRepository;
@@ -108,8 +113,13 @@ public class QuestionService {
         question.setSubjectId(request.getSubjectId());
         question.setTopicId(request.getTopicId());
         question.setDifficulty(request.getDifficulty());
-        question.setOptions(request.getOptions());
-        question.setCorrectAnswer(request.getCorrectAnswer());
+        
+        // Remove previous options and add new ones
+        question.setOptions(null);
+        
+        // Set correct answer based on question type
+        question.setCorrectAnswerOptionId(request.getCorrectAnswerOptionId());
+        question.setCorrectAnswerText(request.getCorrectAnswerText());
         question.setExplanation(request.getExplanation());
         question.setPoints(request.getPoints());
         question.setTags(request.getTags());
@@ -117,6 +127,32 @@ public class QuestionService {
         question.setCreatedBy(currentUserId);
 
         Question savedQuestion = questionRepository.save(question);
+        
+        // Handle options for MCQ after saving the question to get the ID
+        if (request.getOptions() != null && !request.getOptions().isEmpty()) {
+            final Long questionId = savedQuestion.getId();
+            List<com.educonnect.assessment.entity.QuestionOption> questionOptions = request.getOptions().stream()
+                .map(optionRequest -> new com.educonnect.assessment.entity.QuestionOption(
+                    questionId,
+                    optionRequest.getText(),
+                    optionRequest.getOptionOrder()
+                ))
+                .collect(Collectors.toList());
+            savedQuestion.setOptions(questionOptions);
+            savedQuestion = questionRepository.save(savedQuestion);
+            
+            // Set correct answer option ID based on correctAnswerText
+            if (request.getCorrectAnswerText() != null && !request.getCorrectAnswerText().isEmpty()) {
+                for (com.educonnect.assessment.entity.QuestionOption option : savedQuestion.getOptions()) {
+                    if (option.getText().equals(request.getCorrectAnswerText())) {
+                        savedQuestion.setCorrectAnswerOptionId(option.getId());
+                        savedQuestion.setCorrectAnswerText(null); // Clear text since we have ID now
+                        savedQuestion = questionRepository.save(savedQuestion);
+                        break;
+                    }
+                }
+            }
+        }
 
         // Create practice problem if requested
         if (request.getCreatePracticeProblem() != null && request.getCreatePracticeProblem()) {
@@ -136,8 +172,12 @@ public class QuestionService {
         return savedQuestion;
     }
 
+    @Transactional
     public Question updateQuestion(Long id, QuestionRequest request) {
-        Question question = getQuestionById(id);
+        // Verify question exists
+        if (!questionRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Question not found with id: " + id);
+        }
 
         // Verify subject exists
         if (!subjectRepository.existsById(request.getSubjectId())) {
@@ -149,19 +189,75 @@ public class QuestionService {
             throw new ResourceNotFoundException("Topic not found with id: " + request.getTopicId());
         }
 
-        question.setText(request.getText());
-        question.setType(request.getType());
-        question.setSubjectId(request.getSubjectId());
-        question.setTopicId(request.getTopicId());
-        question.setDifficulty(request.getDifficulty());
-        question.setOptions(request.getOptions());
-        question.setCorrectAnswer(request.getCorrectAnswer());
-        question.setExplanation(request.getExplanation());
-        question.setPoints(request.getPoints());
-        question.setTags(request.getTags());
-        question.setAttachments(request.getAttachments());
+        // Delete all existing options manually first
+        questionOptionRepository.deleteByQuestionId(id);
 
-        return questionRepository.save(question);
+        // Update question using native query to avoid Hibernate collection management issues
+        questionRepository.updateQuestionDetails(
+            id,
+            request.getText(),
+            request.getType().name(),
+            request.getSubjectId(),
+            request.getTopicId(),
+            request.getDifficulty().name(),
+            request.getExplanation(),
+            request.getPoints(),
+            request.getCorrectAnswerOptionId(),
+            request.getCorrectAnswerText()
+        );
+
+        // Create new options if provided
+        if (request.getOptions() != null && !request.getOptions().isEmpty()) {
+            // Create and save options directly to repository
+            List<com.educonnect.assessment.entity.QuestionOption> savedOptions = new ArrayList<>();
+            for (com.educonnect.assessment.dto.QuestionOptionRequest optionRequest : request.getOptions()) {
+                com.educonnect.assessment.entity.QuestionOption option = 
+                    new com.educonnect.assessment.entity.QuestionOption(
+                        id,
+                        optionRequest.getText(),
+                        optionRequest.getOptionOrder()
+                    );
+                com.educonnect.assessment.entity.QuestionOption savedOption = questionOptionRepository.save(option);
+                savedOptions.add(savedOption);
+            }
+            
+            // Set correct answer option ID based on correctAnswerText
+            if (request.getCorrectAnswerText() != null && !request.getCorrectAnswerText().isEmpty()) {
+                for (com.educonnect.assessment.entity.QuestionOption option : savedOptions) {
+                    if (option.getText().equals(request.getCorrectAnswerText())) {
+                        // Update the correct answer option ID using native query
+                        questionRepository.updateQuestionDetails(
+                            id,
+                            request.getText(),
+                            request.getType().name(),
+                            request.getSubjectId(),
+                            request.getTopicId(),
+                            request.getDifficulty().name(),
+                            request.getExplanation(),
+                            request.getPoints(),
+                            option.getId(),
+                            null // Clear text since we have ID now
+                        );
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Return a minimal question object to avoid Hibernate collection loading issues
+        Question result = new Question();
+        result.setId(id);
+        result.setText(request.getText());
+        result.setType(request.getType());
+        result.setSubjectId(request.getSubjectId());
+        result.setTopicId(request.getTopicId());
+        result.setDifficulty(request.getDifficulty());
+        result.setExplanation(request.getExplanation());
+        result.setPoints(request.getPoints());
+        result.setCorrectAnswerText(request.getCorrectAnswerText());
+        result.setCorrectAnswerOptionId(request.getCorrectAnswerOptionId());
+        
+        return result;
     }
 
     public void deleteQuestion(Long id) {
@@ -237,12 +333,17 @@ public class QuestionService {
         response.setCreatedAt(question.getCreatedAt());
         response.setUpdatedAt(question.getUpdatedAt());
 
-        // Convert options with IDs
-        if (question.getOptions() != null) {
-            List<QuestionOption> optionsWithIds = IntStream.range(0, question.getOptions().size())
-                    .mapToObj(i -> new QuestionOption((long) (i + 1), question.getOptions().get(i)))
+        // Set correct answer fields
+        response.setCorrectAnswerOptionId(question.getCorrectAnswerOptionId());
+        response.setCorrectAnswerText(question.getCorrectAnswerText());
+        response.setExplanation(question.getExplanation());
+
+        // Convert QuestionOption entities to DTOs
+        if (question.getOptions() != null && !question.getOptions().isEmpty()) {
+            List<QuestionOption> optionDtos = question.getOptions().stream()
+                    .map(option -> new QuestionOption(option.getId(), option.getText()))
                     .collect(Collectors.toList());
-            response.setOptions(optionsWithIds);
+            response.setOptions(optionDtos);
         }
 
         // Add subject and topic names by querying repositories directly to avoid lazy loading issues
@@ -317,5 +418,43 @@ public class QuestionService {
         result.put("filters", filters);
         
         return result;
+    }
+
+    public Map<String, Object> getQuestionStats() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Total questions count
+        long totalQuestions = questionRepository.count();
+        stats.put("totalQuestions", totalQuestions);
+        
+        // Questions by difficulty
+        Map<String, Long> questionsByDifficulty = new HashMap<>();
+        for (Difficulty difficulty : Difficulty.values()) {
+            long count = questionRepository.countByDifficulty(difficulty);
+            questionsByDifficulty.put(difficulty.name(), count);
+        }
+        stats.put("questionsByDifficulty", questionsByDifficulty);
+        
+        // Questions by subject
+        List<Object[]> subjectStats = questionRepository.getQuestionCountBySubject();
+        List<Map<String, Object>> questionsBySubject = subjectStats.stream()
+                .map(row -> {
+                    Map<String, Object> subjectMap = new HashMap<>();
+                    subjectMap.put("subjectName", row[0]);
+                    subjectMap.put("count", row[1]);
+                    return subjectMap;
+                })
+                .collect(Collectors.toList());
+        stats.put("questionsBySubject", questionsBySubject);
+        
+        // Questions by type
+        Map<String, Long> questionsByType = new HashMap<>();
+        for (QuestionType type : QuestionType.values()) {
+            long count = questionRepository.countByType(type);
+            questionsByType.put(type.name(), count);
+        }
+        stats.put("questionsByType", questionsByType);
+        
+        return stats;
     }
 }

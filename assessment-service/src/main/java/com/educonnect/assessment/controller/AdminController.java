@@ -137,6 +137,50 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(result, "Practice problems created successfully"));
     }
 
+    @PostMapping("/add-questions-to-daily")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
+    public ResponseEntity<ApiResponse<String>> addQuestionsToDailyQuestions(
+            @RequestBody AddQuestionsToDailyRequest request) {
+        
+        dailyQuestionService.setDailyQuestions(request.getDate(), request.getQuestionIds(), 
+                request.getSubjectDistribution());
+        return ResponseEntity.ok(ApiResponse.success("Questions added to daily questions successfully"));
+    }
+
+    @PostMapping("/add-questions-to-practice")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> addQuestionsToPractice(
+            @RequestBody List<Long> questionIds) {
+        
+        int created = 0;
+        int skipped = 0;
+        
+        for (Long questionId : questionIds) {
+            try {
+                practiceProblemService.createProblemFromQuestion(questionId);
+                created++;
+            } catch (Exception e) {
+                skipped++;
+            }
+        }
+        
+        Map<String, Object> result = Map.of(
+            "created", created,
+            "skipped", skipped,
+            "total", questionIds.size(),
+            "message", String.format("Added %d questions to practice problems", created)
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(result, "Questions added to practice problems successfully"));
+    }
+
+    @GetMapping("/questions/stats")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getQuestionStats() {
+        Map<String, Object> stats = questionService.getQuestionStats();
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
     @GetMapping("/practice-problems-test")
     public ResponseEntity<ApiResponse<Map<String, Object>>> testPracticeProblems(
             @RequestParam(defaultValue = "0") int page,
@@ -164,8 +208,23 @@ public class AdminController {
         }
     }
 
-    // Inner class for request DTO
+    // Inner classes for request DTOs
     public static class SetDailyQuestionsRequest {
+        private LocalDate date;
+        private List<Long> questionIds;
+        private Map<String, Object> subjectDistribution;
+
+        public LocalDate getDate() { return date; }
+        public void setDate(LocalDate date) { this.date = date; }
+        public List<Long> getQuestionIds() { return questionIds; }
+        public void setQuestionIds(List<Long> questionIds) { this.questionIds = questionIds; }
+        public Map<String, Object> getSubjectDistribution() { return subjectDistribution; }
+        public void setSubjectDistribution(Map<String, Object> subjectDistribution) { 
+            this.subjectDistribution = subjectDistribution; 
+        }
+    }
+
+    public static class AddQuestionsToDailyRequest {
         private LocalDate date;
         private List<Long> questionIds;
         private Map<String, Object> subjectDistribution;

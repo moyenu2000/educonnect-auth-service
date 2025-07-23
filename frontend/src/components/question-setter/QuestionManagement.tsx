@@ -1,0 +1,488 @@
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { assessmentService } from '@/services/assessmentService'
+import { Link, useNavigate } from 'react-router-dom'
+import { 
+  FileQuestion, 
+  Plus, 
+  Eye, 
+  Search, 
+  Filter,
+  Calendar,
+  BookOpen,
+  Trophy,
+  Check,
+  X
+} from 'lucide-react'
+
+interface QuestionOption {
+  id: number
+  text: string
+}
+
+interface Question {
+  id: number
+  text: string
+  type: string
+  difficulty: string
+  subjectId: number
+  subjectName?: string
+  topicId?: number
+  topicName?: string
+  options?: QuestionOption[]
+  correctAnswerOptionId?: number
+  correctAnswerText?: string
+  explanation?: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface Subject {
+  id: number
+  name: string
+}
+
+const QuestionManagement: React.FC = () => {
+  const navigate = useNavigate()
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [totalElements, setTotalElements] = useState(0)
+  
+  // Filters
+  const [filters, setFilters] = useState({
+    subjectId: '',
+    difficulty: '',
+    type: '',
+    search: ''
+  })
+
+  // Action states
+  const [showActionPanel, setShowActionPanel] = useState(false)
+  const [actionType, setActionType] = useState<'daily' | 'practice' | 'contest' | null>(null)
+  const [actionDate, setActionDate] = useState(new Date().toISOString().split('T')[0])
+  
+
+  useEffect(() => {
+    loadQuestions()
+    loadSubjects()
+  }, [currentPage, filters])
+
+  const loadQuestions = async () => {
+    try {
+      setLoading(true)
+      const params = {
+        page: currentPage,
+        size: 20,
+        ...(filters.subjectId && { subjectId: parseInt(filters.subjectId) }),
+        ...(filters.difficulty && { difficulty: filters.difficulty }),
+        ...(filters.type && { type: filters.type }),
+        ...(filters.search && { search: filters.search })
+      }
+
+      const response = await assessmentService.getQuestions(params)
+      console.log('API Response:', response) // Debug log
+      const data = response.data?.data
+
+      if (data) {
+        console.log('Response data:', data) // Debug log
+        setQuestions(data.questions || [])
+        setTotalPages(data.totalPages || 0)
+        setTotalElements(data.totalElements || 0)
+      } else {
+        console.log('No data in response') // Debug log
+      }
+    } catch (error) {
+      console.error('Failed to load questions:', error)
+      alert('Failed to load questions. Please check authentication and try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadSubjects = async () => {
+    try {
+      const response = await assessmentService.getSubjects()
+      const data = response.data?.data
+      if (data && data.content) {
+        setSubjects(data.content)
+      }
+    } catch (error) {
+      console.error('Failed to load subjects:', error)
+    }
+  }
+
+  const handleEditQuestion = (questionId: number) => {
+    const editPath = window.location.pathname.includes('/admin/') 
+      ? `/admin/questions/create?edit=${questionId}`
+      : `/question-setter/create?edit=${questionId}`
+    navigate(editPath)
+  }
+
+  const handleQuestionSelect = (questionId: number) => {
+    setSelectedQuestions(prev => 
+      prev.includes(questionId) 
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (selectedQuestions.length === questions.length) {
+      setSelectedQuestions([])
+    } else {
+      setSelectedQuestions(questions.map(q => q.id))
+    }
+  }
+
+  const handleBulkAction = (type: 'daily' | 'practice' | 'contest') => {
+    if (selectedQuestions.length === 0) {
+      alert('Please select questions first')
+      return
+    }
+    setActionType(type)
+    setShowActionPanel(true)
+  }
+
+  const executeAction = async () => {
+    if (!actionType || selectedQuestions.length === 0) return
+
+    try {
+      let response
+      let message = ''
+
+      switch (actionType) {
+        case 'daily':
+          response = await assessmentService.addQuestionsToDailyQuestions({
+            date: actionDate,
+            questionIds: selectedQuestions,
+            subjectDistribution: {}
+          })
+          message = 'Questions added to daily questions successfully'
+          break
+
+        case 'practice':
+          response = await assessmentService.addQuestionsToPractice(selectedQuestions)
+          message = 'Questions added to practice problems successfully'
+          break
+
+        case 'contest':
+          // For contest creation, we'll redirect to contest creation page with selected questions
+          localStorage.setItem('selectedQuestions', JSON.stringify(selectedQuestions))
+          window.location.href = '/question-setter/create-contest'
+          return
+
+        default:
+          return
+      }
+
+      if (response.data?.success) {
+        alert(message)
+        setSelectedQuestions([])
+        setShowActionPanel(false)
+        setActionType(null)
+      }
+    } catch (error) {
+      console.error('Failed to execute action:', error)
+      alert('Failed to execute action. Please try again.')
+    }
+  }
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toUpperCase()) {
+      case 'EASY': return 'bg-green-100 text-green-800'
+      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800'
+      case 'HARD': return 'bg-orange-100 text-orange-800'
+      case 'EXPERT': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getTypeColor = (type: string) => {
+    switch (type?.toUpperCase()) {
+      case 'MULTIPLE_CHOICE': return 'bg-blue-100 text-blue-800'
+      case 'TRUE_FALSE': return 'bg-purple-100 text-purple-800'
+      case 'SHORT_ANSWER': return 'bg-indigo-100 text-indigo-800'
+      case 'ESSAY': return 'bg-pink-100 text-pink-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Question Management</h1>
+          <p className="text-muted-foreground">
+            Manage and organize questions for daily questions, practice, and contests
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link to={window.location.pathname.includes('/admin/') ? '/admin/questions/create' : '/question-setter/create'}>
+            <Button variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Question
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div>
+              <label className="text-sm font-medium">Subject</label>
+              <select 
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.subjectId}
+                onChange={(e) => setFilters(prev => ({ ...prev, subjectId: e.target.value }))}
+              >
+                <option value="">All Subjects</option>
+                {subjects.map(subject => (
+                  <option key={subject.id} value={subject.id}>{subject.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Difficulty</label>
+              <select 
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.difficulty}
+                onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
+              >
+                <option value="">All Difficulties</option>
+                <option value="EASY">Easy</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HARD">Hard</option>
+                <option value="EXPERT">Expert</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Type</label>
+              <select 
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.type}
+                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+              >
+                <option value="">All Types</option>
+                <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+                <option value="TRUE_FALSE">True/False</option>
+                <option value="SHORT_ANSWER">Short Answer</option>
+                <option value="ESSAY">Essay</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Search</label>
+              <input 
+                type="text"
+                className="w-full mt-1 p-2 border rounded-md"
+                placeholder="Search questions..."
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Selection and Actions */}
+      {selectedQuestions.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium">
+                  {selectedQuestions.length} question(s) selected
+                </span>
+                <Button variant="outline" size="sm" onClick={() => setSelectedQuestions([])}>
+                  Clear Selection
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleBulkAction('daily')}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Add to Daily Questions
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleBulkAction('practice')}
+                >
+                  <BookOpen className="mr-2 h-4 w-4" />
+                  Add to Practice
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleBulkAction('contest')}
+                >
+                  <Trophy className="mr-2 h-4 w-4" />
+                  Create Contest
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Action Panel */}
+      {showActionPanel && (
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {actionType === 'daily' && 'Add to Daily Questions'}
+              {actionType === 'practice' && 'Add to Practice Problems'}
+              {actionType === 'contest' && 'Create Contest'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              {actionType === 'daily' && (
+                <div>
+                  <label className="text-sm font-medium">Date</label>
+                  <input 
+                    type="date"
+                    className="mt-1 p-2 border rounded-md"
+                    value={actionDate}
+                    onChange={(e) => setActionDate(e.target.value)}
+                  />
+                </div>
+              )}
+              <div className="flex gap-2 ml-auto">
+                <Button variant="outline" onClick={() => setShowActionPanel(false)}>
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button onClick={executeAction}>
+                  <Check className="mr-2 h-4 w-4" />
+                  Confirm
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Questions List */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Questions ({totalElements})</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSelectAll}
+              >
+                {selectedQuestions.length === questions.length ? 'Deselect All' : 'Select All'}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {questions.map((question) => (
+              <div 
+                key={question.id} 
+                className={`border rounded-lg p-4 transition-colors ${
+                  selectedQuestions.includes(question.id) 
+                    ? 'border-blue-300 bg-blue-50' 
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={selectedQuestions.includes(question.id)}
+                    onChange={() => handleQuestionSelect(question.id)}
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{question.text}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge className={getDifficultyColor(question.difficulty)}>
+                            {question.difficulty}
+                          </Badge>
+                          <Badge className={getTypeColor(question.type)}>
+                            {question.type?.replace('_', ' ')}
+                          </Badge>
+                          {question.subjectName && (
+                            <Badge variant="outline">{question.subjectName}</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleEditQuestion(question.id)}
+                          title="Edit Question"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Showing {currentPage * 20 + 1} to {Math.min((currentPage + 1) * 20, totalElements)} of {totalElements} questions
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={currentPage === 0}
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                >
+                  Previous
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={currentPage >= totalPages - 1}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+    </div>
+  )
+}
+
+export default QuestionManagement

@@ -15,6 +15,8 @@ import Layout from './components/layout/Layout'
 // Dashboard Components
 import AdminDashboard from './components/admin/AdminDashboard'
 import QuestionSetterDashboard from './components/question-setter/QuestionSetterDashboard'
+import QuestionManagement from './components/question-setter/QuestionManagement'
+import CreateQuestion from './components/question-setter/CreateQuestion'
 import StudentDashboard from './components/student/StudentDashboard'
 
 // Student Components
@@ -93,7 +95,7 @@ const ProtectedRoute: React.FC<{
   }
 
   // If wrong role, redirect to user's dashboard
-  if (requiredRole && user && user.role !== requiredRole) {
+  if (requiredRole && user && user.role && user.role !== requiredRole) {
     return <Navigate to={`/${user.role.toLowerCase()}`} replace />
   }
 
@@ -190,6 +192,16 @@ const AppContent: React.FC = () => {
           <Layout><HealthCheck /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/admin/questions" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><QuestionManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/questions/create" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><CreateQuestion /></Layout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/question-setter" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
@@ -204,6 +216,16 @@ const AppContent: React.FC = () => {
       <Route path="/question-setter/settings" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
           <Layout><TwoFactorSetup /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/manage" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><QuestionManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/create" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><CreateQuestion /></Layout>
         </ProtectedRoute>
       } />
 

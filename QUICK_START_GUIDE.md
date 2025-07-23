@@ -7,7 +7,7 @@
 - ✅ **Auth Service** (Port 8081): Authentication and user management
 - ✅ **Assessment Service** (Port 8083): Questions, exams, and analytics
 - ✅ **Discussion Service** (Port 8082): Forums, groups, and messaging
-- ✅ **Frontend Application** (Port 3001): React-based user interface
+- ✅ **Frontend Application** (Port 3000): React-based user interface
 
 ---
 
@@ -15,7 +15,7 @@
 
 | Service | URL | Purpose |
 |---------|-----|---------|
-| **Frontend App** | http://localhost:3001 | Main application interface |
+| **Frontend App** | http://localhost:3000 | Main application interface |
 | **Auth API** | http://localhost:8081/api/v1 | Authentication endpoints |
 | **Assessment API** | http://localhost:8083/api/v1 | Learning content endpoints |
 | **Discussion API** | http://localhost:8082/api/v1 | Community features endpoints |
@@ -42,7 +42,7 @@
 ## 🎮 How to Use the Platform
 
 ### 1. **Access the Application**
-1. Open your browser and go to: **http://localhost:3001**
+1. Open your browser and go to: **http://localhost:3000**
 2. You'll see the EduConnect login page
 
 ### 2. **Login Process**

@@ -49,14 +49,16 @@ public class Question {
     @Column(nullable = false)
     private Difficulty difficulty;
 
-    @ElementCollection
-    @CollectionTable(name = "question_options", joinColumns = @JoinColumn(name = "question_id"))
-    @Column(name = "option_text")
-    private List<String> options;
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "question_id")
+    @OrderBy("optionOrder ASC")
+    private List<QuestionOption> options;
 
-    @NotBlank
-    @Column(nullable = false)
-    private String correctAnswer;
+    @Column(nullable = true)
+    private Long correctAnswerOptionId;
+
+    @Column(nullable = true, columnDefinition = "TEXT")
+    private String correctAnswerText;
 
     @Column(columnDefinition = "TEXT")
     private String explanation;
@@ -161,20 +163,42 @@ public class Question {
         this.difficulty = difficulty;
     }
 
-    public List<String> getOptions() {
+    public List<QuestionOption> getOptions() {
         return options;
     }
 
-    public void setOptions(List<String> options) {
+    public void setOptions(List<QuestionOption> options) {
         this.options = options;
     }
 
-    public String getCorrectAnswer() {
-        return correctAnswer;
+    public Long getCorrectAnswerOptionId() {
+        return correctAnswerOptionId;
     }
 
-    public void setCorrectAnswer(String correctAnswer) {
-        this.correctAnswer = correctAnswer;
+    public void setCorrectAnswerOptionId(Long correctAnswerOptionId) {
+        this.correctAnswerOptionId = correctAnswerOptionId;
+    }
+
+    public String getCorrectAnswerText() {
+        return correctAnswerText;
+    }
+
+    public void setCorrectAnswerText(String correctAnswerText) {
+        this.correctAnswerText = correctAnswerText;
+    }
+
+    // Helper method for backward compatibility
+    public String getCorrectAnswer() {
+        // For MCQ questions, find the correct option text by ID
+        if (correctAnswerOptionId != null && options != null) {
+            for (QuestionOption option : options) {
+                if (option.getId().equals(correctAnswerOptionId)) {
+                    return option.getText();
+                }
+            }
+        }
+        // For non-MCQ questions or fallback, return the text
+        return correctAnswerText;
     }
 
     public String getExplanation() {

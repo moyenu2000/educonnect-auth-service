@@ -22,10 +22,11 @@ public class QuestionRequest {
     @NotNull(message = "Difficulty is required")
     private Difficulty difficulty;
 
-    private List<String> options;
+    private List<QuestionOptionRequest> options;
 
-    @NotBlank(message = "Correct answer is required")
-    private String correctAnswer;
+    private Long correctAnswerOptionId;
+
+    private String correctAnswerText;
 
     private String explanation;
 
@@ -83,20 +84,28 @@ public class QuestionRequest {
         this.difficulty = difficulty;
     }
 
-    public List<String> getOptions() {
+    public List<QuestionOptionRequest> getOptions() {
         return options;
     }
 
-    public void setOptions(List<String> options) {
+    public void setOptions(List<QuestionOptionRequest> options) {
         this.options = options;
     }
 
-    public String getCorrectAnswer() {
-        return correctAnswer;
+    public Long getCorrectAnswerOptionId() {
+        return correctAnswerOptionId;
     }
 
-    public void setCorrectAnswer(String correctAnswer) {
-        this.correctAnswer = correctAnswer;
+    public void setCorrectAnswerOptionId(Long correctAnswerOptionId) {
+        this.correctAnswerOptionId = correctAnswerOptionId;
+    }
+
+    public String getCorrectAnswerText() {
+        return correctAnswerText;
+    }
+
+    public void setCorrectAnswerText(String correctAnswerText) {
+        this.correctAnswerText = correctAnswerText;
     }
 
     public String getExplanation() {

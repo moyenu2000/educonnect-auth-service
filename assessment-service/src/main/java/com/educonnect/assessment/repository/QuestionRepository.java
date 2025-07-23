@@ -7,6 +7,7 @@ import com.educonnect.assessment.enums.QuestionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -62,4 +63,31 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     long countByTopicIdAndIsActiveTrue(Long topicId);
     
     boolean existsByCreatedBy(Long userId);
+    
+    // Statistics methods
+    long countByDifficulty(Difficulty difficulty);
+    
+    long countByType(QuestionType type);
+    
+    @Query(value = "SELECT s.name, COUNT(q.id) FROM assessment.questions q " +
+           "JOIN assessment.subjects s ON q.subject_id = s.id " +
+           "WHERE q.is_active = true GROUP BY s.name ORDER BY COUNT(q.id) DESC", 
+           nativeQuery = true)
+    List<Object[]> getQuestionCountBySubject();
+    
+    @Modifying
+    @Query(value = "UPDATE assessment.questions SET text = :text, type = :type, subject_id = :subjectId, topic_id = :topicId, " +
+                   "difficulty = :difficulty, explanation = :explanation, points = :points, " +
+                   "correct_answer_option_id = :correctAnswerOptionId, correct_answer_text = :correctAnswerText, " +
+                   "updated_at = NOW() WHERE id = :id", nativeQuery = true)
+    void updateQuestionDetails(@Param("id") Long id, 
+                              @Param("text") String text,
+                              @Param("type") String type,
+                              @Param("subjectId") Long subjectId,
+                              @Param("topicId") Long topicId,
+                              @Param("difficulty") String difficulty,
+                              @Param("explanation") String explanation,
+                              @Param("points") Integer points,
+                              @Param("correctAnswerOptionId") Long correctAnswerOptionId,
+                              @Param("correctAnswerText") String correctAnswerText);
 }

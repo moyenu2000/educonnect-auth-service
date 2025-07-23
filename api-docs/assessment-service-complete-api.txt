@@ -496,6 +496,69 @@ GET /admin/analytics?period=MONTHLY
 Headers: Authorization: Bearer <token>
 Response: (Similar to #35 with period filtering)
 
+### 37. Get Question Statistics (ADMIN/QUESTION_SETTER)
+GET /admin/questions/stats
+Headers: Authorization: Bearer <token>
+Response:
+{
+  "success": true,
+  "data": {
+    "totalQuestions": 125,
+    "questionsByDifficulty": {
+      "EASY": 45,
+      "MEDIUM": 50,
+      "HARD": 25,
+      "EXPERT": 5
+    },
+    "questionsBySubject": [
+      {"subjectName": "Mathematics", "count": 60},
+      {"subjectName": "Physics", "count": 35},
+      {"subjectName": "Chemistry", "count": 30}
+    ],
+    "questionsByType": {
+      "MULTIPLE_CHOICE": 80,
+      "TRUE_FALSE": 25,
+      "SHORT_ANSWER": 15,
+      "ESSAY": 5
+    }
+  }
+}
+
+### 38. Add Questions to Daily Questions (ADMIN/QUESTION_SETTER)
+POST /admin/add-questions-to-daily
+Headers: Authorization: Bearer <token>
+Content-Type: application/json
+Body:
+{
+  "date": "2025-01-15",
+  "questionIds": [1, 2, 3, 4, 5],
+  "subjectDistribution": {
+    "Mathematics": 3,
+    "Physics": 2
+  }
+}
+Response:
+{
+  "success": true,
+  "message": "Questions added to daily questions successfully"
+}
+
+### 39. Add Questions to Practice Problems (ADMIN/QUESTION_SETTER)
+POST /admin/add-questions-to-practice
+Headers: Authorization: Bearer <token>
+Content-Type: application/json
+Body: [1, 2, 3, 4, 5]
+Response:
+{
+  "success": true,
+  "data": {
+    "created": 5,
+    "skipped": 0,
+    "total": 5,
+    "message": "Added 5 questions to practice problems"
+  }
+}
+
 ### 37. Test Practice Problems (ADMIN)
 GET /admin/practice-problems-test
 Headers: Authorization: Bearer <token>

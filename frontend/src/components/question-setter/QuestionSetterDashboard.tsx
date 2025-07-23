@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { FileQuestion, BookOpen, Brain, Trophy, Plus, Eye } from 'lucide-react'
+import { assessmentService } from '@/services/assessmentService'
+import { FileQuestion, BookOpen, Brain, Trophy, Plus, Eye, Settings } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface QuestionStats {
@@ -29,24 +30,38 @@ const QuestionSetterDashboard: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      // Mock data - you can replace with actual API call
-      const mockStats: QuestionStats = {
-        totalQuestions: 45,
-        questionsByDifficulty: {
-          EASY: 15,
-          MEDIUM: 18,
-          HARD: 10,
-          EXPERT: 2
-        },
-        questionsBySubject: [
-          { subjectName: 'Mathematics', count: 20 },
-          { subjectName: 'Physics', count: 15 },
-          { subjectName: 'Chemistry', count: 10 }
-        ]
+      const response = await assessmentService.getQuestionStats()
+      const data = response.data?.data
+      
+      if (data) {
+        // Transform the API response to match our interface
+        const transformedStats: QuestionStats = {
+          totalQuestions: data.totalQuestions || 0,
+          questionsByDifficulty: {
+            EASY: data.questionsByDifficulty?.EASY || 0,
+            MEDIUM: data.questionsByDifficulty?.MEDIUM || 0,
+            HARD: data.questionsByDifficulty?.HARD || 0,
+            EXPERT: data.questionsByDifficulty?.EXPERT || 0
+          },
+          questionsBySubject: data.questionsBySubject || []
+        }
+        setStats(transformedStats)
+      } else {
+        // Fallback to empty stats if no data
+        setStats({
+          totalQuestions: 0,
+          questionsByDifficulty: { EASY: 0, MEDIUM: 0, HARD: 0, EXPERT: 0 },
+          questionsBySubject: []
+        })
       }
-      setStats(mockStats)
     } catch (error) {
       console.error('Failed to load stats:', error)
+      // Set empty stats on error
+      setStats({
+        totalQuestions: 0,
+        questionsByDifficulty: { EASY: 0, MEDIUM: 0, HARD: 0, EXPERT: 0 },
+        questionsBySubject: []
+      })
     } finally {
       setLoading(false)
     }
@@ -84,7 +99,7 @@ const QuestionSetterDashboard: React.FC = () => {
             Create and manage questions for the platform
           </p>
         </div>
-        <Link to="/question-setter/create-question">
+        <Link to="/question-setter/create">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Create Question
@@ -159,7 +174,7 @@ const QuestionSetterDashboard: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Link to="/question-setter/create-question">
+            <Link to="/question-setter/create">
               <Button className="w-full justify-start" variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 Create New Question
@@ -169,6 +184,12 @@ const QuestionSetterDashboard: React.FC = () => {
               <Button className="w-full justify-start" variant="outline">
                 <Eye className="mr-2 h-4 w-4" />
                 View All Questions
+              </Button>
+            </Link>
+            <Link to="/question-setter/manage">
+              <Button className="w-full justify-start" variant="outline">
+                <Settings className="mr-2 h-4 w-4" />
+                Manage Questions
               </Button>
             </Link>
             <Link to="/question-setter/subjects">

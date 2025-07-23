@@ -24,6 +24,11 @@ export interface Topic {
   questionsCount: number
 }
 
+export interface QuestionOption {
+  id: number
+  text: string
+}
+
 export interface Question {
   id: number
   text: string
@@ -33,12 +38,17 @@ export interface Question {
   subjectName: string
   topicName?: string
   difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT'
-  options: Array<{ id: number, text: string, isCorrect: boolean }>
+  options: QuestionOption[]
+  correctAnswerOptionId?: number
+  correctAnswerText?: string
+  explanation?: string
   points: number
   tags: string[]
   attachments: string[]
   isActive: boolean
   createdBy: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Contest {
@@ -292,4 +302,16 @@ export const assessmentService = {
   
   createPracticeProblemsFromIds: (questionIds: number[]) =>
     assessmentApi.post('/admin/create-practice-problems-from-ids', questionIds),
+  
+  // Question Management for Admin/Question Setter
+  getQuestionStats: () => assessmentApi.get('/admin/questions/stats'),
+  
+  addQuestionsToDailyQuestions: (data: {
+    date: string
+    questionIds: number[]
+    subjectDistribution?: any
+  }) => assessmentApi.post('/admin/add-questions-to-daily', data),
+  
+  addQuestionsToPractice: (questionIds: number[]) =>
+    assessmentApi.post('/admin/add-questions-to-practice', questionIds),
 }

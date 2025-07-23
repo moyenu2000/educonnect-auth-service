@@ -8,8 +8,10 @@ import com.educonnect.assessment.entity.UserStreak;
 import com.educonnect.assessment.enums.ClassLevel;
 import com.educonnect.assessment.enums.Difficulty;
 import com.educonnect.assessment.repository.DailyQuestionRepository;
+import com.educonnect.assessment.repository.QuestionRepository;
 import com.educonnect.assessment.repository.UserSubmissionRepository;
 import com.educonnect.assessment.repository.UserStreakRepository;
+import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,9 @@ public class DailyQuestionService {
 
     @Autowired
     private DailyQuestionRepository dailyQuestionRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
 
     @Autowired
     private UserSubmissionRepository userSubmissionRepository;
@@ -367,10 +372,15 @@ public class DailyQuestionService {
 
         // Add new daily questions
         for (Long questionId : questionIds) {
+            // Fetch the question to get subject and difficulty
+            Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
+            
             DailyQuestion dailyQuestion = new DailyQuestion();
             dailyQuestion.setQuestionId(questionId);
             dailyQuestion.setDate(date);
-            // You would need to fetch the question to get subject and difficulty
+            dailyQuestion.setSubjectId(question.getSubjectId());
+            dailyQuestion.setDifficulty(question.getDifficulty());
             dailyQuestionRepository.save(dailyQuestion);
         }
     }

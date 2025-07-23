@@ -15,6 +15,9 @@ public class QuestionResponse {
     private String topicName;
     private Difficulty difficulty;
     private List<QuestionOption> options;
+    private Long correctAnswerOptionId;
+    private String correctAnswerText;
+    private String explanation;
     private Integer points;
     private List<String> tags;
     private List<String> attachments;
@@ -97,7 +100,29 @@ public class QuestionResponse {
         this.options = options;
     }
 
+    public Long getCorrectAnswerOptionId() {
+        return correctAnswerOptionId;
+    }
 
+    public void setCorrectAnswerOptionId(Long correctAnswerOptionId) {
+        this.correctAnswerOptionId = correctAnswerOptionId;
+    }
+
+    public String getCorrectAnswerText() {
+        return correctAnswerText;
+    }
+
+    public void setCorrectAnswerText(String correctAnswerText) {
+        this.correctAnswerText = correctAnswerText;
+    }
+
+    public String getExplanation() {
+        return explanation;
+    }
+
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
+    }
 
     public Integer getPoints() {
         return points;

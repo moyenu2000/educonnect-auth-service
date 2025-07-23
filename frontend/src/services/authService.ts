@@ -165,6 +165,11 @@ class AuthService {
     const response = await fetch(`${BASE_URL}/auth/me`, {
       headers: this.getAuthHeaders()
     });
+    
+    if (!response.ok) {
+      throw new Error(`Authentication failed: ${response.status}`);
+    }
+    
     return response.json();
   }
 

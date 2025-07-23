@@ -242,8 +242,8 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
                 minimalResponse.setDifficulty(question.getDifficulty());
                 minimalResponse.setPoints(question.getPoints());
                 if (question.getOptions() != null) {
-                    List<QuestionOption> optionsWithIds = IntStream.range(0, question.getOptions().size())
-                            .mapToObj(i -> new QuestionOption((long) (i + 1), question.getOptions().get(i)))
+                    List<com.educonnect.assessment.dto.QuestionOption> optionsWithIds = question.getOptions().stream()
+                            .map(option -> new com.educonnect.assessment.dto.QuestionOption(option.getId(), option.getText()))
                             .collect(Collectors.toList());
                     minimalResponse.setOptions(optionsWithIds);
                 }
