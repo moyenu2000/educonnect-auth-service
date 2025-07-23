@@ -197,6 +197,9 @@ export const assessmentService = {
   
   setDailyQuestions: (data: { date: string, questionIds: number[] }) =>
     assessmentApi.put('/daily-questions', data),
+  
+  removeDailyQuestion: (dailyQuestionId: number) =>
+    assessmentApi.delete(`/daily-questions/${dailyQuestionId}`),
 
   // Contests
   getContests: (params?: {

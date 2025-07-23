@@ -8,6 +8,7 @@ export interface User {
   role: string;
   verified: boolean;
   twoFactorEnabled: boolean;
+  enabled: boolean;
   createdAt: string;
 }
 

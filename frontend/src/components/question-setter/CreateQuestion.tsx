@@ -46,6 +46,7 @@ const CreateQuestion: React.FC = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const questionId = searchParams.get('edit')
+  const returnTo = searchParams.get('returnTo')
   const isEditing = !!questionId
   const isAdminRoute = window.location.pathname.includes('/admin/')
   const [loading, setLoading] = useState(false)
@@ -310,22 +311,40 @@ const CreateQuestion: React.FC = () => {
 
     return (
       <div className="space-y-4">
-        <label className="text-sm font-medium">Options</label>
+        <label className="text-sm font-medium">
+          Options
+          {isEditing && (
+            <span className="text-xs text-gray-500 ml-2">
+              (Current correct answer is highlighted)
+            </span>
+          )}
+        </label>
         {formData.options.map((option, index) => (
-          <div key={index} className="flex items-center gap-3 p-3 border rounded">
+          <div 
+            key={index} 
+            className={`flex items-center gap-3 p-3 border rounded transition-colors ${
+              option.isCorrect 
+                ? 'border-green-400 bg-green-50' 
+                : 'border-gray-300 hover:border-gray-400'
+            }`}
+          >
             <input
               type="radio"
               name="correctOption"
               checked={option.isCorrect}
               onChange={() => handleOptionChange(index, 'isCorrect', true)}
-              className="text-blue-600"
+              className="text-green-600 focus:ring-green-500"
             />
             <input
               type="text"
               value={option.text}
               onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
               placeholder={`Option ${index + 1}`}
-              className="flex-1 p-2 border rounded-md"
+              className={`flex-1 p-2 border rounded-md ${
+                option.isCorrect 
+                  ? 'border-green-300 bg-green-50 font-medium text-green-900' 
+                  : 'border-gray-300'
+              }`}
             />
             {formData.options.length > 2 && (
               <Button
@@ -363,7 +382,10 @@ const CreateQuestion: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link to={isAdminRoute ? '/admin/questions' : '/question-setter/manage'}>
+          <Link to={
+            returnTo === 'daily-questions' ? '/admin/daily-questions' :
+            isAdminRoute ? '/admin/questions' : '/question-setter/manage'
+          }>
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -484,6 +506,19 @@ const CreateQuestion: React.FC = () => {
                 <p className="text-sm text-red-600 mt-1">{errors.points}</p>
               )}
             </div>
+
+            {/* Current Correct Answer Display (when editing) */}
+            {isEditing && formData.type === 'MCQ' && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">Current Correct Answer</h4>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-blue-800">
+                    {formData.options.find(opt => opt.isCorrect)?.text || 'No correct answer selected'}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Options Section */}
             {renderOptionsSection()}

@@ -2,34 +2,68 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
 import type { User, UsersPageResponse } from '../services/authService';
 
+type TabType = 'enabled' | 'disabled';
+
 export const AdminUserManagement: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [totalPages, setTotalPages] = useState(0);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [activeTab, setActiveTab] = useState<TabType>('enabled');
+  
+  // Calculate pagination for filtered data
+  const USERS_PER_PAGE = 10;
+  const totalElements = filteredUsers.length;
+  const totalPages = Math.ceil(totalElements / USERS_PER_PAGE);
+  const startIndex = currentPage * USERS_PER_PAGE;
+  const endIndex = startIndex + USERS_PER_PAGE;
+  const currentPageUsers = filteredUsers.slice(startIndex, endIndex);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    loadAllUsers();
+  }, []);
 
-  const loadUsers = useCallback(async () => {
+  useEffect(() => {
+    filterUsers();
+  }, [allUsers, activeTab]);
+
+  const loadAllUsers = useCallback(async () => {
     setLoading(true);
     setError('');
 
     try {
-      const response: UsersPageResponse = await authService.getAllUsers(currentPage, 10);
-      setUsers(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
-    } catch {
-      setError('Failed to load users. Please check your permissions.');
+      // Load all users by making multiple API calls if needed
+      let allUsersData: User[] = [];
+      let currentApiPage = 0;
+      let hasMorePages = true;
+      
+      while (hasMorePages) {
+        const response: UsersPageResponse = await authService.getAllUsers(currentApiPage, 50); // Use larger page size
+        const users = response.content || [];
+        allUsersData = [...allUsersData, ...users];
+        
+        hasMorePages = !response.last && users.length > 0;
+        currentApiPage++;
+      }
+      
+      setAllUsers(allUsersData);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      setError('Failed to load users. Please check your permissions and network connection.');
     } finally {
       setLoading(false);
     }
-  }, [currentPage]);
+  }, []);
+
+  const filterUsers = useCallback(() => {
+    const filtered = allUsers.filter(user => {
+      return activeTab === 'enabled' ? user.enabled : !user.enabled;
+    });
+    setFilteredUsers(filtered);
+    setCurrentPage(0); // Reset to first page when filter changes
+  }, [allUsers, activeTab]);
 
   const handleRoleChange = async (userId: number, newRole: string) => {
     setError('');
@@ -39,7 +73,7 @@ export const AdminUserManagement: React.FC = () => {
       const result = await authService.updateUserRole(userId, newRole);
       if (result.success) {
         setSuccess(`User role updated to ${newRole}`);
-        await loadUsers();
+        await loadAllUsers();
       } else {
         setError(result.message);
       }
@@ -56,7 +90,7 @@ export const AdminUserManagement: React.FC = () => {
       const result = await authService.updateUserStatus(userId, !currentEnabled);
       if (result.success) {
         setSuccess(`User ${!currentEnabled ? 'enabled' : 'disabled'} successfully`);
-        await loadUsers();
+        await loadAllUsers();
       } else {
         setError(result.message);
       }
@@ -67,6 +101,11 @@ export const AdminUserManagement: React.FC = () => {
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
+  };
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    // filterUsers will be called automatically via useEffect and will reset currentPage
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -99,13 +138,39 @@ export const AdminUserManagement: React.FC = () => {
       )}
 
       <div className="bg-white rounded-lg shadow-md">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+            <button
+              onClick={() => handleTabChange('enabled')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'enabled'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Enabled Users
+            </button>
+            <button
+              onClick={() => handleTabChange('disabled')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'disabled'
+                  ? 'border-indigo-500 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Disabled Users
+            </button>
+          </nav>
+        </div>
+
         <div className="p-6 border-b">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">
-              All Users ({totalElements})
+              {activeTab === 'enabled' ? 'Enabled' : 'Disabled'} Users ({totalElements})
             </h3>
             <button
-              onClick={loadUsers}
+              onClick={loadAllUsers}
               disabled={loading}
               className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
@@ -114,7 +179,7 @@ export const AdminUserManagement: React.FC = () => {
           </div>
         </div>
 
-        {loading && users.length === 0 ? (
+        {loading && currentPageUsers.length === 0 ? (
           <div className="p-6 text-center">Loading users...</div>
         ) : (
           <>
@@ -143,7 +208,7 @@ export const AdminUserManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
+                  {currentPageUsers.map((user) => (
                     <tr key={user.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
@@ -162,9 +227,9 @@ export const AdminUserManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.enabled !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          user.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {user.enabled !== false ? 'Active' : 'Disabled'}
+                          {user.enabled ? 'Active' : 'Disabled'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -189,14 +254,14 @@ export const AdminUserManagement: React.FC = () => {
                         </select>
                         
                         <button
-                          onClick={() => handleStatusToggle(user.id, user.enabled !== false)}
+                          onClick={() => handleStatusToggle(user.id, user.enabled)}
                           className={`text-xs px-2 py-1 rounded ${
-                            user.enabled !== false
+                            user.enabled
                               ? 'text-red-600 hover:text-red-900'
                               : 'text-green-600 hover:text-green-900'
                           }`}
                         >
-                          {user.enabled !== false ? 'Disable' : 'Enable'}
+                          {user.enabled ? 'Disable' : 'Enable'}
                         </button>
                       </td>
                     </tr>
@@ -209,7 +274,7 @@ export const AdminUserManagement: React.FC = () => {
               <div className="px-6 py-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-700">
-                    Showing {currentPage * 10 + 1} to {Math.min((currentPage + 1) * 10, totalElements)} of {totalElements} users
+                    Showing {startIndex + 1} to {Math.min(endIndex, totalElements)} of {totalElements} users
                   </div>
                   <div className="flex space-x-2">
                     <button
@@ -238,7 +303,7 @@ export const AdminUserManagement: React.FC = () => {
           </>
         )}
 
-        {users.length === 0 && !loading && (
+        {filteredUsers.length === 0 && !loading && (
           <div className="p-6 text-center text-gray-500">
             No users found
           </div>

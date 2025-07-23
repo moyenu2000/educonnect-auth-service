@@ -151,6 +151,11 @@ public class AuthService {
                     "Account is locked due to too many failed login attempts. Please try again later.");
         }
 
+        // Check if account is disabled
+        if (!user.isEnabled()) {
+            throw new BadRequestException("Your account has been disabled. Please contact the administrator.");
+        }
+
         // Check if email is verified
         if (!user.isVerified() && user.getProvider() == AuthProvider.LOCAL) {
             throw new BadRequestException("Please verify your email before logging in.");
@@ -416,6 +421,7 @@ public class AuthService {
                 .bio(user.getBio())
                 .avatarUrl(user.getAvatarUrl())
                 .role(user.getRole().name())
+                .enabled(user.isEnabled())
                 .verified(user.isVerified())
                 .twoFactorEnabled(user.isTwoFactorEnabled())
                 .createdAt(user.getCreatedAt())

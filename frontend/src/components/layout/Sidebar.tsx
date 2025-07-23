@@ -28,6 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Subjects', href: '/admin/subjects', icon: BookOpen },
     { name: 'Questions', href: '/admin/questions', icon: FileQuestion },
+    { name: 'Daily Questions', href: '/admin/daily-questions', icon: Calendar },
     { name: 'Contests', href: '/admin/contests', icon: Trophy },
     { name: 'Live Exams', href: '/admin/live-exams', icon: Calendar },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },

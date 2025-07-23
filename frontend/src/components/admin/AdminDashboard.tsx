@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
-import { Users, BookOpen, FileQuestion, Trophy, TrendingUp, Activity, Settings } from 'lucide-react'
+import { Users, BookOpen, FileQuestion, Trophy, TrendingUp, Activity, Settings, Calendar } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface AdminAnalytics {
@@ -193,6 +193,12 @@ const AdminDashboard: React.FC = () => {
               <Button className="w-full justify-start" variant="outline">
                 <FileQuestion className="mr-2 h-4 w-4" />
                 Manage Questions
+              </Button>
+            </Link>
+            <Link to="/admin/daily-questions">
+              <Button className="w-full justify-start" variant="outline">
+                <Calendar className="mr-2 h-4 w-4" />
+                Manage Daily Questions
               </Button>
             </Link>
             <Button className="w-full justify-start" variant="outline">

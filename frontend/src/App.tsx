@@ -28,6 +28,7 @@ import LiveExams from './components/student/LiveExams'
 
 // Admin Components  
 import SubjectManagement from './components/admin/SubjectManagement'
+import DailyQuestionManagement from './components/admin/DailyQuestionManagement'
 
 // Test Component
 import TestPage from './components/TestPage'
@@ -200,6 +201,11 @@ const AppContent: React.FC = () => {
       <Route path="/admin/questions/create" element={
         <ProtectedRoute requiredRole="ADMIN">
           <Layout><CreateQuestion /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/daily-questions" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><DailyQuestionManagement /></Layout>
         </ProtectedRoute>
       } />
 

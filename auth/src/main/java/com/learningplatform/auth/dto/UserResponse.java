@@ -21,6 +21,7 @@ public class UserResponse {
     private String bio;
     private String avatarUrl;
     private String role;
+    private boolean enabled;
     private boolean verified;
     private boolean twoFactorEnabled;
     private LocalDateTime createdAt;

@@ -233,6 +233,12 @@ class AuthService {
     const response = await fetch(`${BASE_URL}/auth/admin/users?page=${page}&size=${size}`, {
       headers: this.getAuthHeaders()
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    
     return response.json();
   }
 
