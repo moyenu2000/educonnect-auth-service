@@ -351,7 +351,15 @@ const QuestionManagement: React.FC = () => {
       {/* Filters / controls / configuration */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Question Filters & Actions</CardTitle>
+            <Link to={window.location.pathname.includes('/admin/') ? '/admin/questions/create' : '/question-setter/create'}>
+              <Button variant="outline">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Question
+              </Button>
+            </Link>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">

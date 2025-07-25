@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Menu } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useAuth } from '@/contexts/AuthContext'
@@ -8,10 +8,9 @@ import Sidebar from './Sidebar'
 
 interface HeaderProps {
   title?: string
-  showBackButton?: boolean
 }
 
-const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showBackButton = false }) => {
+const Header: React.FC<HeaderProps> = ({ title = 'Dashboard' }) => {
   const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -29,7 +28,10 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showBackButton = f
     if (segments.includes('admin')) {
       if (segments.includes('users')) return 'User Management'
       if (segments.includes('subjects')) return 'Subject Management'
-      if (segments.includes('questions')) return 'Question Management'
+      if (segments.includes('questions')) {
+        if (segments.includes('daily-config')) return 'Configure Daily Questions'
+        return 'Question Management'
+      }
       if (segments.includes('daily-questions')) return 'Daily Questions'
       if (segments.includes('contests')) return 'Contests'
       if (segments.includes('live-exams')) return 'Live Exams'
@@ -43,6 +45,7 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showBackButton = f
       if (segments.includes('questions')) return 'My Questions'
       if (segments.includes('subjects')) return 'Subjects & Topics'
       if (segments.includes('create-question')) return 'Create Question'
+      if (segments.includes('daily-config')) return 'Configure Daily Questions'
       if (segments.includes('contests')) return 'Contests'
       if (segments.includes('analytics')) return 'Analytics'
       if (segments.includes('profile')) return 'Profile'
@@ -68,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showBackButton = f
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background">
-      <div className="flex h-16 items-center gap-4 px-4">
+      <div className="flex h-14 items-center gap-4 px-4 lg:h-[60px] lg:px-6">
         {/* Mobile menu button */}
         <Dialog.Root>
           <Dialog.Trigger asChild>
@@ -83,16 +86,13 @@ const Header: React.FC<HeaderProps> = ({ title = 'Dashboard', showBackButton = f
         </Dialog.Root>
 
         {/* Back button */}
-        {showBackButton && (
-          <Button variant="ghost" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-            <span className="sr-only">Go back</span>
-          </Button>
-        )}
+        <Button variant="ghost" size="sm" onClick={handleBack} className="px-3">
+          ← Back
+        </Button>
 
         {/* Page title */}
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold">{getPageTitle()}</h1>
+        <div className="flex-1 font-semibold">
+          <div className="leading-6 text-base">{getPageTitle()}</div>
         </div>
       </div>
     </header>

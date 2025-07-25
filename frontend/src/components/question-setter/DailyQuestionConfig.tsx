@@ -167,37 +167,16 @@ const DailyQuestionConfig: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Configure Daily Questions</h1>
-            <p className="text-muted-foreground">
-              Add questions to daily questions list and configure their settings
-            </p>
-          </div>
-        </div>
-      </div>
+
 
       {/* Date Selection */}
       <Card>
-        <CardHeader>
-          <CardTitle>Date Configuration</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-w-xs">
-            <label className="block text-sm font-medium mb-2">Select Date</label>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <label className="text-lg font-semibold">Select Date</label>
             <input 
               type="date"
-              className="w-full p-3 border rounded-md"
+              className="p-3 border rounded-md"
               value={actionDate}
               onChange={(e) => setActionDate(e.target.value)}
             />
@@ -279,8 +258,42 @@ const DailyQuestionConfig: React.FC = () => {
                           <Badge className={getDifficultyColor(question.difficulty)}>
                             {question.difficulty}
                           </Badge>
+                          <Badge className={getTypeColor(question.type)}>
+                            {question.type?.replace('_', ' ')}
+                          </Badge>
                         </div>
-                        <p className="text-sm text-gray-700">{question.text}</p>
+                        <p className="text-sm text-gray-700 mb-3">{question.text}</p>
+                        
+                        {/* Show options for multiple choice and true/false questions */}
+                        {question.options && question.options.length > 0 && (
+                          <div className="mb-2">
+                            <p className="text-xs font-medium text-gray-600 mb-1">Options:</p>
+                            <div className="space-y-1">
+                              {question.options.map((option: QuestionOption, optionIndex: number) => (
+                                <div key={option.id} className={`text-xs p-2 rounded ${
+                                  option.id === question.correctAnswerOptionId 
+                                    ? 'bg-green-100 text-green-800 font-medium' 
+                                    : 'bg-gray-50 text-gray-700'
+                                }`}>
+                                  <span className="font-medium">{String.fromCharCode(65 + optionIndex)}.</span> {option.text}
+                                  {option.id === question.correctAnswerOptionId && (
+                                    <span className="ml-2 text-green-600">✓ Correct</span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Show correct answer for non-multiple choice questions */}
+                        {question.correctAnswerText && !question.options?.length && (
+                          <div className="mb-2">
+                            <p className="text-xs font-medium text-gray-600">Correct Answer:</p>
+                            <p className="text-xs bg-green-100 text-green-800 p-2 rounded font-medium">
+                              {question.correctAnswerText}
+                            </p>
+                          </div>
+                        )}
                       </div>
                       <Button
                         size="sm"
