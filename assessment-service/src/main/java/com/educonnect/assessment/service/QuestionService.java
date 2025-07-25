@@ -130,10 +130,10 @@ public class QuestionService {
         
         // Handle options for MCQ after saving the question to get the ID
         if (request.getOptions() != null && !request.getOptions().isEmpty()) {
-            final Long questionId = savedQuestion.getId();
+            final Question finalQuestion = savedQuestion;
             List<com.educonnect.assessment.entity.QuestionOption> questionOptions = request.getOptions().stream()
                 .map(optionRequest -> new com.educonnect.assessment.entity.QuestionOption(
-                    questionId,
+                    finalQuestion,
                     optionRequest.getText(),
                     optionRequest.getOptionOrder()
                 ))
@@ -206,6 +206,10 @@ public class QuestionService {
             request.getCorrectAnswerText()
         );
 
+        // Get the updated question entity
+        Question updatedQuestion = questionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + id));
+
         // Create new options if provided
         if (request.getOptions() != null && !request.getOptions().isEmpty()) {
             // Create and save options directly to repository
@@ -213,7 +217,7 @@ public class QuestionService {
             for (com.educonnect.assessment.dto.QuestionOptionRequest optionRequest : request.getOptions()) {
                 com.educonnect.assessment.entity.QuestionOption option = 
                     new com.educonnect.assessment.entity.QuestionOption(
-                        id,
+                        updatedQuestion,
                         optionRequest.getText(),
                         optionRequest.getOptionOrder()
                     );

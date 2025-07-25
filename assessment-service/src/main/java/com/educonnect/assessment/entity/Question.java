@@ -49,8 +49,7 @@ public class Question {
     @Column(nullable = false)
     private Difficulty difficulty;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "question_id")
+    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("optionOrder ASC")
     private List<QuestionOption> options;
 

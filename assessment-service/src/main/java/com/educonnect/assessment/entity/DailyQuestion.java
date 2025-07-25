@@ -9,18 +9,18 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "daily_questions", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"date", "questionId"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"questionId", "date"}))
 public class DailyQuestion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "question_id", nullable = false)
     private Long questionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "questionId", insertable = false, updatable = false)
+    @JoinColumn(name = "question_id", insertable = false, updatable = false)
     @JsonIgnore
     private Question question;
 
@@ -29,8 +29,13 @@ public class DailyQuestion {
     private LocalDate date;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "subject_id", nullable = false)
     private Long subjectId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_id", insertable = false, updatable = false)
+    @JsonIgnore
+    private Subject subject;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -38,9 +43,12 @@ public class DailyQuestion {
     private Difficulty difficulty;
 
     @Column(nullable = false)
-    private Integer points = 1;
+    private Integer points;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "bonus_points")
+    private Integer bonusPoints = 0;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -88,6 +96,14 @@ public class DailyQuestion {
         this.subjectId = subjectId;
     }
 
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
+    }
+
     public Difficulty getDifficulty() {
         return difficulty;
     }
@@ -102,6 +118,14 @@ public class DailyQuestion {
 
     public void setPoints(Integer points) {
         this.points = points;
+    }
+
+    public Integer getBonusPoints() {
+        return bonusPoints;
+    }
+
+    public void setBonusPoints(Integer bonusPoints) {
+        this.bonusPoints = bonusPoints;
     }
 
     public LocalDateTime getCreatedAt() {

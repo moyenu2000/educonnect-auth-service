@@ -1,0 +1,244 @@
+package com.educonnect.assessment.controller;
+
+import com.educonnect.assessment.dto.ApiResponse;
+import com.educonnect.assessment.dto.PagedResponse;
+import com.educonnect.assessment.entity.DailyQuestion;
+import com.educonnect.assessment.entity.DailyQuestionSubmission;
+import com.educonnect.assessment.enums.ClassLevel;
+import com.educonnect.assessment.enums.Difficulty;
+import com.educonnect.assessment.service.DailyQuestionServiceNew;
+import com.educonnect.assessment.util.SecurityUtils;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/daily-questions")
+public class DailyQuestionControllerNew {
+
+    @Autowired
+    private DailyQuestionServiceNew dailyQuestionService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestions(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) UUID subjectId,
+            @RequestParam(required = false) ClassLevel classLevel,
+            @RequestParam(required = false) Difficulty difficulty) {
+        
+        Map<String, Object> result = dailyQuestionService.getDailyQuestions(date, subjectId, classLevel, difficulty);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/today")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTodayDailyQuestions(
+            @RequestParam(required = false) UUID subjectId,
+            @RequestParam(required = false) ClassLevel classLevel,
+            @RequestParam(required = false) Difficulty difficulty) {
+        
+        Map<String, Object> result = dailyQuestionService.getDailyQuestions(LocalDate.now(), subjectId, classLevel, difficulty);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/details")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestionDetails(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) UUID subjectId,
+            @RequestParam(required = false) ClassLevel classLevel) {
+        
+        Map<String, Object> result = dailyQuestionService.getDailyQuestionDetails(date, subjectId, classLevel);
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @PostMapping("/{dailyQuestionId}/submit")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> submitDailyQuestionAnswer(
+            @PathVariable UUID dailyQuestionId,
+            @Valid @RequestBody SubmitAnswerRequest request) {
+        
+        Map<String, Object> result = dailyQuestionService.submitDailyQuestionAnswer(
+                dailyQuestionId, 
+                request.getAnswer(), 
+                request.getTimeTakenSeconds(), 
+                request.getExplanation());
+        
+        return ResponseEntity.ok(ApiResponse.success(result));
+    }
+
+    @GetMapping("/history")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<PagedResponse<DailyQuestionSubmission>>> getDailyQuestionHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) UUID subjectId) {
+        
+        UUID userId = UUID.fromString(SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User not authenticated")).toString());
+        
+        PagedResponse<DailyQuestionSubmission> history = dailyQuestionService
+                .getDailyQuestionHistory(userId, page, size, subjectId);
+        
+        return ResponseEntity.ok(ApiResponse.success(history));
+    }
+
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestionStats(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) UUID subjectId) {
+        
+        UUID userId = UUID.fromString(SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User not authenticated")).toString());
+        
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        
+        Map<String, Object> stats = dailyQuestionService.getUserDailyStats(userId, date, subjectId);
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    @GetMapping("/stats/range")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getDailyQuestionStatsRange(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) UUID subjectId) {
+        
+        UUID userId = UUID.fromString(SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User not authenticated")).toString());
+        
+        Map<String, Object> stats = new java.util.HashMap<>();
+        
+        // Get stats for each day in the range
+        LocalDate current = startDate;
+        java.util.List<Map<String, Object>> dailyStats = new java.util.ArrayList<>();
+        
+        while (!current.isAfter(endDate)) {
+            Map<String, Object> dayStats = dailyQuestionService.getUserDailyStats(userId, current, subjectId);
+            dailyStats.add(dayStats);
+            current = current.plusDays(1);
+        }
+        
+        stats.put("dailyStats", dailyStats);
+        stats.put("startDate", startDate);
+        stats.put("endDate", endDate);
+        
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    // Admin endpoints
+    @PutMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
+    public ResponseEntity<ApiResponse<String>> setDailyQuestions(
+            @Valid @RequestBody SetDailyQuestionsRequest request) {
+        
+        dailyQuestionService.setDailyQuestions(
+                request.getDate(), 
+                request.getQuestionIds(), 
+                request.getConfig());
+        
+        return ResponseEntity.ok(ApiResponse.success("Daily questions set successfully"));
+    }
+
+    @GetMapping("/admin/analytics")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAdminAnalytics(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) UUID subjectId) {
+        
+        if (date == null) {
+            date = LocalDate.now();
+        }
+        
+        // This would be implemented to get admin-level analytics
+        Map<String, Object> analytics = new java.util.HashMap<>();
+        analytics.put("message", "Admin analytics endpoint - to be implemented");
+        analytics.put("date", date);
+        analytics.put("subjectId", subjectId);
+        
+        return ResponseEntity.ok(ApiResponse.success(analytics));
+    }
+
+    // Inner classes for request DTOs
+    public static class SubmitAnswerRequest {
+        @NotBlank(message = "Answer is required")
+        private String answer;
+        
+        private Integer timeTakenSeconds;
+        private String explanation;
+
+        // Getters and setters
+        public String getAnswer() {
+            return answer;
+        }
+
+        public void setAnswer(String answer) {
+            this.answer = answer;
+        }
+
+        public Integer getTimeTakenSeconds() {
+            return timeTakenSeconds;
+        }
+
+        public void setTimeTakenSeconds(Integer timeTakenSeconds) {
+            this.timeTakenSeconds = timeTakenSeconds;
+        }
+
+        public String getExplanation() {
+            return explanation;
+        }
+
+        public void setExplanation(String explanation) {
+            this.explanation = explanation;
+        }
+    }
+
+    public static class SetDailyQuestionsRequest {
+        @NotNull(message = "Date is required")
+        @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+        private LocalDate date;
+        
+        @NotNull(message = "Question IDs are required")
+        private List<UUID> questionIds;
+        
+        private Map<String, Object> config = new java.util.HashMap<>();
+
+        // Getters and setters
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
+
+        public List<UUID> getQuestionIds() {
+            return questionIds;
+        }
+
+        public void setQuestionIds(List<UUID> questionIds) {
+            this.questionIds = questionIds;
+        }
+
+        public Map<String, Object> getConfig() {
+            return config;
+        }
+
+        public void setConfig(Map<String, Object> config) {
+            this.config = config;
+        }
+    }
+}

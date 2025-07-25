@@ -50,7 +50,7 @@ public class DailyQuestionService {
             date = LocalDate.now();
         }
 
-        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestions(
+        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestionsWithDifficulty(
                 date, subjectId, classLevel, difficulty);
 
         Map<String, Object> result = new HashMap<>();
@@ -72,7 +72,7 @@ public class DailyQuestionService {
             date = LocalDate.now();
         }
 
-        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestions(
+        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestionsWithDifficulty(
                 date, subjectId, classLevel, difficulty);
 
         Long userId = SecurityUtils.getCurrentUserId()

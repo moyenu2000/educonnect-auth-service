@@ -11,12 +11,8 @@ public class QuestionOption {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(name = "question_id", nullable = false)
-    private Long questionId;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "question_id", insertable = false, updatable = false)
+    @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
     @NotBlank
@@ -28,8 +24,8 @@ public class QuestionOption {
 
     public QuestionOption() {}
 
-    public QuestionOption(Long questionId, String text, Integer optionOrder) {
-        this.questionId = questionId;
+    public QuestionOption(Question question, String text, Integer optionOrder) {
+        this.question = question;
         this.text = text;
         this.optionOrder = optionOrder;
     }
@@ -42,23 +38,16 @@ public class QuestionOption {
         this.id = id;
     }
 
-    public Long getQuestionId() {
-        return questionId;
-    }
-
-    public void setQuestionId(Long questionId) {
-        this.questionId = questionId;
-    }
-
     public Question getQuestion() {
         return question;
     }
 
     public void setQuestion(Question question) {
         this.question = question;
-        if (question != null) {
-            this.questionId = question.getId();
-        }
+    }
+
+    public Long getQuestionId() {
+        return question != null ? question.getId() : null;
     }
 
     public String getText() {

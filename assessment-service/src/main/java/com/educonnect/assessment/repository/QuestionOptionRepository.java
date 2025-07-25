@@ -11,6 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface QuestionOptionRepository extends JpaRepository<QuestionOption, Long> {
     
     @Modifying
-    @Query("DELETE FROM QuestionOption qo WHERE qo.questionId = :questionId")
+    @Query("DELETE FROM QuestionOption qo WHERE qo.question.id = :questionId")
     void deleteByQuestionId(@Param("questionId") Long questionId);
 }

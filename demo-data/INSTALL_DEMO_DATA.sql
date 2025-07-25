@@ -58,6 +58,14 @@ SELECT
 \i demo-data/assessment/07_practice_problems.sql
 
 \echo ''
+\echo '🎓 Step 8a: Adding HSC Questions for Bangladesh Students (Assessment Service)...'
+\i demo-data/assessment/08_hsc_questions.sql
+
+\echo ''
+\echo '🎯 Step 8b: Adding HSC Question Options (Assessment Service)...'
+\i demo-data/assessment/09_hsc_question_options.sql
+
+\echo ''
 \echo '👤 Step 9: Syncing users to Discussion Service...'
 \i demo-data/discussion/07_discussion_users.sql
 
@@ -137,9 +145,10 @@ SELECT 'AI Queries' as entity, COUNT(*) as total FROM discussion.ai_queries;
 \echo '4. Explore demo data:'
 \echo '   - 38+ users across all roles'
 \echo '   - 30+ subjects and topics'
-\echo '   - 50+ questions with multiple choice options'
+\echo '   - 100+ questions with multiple choice options (including HSC questions)'
 \echo '   - 17+ discussion groups'
 \echo '   - 23+ active discussions'
+\echo '   - Comprehensive HSC questions for Bangladesh curriculum'
 \echo '   - Realistic user interactions and performance data'
 \echo ''
 \echo '📁 Demo data files organized in:'
