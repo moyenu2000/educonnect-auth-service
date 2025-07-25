@@ -17,6 +17,7 @@ import AdminDashboard from './components/admin/AdminDashboard'
 import QuestionSetterDashboard from './components/question-setter/QuestionSetterDashboard'
 import QuestionManagement from './components/question-setter/QuestionManagement'
 import CreateQuestion from './components/question-setter/CreateQuestion'
+import DailyQuestionConfig from './components/question-setter/DailyQuestionConfig'
 import StudentDashboard from './components/student/StudentDashboard'
 
 // Student Components
@@ -203,6 +204,11 @@ const AppContent: React.FC = () => {
           <Layout><CreateQuestion /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/admin/questions/daily-config" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><DailyQuestionConfig /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/admin/daily-questions" element={
         <ProtectedRoute requiredRole="ADMIN">
           <Layout><DailyQuestionManagement /></Layout>
@@ -232,6 +238,11 @@ const AppContent: React.FC = () => {
       <Route path="/question-setter/create" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
           <Layout><CreateQuestion /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/daily-config" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><DailyQuestionConfig /></Layout>
         </ProtectedRoute>
       } />
 

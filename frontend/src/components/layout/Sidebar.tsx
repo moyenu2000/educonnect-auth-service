@@ -1,6 +1,9 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
+import { Badge } from '@/components/ui/badge'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import {
   BookOpen,
   Users,
@@ -14,6 +17,7 @@ import {
   Brain,
   User,
   GraduationCap,
+  LogOut,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -22,6 +26,24 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const location = useLocation()
+  const { user, logout } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+  }
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return 'bg-red-100 text-red-800'
+      case 'QUESTION_SETTER':
+        return 'bg-blue-100 text-blue-800'
+      case 'STUDENT':
+        return 'bg-green-100 text-green-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
 
   const adminNavItems = [
     { name: 'Dashboard', href: '/admin', icon: Home },
@@ -43,7 +65,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Create Question', href: '/question-setter/create-question', icon: Brain },
     { name: 'Contests', href: '/question-setter/contests', icon: Trophy },
     { name: 'Analytics', href: '/question-setter/analytics', icon: BarChart3 },
-    { name: 'Profile', href: '/question-setter/profile', icon: User },
   ]
 
   const studentNavItems = [
@@ -57,7 +78,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Messages', href: '/student/messages', icon: MessageSquare },
     { name: 'AI Assistant', href: '/student/ai', icon: Brain },
     { name: 'Leaderboard', href: '/student/leaderboard', icon: BarChart3 },
-    { name: 'Profile', href: '/student/profile', icon: User },
   ]
 
   const getNavItems = () => {
@@ -76,8 +96,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const navItems = getNavItems()
 
   return (
-    <div className="h-full bg-white border-r">
-      <div className="flex h-full max-h-screen flex-col gap-2">
+    <div className="h-full w-full bg-white border-r">
+      <div className="flex h-full max-h-screen flex-col">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link to="/" className="flex items-center gap-2 font-semibold">
             <GraduationCap className="h-6 w-6" />
@@ -85,8 +105,8 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
           </Link>
         </div>
         
-        <div className="flex-1">
-          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+        <div className="flex-1 overflow-y-auto">
+          <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-2">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href
               return (
@@ -104,6 +124,52 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
               )
             })}
           </nav>
+        </div>
+
+        {/* Profile section at the bottom */}
+        <div className="border-t px-2 py-2 lg:px-4">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary cursor-pointer">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-sm font-medium truncate">{user?.fullName}</div>
+                  <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                </div>
+                <Badge className={getRoleBadgeColor(user?.role || '')}>
+                  {user?.role}
+                </Badge>
+              </div>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content className="w-56 bg-white border rounded-md shadow-lg" align="start" side="top">
+              <DropdownMenu.Label className="px-2 py-1.5 text-sm font-semibold">
+                My Account
+              </DropdownMenu.Label>
+              <DropdownMenu.Separator className="h-px bg-border" />
+              
+              <DropdownMenu.Item asChild>
+                <Link
+                  to={`/${user?.role?.toLowerCase()}/profile`}
+                  className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
+                >
+                  <User className="h-4 w-4" />
+                  Profile
+                </Link>
+              </DropdownMenu.Item>
+              
+              <DropdownMenu.Separator className="h-px bg-border" />
+              
+              <DropdownMenu.Item
+                className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer text-red-600"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
       </div>
     </div>

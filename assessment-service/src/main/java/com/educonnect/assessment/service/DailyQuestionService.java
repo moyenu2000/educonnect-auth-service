@@ -370,6 +370,10 @@ public class DailyQuestionService {
         List<DailyQuestion> existing = dailyQuestionRepository.findByDate(date);
         dailyQuestionRepository.deleteAll(existing);
 
+        // Extract question configurations from subjectDistribution
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> questionConfigurations = (List<Map<String, Object>>) subjectDistribution.get("questionConfigurations");
+
         // Add new daily questions
         for (Long questionId : questionIds) {
             // Fetch the question to get subject and difficulty
@@ -380,7 +384,42 @@ public class DailyQuestionService {
             dailyQuestion.setQuestionId(questionId);
             dailyQuestion.setDate(date);
             dailyQuestion.setSubjectId(question.getSubjectId());
-            dailyQuestion.setDifficulty(question.getDifficulty());
+            
+            // Find configuration for this specific question
+            Map<String, Object> questionConfig = null;
+            if (questionConfigurations != null) {
+                questionConfig = questionConfigurations.stream()
+                    .filter(config -> {
+                        Object configQuestionId = config.get("questionId");
+                        return configQuestionId != null && 
+                               (configQuestionId.equals(questionId) || 
+                                configQuestionId.equals(questionId.intValue()));
+                    })
+                    .findFirst()
+                    .orElse(null);
+            }
+            
+            // Set difficulty - use individual config if available, otherwise question's difficulty
+            if (questionConfig != null && questionConfig.get("difficulty") != null) {
+                String difficultyStr = (String) questionConfig.get("difficulty");
+                try {
+                    Difficulty difficulty = Difficulty.valueOf(difficultyStr.toUpperCase());
+                    dailyQuestion.setDifficulty(difficulty);
+                } catch (IllegalArgumentException e) {
+                    // Fallback to question's difficulty if invalid difficulty provided
+                    dailyQuestion.setDifficulty(question.getDifficulty());
+                }
+            } else {
+                dailyQuestion.setDifficulty(question.getDifficulty());
+            }
+            
+            // Set points - use individual config if available, otherwise default to 10
+            Integer points = 10; // default
+            if (questionConfig != null && questionConfig.get("points") != null) {
+                points = (Integer) questionConfig.get("points");
+            }
+            dailyQuestion.setPoints(points);
+            
             dailyQuestionRepository.save(dailyQuestion);
         }
     }

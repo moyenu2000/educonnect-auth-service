@@ -229,8 +229,23 @@ const QuestionManagement: React.FC = () => {
       alert('Please select questions first')
       return
     }
-    setActionType(type)
-    setShowActionPanel(true)
+    
+    if (type === 'daily') {
+      // Navigate to DailyQuestionConfig page with selected questions
+      const currentPath = window.location.pathname.includes('/admin/') 
+        ? '/admin/questions/daily-config'
+        : '/question-setter/daily-config'
+      
+      navigate(currentPath, {
+        state: {
+          selectedQuestions,
+          allQuestions: questions
+        }
+      })
+    } else {
+      setActionType(type)
+      setShowActionPanel(true)
+    }
   }
 
   const handleBulkDelete = async () => {
@@ -266,6 +281,7 @@ const QuestionManagement: React.FC = () => {
     }
   }
 
+
   const executeAction = async () => {
     if (!actionType || selectedQuestions.length === 0) return
 
@@ -274,15 +290,6 @@ const QuestionManagement: React.FC = () => {
       let message = ''
 
       switch (actionType) {
-        case 'daily':
-          response = await assessmentService.addQuestionsToDailyQuestions({
-            date: actionDate,
-            questionIds: selectedQuestions,
-            subjectDistribution: {}
-          })
-          message = 'Questions added to daily questions successfully'
-          break
-
         case 'practice':
           response = await assessmentService.addQuestionsToPractice(selectedQuestions)
           message = 'Questions added to practice problems successfully'
@@ -340,25 +347,8 @@ const QuestionManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Question Management</h1>
-          <p className="text-muted-foreground">
-            Manage and organize questions for daily questions, practice, and contests
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link to={window.location.pathname.includes('/admin/') ? '/admin/questions/create' : '/question-setter/create'}>
-            <Button variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Question
-            </Button>
-          </Link>
-        </div>
-      </div>
 
-      {/* Filters */}
+      {/* Filters / controls / configuration */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Filters</CardTitle>
@@ -473,6 +463,7 @@ const QuestionManagement: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
 
       {/* Action Panel */}
       {showActionPanel && (

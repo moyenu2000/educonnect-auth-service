@@ -1,5 +1,6 @@
 package com.educonnect.assessment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,6 +14,7 @@ public class QuestionOption {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
+    @JsonIgnore
     private Question question;
 
     @NotBlank
@@ -64,5 +66,11 @@ public class QuestionOption {
 
     public void setOptionOrder(Integer optionOrder) {
         this.optionOrder = optionOrder;
+    }
+
+    public boolean getIsCorrect() {
+        if (question == null) return false;
+        return question.getCorrectAnswer() != null && 
+               question.getCorrectAnswer().equalsIgnoreCase(this.text.trim());
     }
 }
