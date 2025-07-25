@@ -11,7 +11,8 @@ import {
   BookOpen,
   Trophy,
   Check,
-  X
+  X,
+  Trash2
 } from 'lucide-react'
 
 // Debounce hook
@@ -182,6 +183,31 @@ const QuestionManagement: React.FC = () => {
     navigate(editPath)
   }
 
+  const handleDeleteQuestion = async (questionId: number, questionText: string) => {
+    // Show confirmation dialog
+    const truncatedText = questionText.length > 100 ? questionText.substring(0, 100) + '...' : questionText
+    const confirmMessage = `Are you sure you want to delete this question?\n\n"${truncatedText}"`
+    
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    try {
+      await assessmentService.deleteQuestion(questionId)
+      
+      // Remove from selected questions if it was selected
+      setSelectedQuestions(prev => prev.filter(id => id !== questionId))
+      
+      // Reload questions to reflect the change
+      await loadQuestions()
+      
+      alert('Question deleted successfully')
+    } catch (error) {
+      console.error('Failed to delete question:', error)
+      alert('Failed to delete question. Please try again.')
+    }
+  }
+
   const handleQuestionSelect = (questionId: number) => {
     setSelectedQuestions(prev => 
       prev.includes(questionId) 
@@ -205,6 +231,39 @@ const QuestionManagement: React.FC = () => {
     }
     setActionType(type)
     setShowActionPanel(true)
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedQuestions.length === 0) {
+      alert('Please select questions first')
+      return
+    }
+
+    const confirmMessage = `Are you sure you want to delete ${selectedQuestions.length} selected question(s)?\n\nThis action cannot be undone.`
+    
+    if (!window.confirm(confirmMessage)) {
+      return
+    }
+
+    try {
+      // Delete questions one by one
+      const deletePromises = selectedQuestions.map(questionId => 
+        assessmentService.deleteQuestion(questionId)
+      )
+      
+      await Promise.all(deletePromises)
+      
+      // Clear selected questions
+      setSelectedQuestions([])
+      
+      // Reload questions to reflect the changes
+      await loadQuestions()
+      
+      alert(`${selectedQuestions.length} question(s) deleted successfully`)
+    } catch (error) {
+      console.error('Failed to delete questions:', error)
+      alert('Failed to delete some questions. Please try again.')
+    }
   }
 
   const executeAction = async () => {
@@ -400,6 +459,15 @@ const QuestionManagement: React.FC = () => {
                   <Trophy className="mr-2 h-4 w-4" />
                   Create Contest
                 </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={handleBulkDelete}
+                  className="text-red-600 hover:text-red-700 hover:border-red-300"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Selected
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -510,6 +578,15 @@ const QuestionManagement: React.FC = () => {
                             title="Edit Question"
                           >
                             <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDeleteQuestion(question.id, question.text)}
+                            title="Delete Question"
+                            className="text-red-600 hover:text-red-700 hover:border-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
