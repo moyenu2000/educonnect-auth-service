@@ -158,6 +158,7 @@ export const assessmentService = {
     topicId?: number
     difficulty?: string
     type?: string
+    search?: string
   }) => assessmentApi.get('/questions', { params }),
   
   getRandomQuestions: (params: {

@@ -54,7 +54,6 @@ public class QuestionService {
         
         Page<Question> questions = questionRepository.findFilteredQuestions(
                 subjectId, topicId, difficulty, type, search, pageable);
-
         return new PagedResponse<>(
                 questions.getContent(),
                 (int) questions.getTotalElements(),
@@ -76,6 +75,8 @@ public class QuestionService {
         result.put("questions", pagedQuestions.getContent());
         result.put("totalElements", pagedQuestions.getTotalElements());
         result.put("totalPages", pagedQuestions.getTotalPages());
+        result.put("currentPage", pagedQuestions.getCurrentPage());
+        result.put("size", pagedQuestions.getSize());
         result.put("filters", filters);
         
         return result;

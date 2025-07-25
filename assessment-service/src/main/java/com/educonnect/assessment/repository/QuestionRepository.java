@@ -34,7 +34,10 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
            "(:subjectId IS NULL OR q.subjectId = :subjectId) AND " +
            "(:topicId IS NULL OR q.topicId = :topicId) AND " +
            "(:difficulty IS NULL OR q.difficulty = :difficulty) AND " +
-           "(:type IS NULL OR q.type = :type)")
+           "(:type IS NULL OR q.type = :type) AND " +
+           "(:search IS NULL OR :search = '' OR " +
+           "UPPER(q.text) LIKE UPPER(CONCAT('%', :search, '%')) OR " +
+           "UPPER(q.explanation) LIKE UPPER(CONCAT('%', :search, '%')))")
     Page<Question> findFilteredQuestions(
             @Param("subjectId") Long subjectId,
             @Param("topicId") Long topicId,

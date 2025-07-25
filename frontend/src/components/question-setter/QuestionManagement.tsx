@@ -1,21 +1,35 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import React, { useState, useEffect, useCallback } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
 import { Link, useNavigate } from 'react-router-dom'
 import { 
-  FileQuestion, 
   Plus, 
   Eye, 
-  Search, 
-  Filter,
   Calendar,
   BookOpen,
   Trophy,
   Check,
   X
 } from 'lucide-react'
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
+}
 
 interface QuestionOption {
   id: number
@@ -50,6 +64,7 @@ const QuestionManagement: React.FC = () => {
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
+  const [questionsLoading, setQuestionsLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [totalElements, setTotalElements] = useState(0)
@@ -62,27 +77,30 @@ const QuestionManagement: React.FC = () => {
     search: ''
   })
 
+  // Debounced search to prevent excessive API calls
+  const debouncedSearch = useDebounce(filters.search, 500)
+
   // Action states
   const [showActionPanel, setShowActionPanel] = useState(false)
   const [actionType, setActionType] = useState<'daily' | 'practice' | 'contest' | null>(null)
   const [actionDate, setActionDate] = useState(new Date().toISOString().split('T')[0])
-  
 
-  useEffect(() => {
-    loadQuestions()
-    loadSubjects()
-  }, [currentPage, filters])
-
-  const loadQuestions = async () => {
+  const loadQuestions = useCallback(async () => {
     try {
-      setLoading(true)
+      // Only show questions loading for filter changes, not initial load
+      if (questions.length > 0) {
+        setQuestionsLoading(true)
+      } else {
+        setLoading(true)
+      }
+      
       const params = {
         page: currentPage,
         size: 20,
         ...(filters.subjectId && { subjectId: parseInt(filters.subjectId) }),
         ...(filters.difficulty && { difficulty: filters.difficulty }),
         ...(filters.type && { type: filters.type }),
-        ...(filters.search && { search: filters.search })
+        ...(debouncedSearch && { search: debouncedSearch })
       }
 
       const response = await assessmentService.getQuestions(params)
@@ -102,8 +120,48 @@ const QuestionManagement: React.FC = () => {
       alert('Failed to load questions. Please check authentication and try again.')
     } finally {
       setLoading(false)
+      setQuestionsLoading(false)
     }
-  }
+  }, [currentPage, filters.subjectId, filters.difficulty, filters.type, debouncedSearch, questions.length])
+
+  useEffect(() => {
+    loadQuestions()
+  }, [loadQuestions])
+
+  // Reset page and load questions when filters change
+  useEffect(() => {
+    setCurrentPage(0)
+  }, [filters.subjectId, filters.difficulty, filters.type, debouncedSearch])
+
+  // Optimized filter handlers to prevent unnecessary re-renders
+  const handleSubjectChange = useCallback((value: string) => {
+    setFilters(prev => ({ ...prev, subjectId: value }))
+  }, [])
+
+  const handleDifficultyChange = useCallback((value: string) => {
+    setFilters(prev => ({ ...prev, difficulty: value }))
+  }, [])
+
+  const handleTypeChange = useCallback((value: string) => {
+    setFilters(prev => ({ ...prev, type: value }))
+  }, [])
+
+  const handleSearchChange = useCallback((value: string) => {
+    setFilters(prev => ({ ...prev, search: value }))
+  }, [])
+
+  // Optimized pagination handlers
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage(prev => prev - 1)
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => prev + 1)
+  }, [])
+
+  useEffect(() => {
+    loadSubjects()
+  }, [])
 
   const loadSubjects = async () => {
     try {
@@ -213,7 +271,7 @@ const QuestionManagement: React.FC = () => {
     }
   }
 
-  if (loading) {
+  if (loading && questions.length === 0) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -253,7 +311,7 @@ const QuestionManagement: React.FC = () => {
               <select 
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.subjectId}
-                onChange={(e) => setFilters(prev => ({ ...prev, subjectId: e.target.value }))}
+                onChange={(e) => handleSubjectChange(e.target.value)}
               >
                 <option value="">All Subjects</option>
                 {subjects.map(subject => (
@@ -266,7 +324,7 @@ const QuestionManagement: React.FC = () => {
               <select 
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.difficulty}
-                onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
+                onChange={(e) => handleDifficultyChange(e.target.value)}
               >
                 <option value="">All Difficulties</option>
                 <option value="EASY">Easy</option>
@@ -280,7 +338,7 @@ const QuestionManagement: React.FC = () => {
               <select 
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.type}
-                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+                onChange={(e) => handleTypeChange(e.target.value)}
               >
                 <option value="">All Types</option>
                 <option value="MULTIPLE_CHOICE">Multiple Choice</option>
@@ -292,11 +350,12 @@ const QuestionManagement: React.FC = () => {
             <div>
               <label className="text-sm font-medium">Search</label>
               <input 
+                key="search-input"
                 type="text"
                 className="w-full mt-1 p-2 border rounded-md"
                 placeholder="Search questions..."
                 value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
           </div>
@@ -402,55 +461,64 @@ const QuestionManagement: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {questions.map((question) => (
-              <div 
-                key={question.id} 
-                className={`border rounded-lg p-4 transition-colors ${
-                  selectedQuestions.includes(question.id) 
-                    ? 'border-blue-300 bg-blue-50' 
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <input
-                    type="checkbox"
-                    className="mt-1"
-                    checked={selectedQuestions.includes(question.id)}
-                    onChange={() => handleQuestionSelect(question.id)}
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{question.text}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge className={getDifficultyColor(question.difficulty)}>
-                            {question.difficulty}
-                          </Badge>
-                          <Badge className={getTypeColor(question.type)}>
-                            {question.type?.replace('_', ' ')}
-                          </Badge>
-                          {question.subjectName && (
-                            <Badge variant="outline">{question.subjectName}</Badge>
-                          )}
+          {questionsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+                <span className="text-sm text-muted-foreground">Loading questions...</span>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {questions.map((question) => (
+                <div 
+                  key={question.id} 
+                  className={`border rounded-lg p-4 transition-colors ${
+                    selectedQuestions.includes(question.id) 
+                      ? 'border-blue-300 bg-blue-50' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={selectedQuestions.includes(question.id)}
+                      onChange={() => handleQuestionSelect(question.id)}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{question.text}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge className={getDifficultyColor(question.difficulty)}>
+                              {question.difficulty}
+                            </Badge>
+                            <Badge className={getTypeColor(question.type)}>
+                              {question.type?.replace('_', ' ')}
+                            </Badge>
+                            {question.subjectName && (
+                              <Badge variant="outline">{question.subjectName}</Badge>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEditQuestion(question.id)}
-                          title="Edit Question"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditQuestion(question.id)}
+                            title="Edit Question"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -463,7 +531,7 @@ const QuestionManagement: React.FC = () => {
                   variant="outline" 
                   size="sm"
                   disabled={currentPage === 0}
-                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  onClick={handlePreviousPage}
                 >
                   Previous
                 </Button>
@@ -471,7 +539,7 @@ const QuestionManagement: React.FC = () => {
                   variant="outline" 
                   size="sm"
                   disabled={currentPage >= totalPages - 1}
-                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  onClick={handleNextPage}
                 >
                   Next
                 </Button>
