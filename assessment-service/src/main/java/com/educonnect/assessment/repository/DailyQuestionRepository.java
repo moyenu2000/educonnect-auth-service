@@ -27,9 +27,8 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
             @Param("subjectId") Long subjectId,
             @Param("classLevel") ClassLevel classLevel);
     
-    @Query("SELECT dq FROM DailyQuestion dq JOIN dq.question q JOIN q.subject s WHERE dq.date = :date " +
+    @Query("SELECT dq FROM DailyQuestion dq WHERE dq.date = :date " +
            "AND (:subjectId IS NULL OR dq.subjectId = :subjectId) " +
-           "AND (:classLevel IS NULL OR s.classLevel = :classLevel) " +
            "AND (:difficulty IS NULL OR dq.difficulty = :difficulty)")
     List<DailyQuestion> findFilteredDailyQuestionsWithDifficulty(
             @Param("date") LocalDate date,
@@ -85,4 +84,31 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
                            @Param("subjectId") Long subjectId,
                            @Param("difficulty") String difficulty, 
                            @Param("points") Integer points);
+    
+    // Native query to get daily questions with question data without entity loading
+    @Query(value = """
+        SELECT 
+            dq.id, dq.question_id, dq.date, dq.subject_id, dq.difficulty, 
+            dq.points, dq.bonus_points, q.text, q.type
+        FROM daily_questions dq
+        LEFT JOIN questions q ON dq.question_id = q.id
+        WHERE dq.date = :date
+        ORDER BY dq.id
+    """, nativeQuery = true)
+    List<Object[]> findDailyQuestionsWithQuestionDataNative(@Param("date") LocalDate date);
+    
+    // Native query to get all daily questions (for history)
+    @Query(value = """
+        SELECT 
+            dq.id, dq.question_id, dq.date, dq.subject_id, dq.difficulty, 
+            dq.points, dq.bonus_points, q.text, q.type, s.name as subject_name
+        FROM daily_questions dq
+        LEFT JOIN questions q ON dq.question_id = q.id
+        LEFT JOIN subjects s ON dq.subject_id = s.id
+        WHERE (:startDate IS NULL OR dq.date >= :startDate)
+        AND (:endDate IS NULL OR dq.date <= :endDate)
+        ORDER BY dq.date DESC, dq.id
+    """, nativeQuery = true)
+    List<Object[]> findAllDailyQuestionsNative(@Param("startDate") LocalDate startDate, 
+                                             @Param("endDate") LocalDate endDate);
 }

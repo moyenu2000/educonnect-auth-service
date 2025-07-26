@@ -1,5 +1,6 @@
 package com.educonnect.assessment.entity;
 
+import com.educonnect.assessment.enums.ExamSubmissionStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -47,6 +48,16 @@ public class UserSubmission {
     private Long examId;
     private Long contestId;
     private Boolean isDailyQuestion = false;
+    
+    // New fields for submission tracking
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ExamSubmissionStatus submissionStatus = ExamSubmissionStatus.DRAFT;
+    
+    @Column(nullable = false)
+    private Boolean isMarksCalculated = false;
+    
+    private LocalDateTime finalizedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -155,5 +166,29 @@ public class UserSubmission {
 
     public void setIsDailyQuestion(Boolean isDailyQuestion) {
         this.isDailyQuestion = isDailyQuestion;
+    }
+
+    public ExamSubmissionStatus getSubmissionStatus() {
+        return submissionStatus;
+    }
+
+    public void setSubmissionStatus(ExamSubmissionStatus submissionStatus) {
+        this.submissionStatus = submissionStatus;
+    }
+
+    public Boolean getIsMarksCalculated() {
+        return isMarksCalculated;
+    }
+
+    public void setIsMarksCalculated(Boolean isMarksCalculated) {
+        this.isMarksCalculated = isMarksCalculated;
+    }
+
+    public LocalDateTime getFinalizedAt() {
+        return finalizedAt;
+    }
+
+    public void setFinalizedAt(LocalDateTime finalizedAt) {
+        this.finalizedAt = finalizedAt;
     }
 }

@@ -44,7 +44,8 @@ assessmentApi.interceptors.request.use(addAuthToken)
 discussionApi.interceptors.request.use(addAuthToken)
 
 // Response interceptors for error handling
-const handleError = (error: AxiosError) => {
+const handleAuthError = (error: AxiosError) => {
+  // Only logout on auth service 401 errors, not other services
   if (error.response?.status === 401) {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
@@ -53,8 +54,17 @@ const handleError = (error: AxiosError) => {
   return Promise.reject(error)
 }
 
-authApi.interceptors.response.use((response) => response, handleError)
-assessmentApi.interceptors.response.use((response) => response, handleError)
-discussionApi.interceptors.response.use((response) => response, handleError)
+const handleServiceError = (error: AxiosError) => {
+  // For assessment/discussion services, don't auto-logout on 401
+  // Just return the error for the component to handle
+  if (error.response?.status === 401) {
+    console.warn('Service authentication failed, but keeping user logged in')
+  }
+  return Promise.reject(error)
+}
+
+authApi.interceptors.response.use((response) => response, handleAuthError)
+assessmentApi.interceptors.response.use((response) => response, handleServiceError)
+discussionApi.interceptors.response.use((response) => response, handleServiceError)
 
 export { API_CONFIG }

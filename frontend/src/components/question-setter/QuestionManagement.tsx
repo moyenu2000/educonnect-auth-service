@@ -59,10 +59,22 @@ interface Subject {
   name: string
 }
 
+interface Topic {
+  id: number
+  name: string
+  description: string
+  subjectId: number
+  displayOrder: number
+  isActive: boolean
+  questionsCount: number
+}
+
 const QuestionManagement: React.FC = () => {
   const navigate = useNavigate()
   const [questions, setQuestions] = useState<Question[]>([])
   const [subjects, setSubjects] = useState<Subject[]>([])
+  const [topics, setTopics] = useState<Topic[]>([])
+  const [allTopics, setAllTopics] = useState<Topic[]>([])
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([])
   const [loading, setLoading] = useState(true)
   const [questionsLoading, setQuestionsLoading] = useState(false)
@@ -73,6 +85,7 @@ const QuestionManagement: React.FC = () => {
   // Filters
   const [filters, setFilters] = useState({
     subjectId: '',
+    topicId: '',
     difficulty: '',
     type: '',
     search: ''
@@ -99,6 +112,7 @@ const QuestionManagement: React.FC = () => {
         page: currentPage,
         size: 20,
         ...(filters.subjectId && { subjectId: parseInt(filters.subjectId) }),
+        ...(filters.topicId && { topicId: parseInt(filters.topicId) }),
         ...(filters.difficulty && { difficulty: filters.difficulty }),
         ...(filters.type && { type: filters.type }),
         ...(debouncedSearch && { search: debouncedSearch })
@@ -123,7 +137,7 @@ const QuestionManagement: React.FC = () => {
       setLoading(false)
       setQuestionsLoading(false)
     }
-  }, [currentPage, filters.subjectId, filters.difficulty, filters.type, debouncedSearch, questions.length])
+  }, [currentPage, filters.subjectId, filters.topicId, filters.difficulty, filters.type, debouncedSearch, questions.length])
 
   useEffect(() => {
     loadQuestions()
@@ -132,11 +146,15 @@ const QuestionManagement: React.FC = () => {
   // Reset page and load questions when filters change
   useEffect(() => {
     setCurrentPage(0)
-  }, [filters.subjectId, filters.difficulty, filters.type, debouncedSearch])
+  }, [filters.subjectId, filters.topicId, filters.difficulty, filters.type, debouncedSearch])
 
   // Optimized filter handlers to prevent unnecessary re-renders
   const handleSubjectChange = useCallback((value: string) => {
-    setFilters(prev => ({ ...prev, subjectId: value }))
+    setFilters(prev => ({ ...prev, subjectId: value, topicId: '' })) // Reset topic when subject changes
+  }, [])
+
+  const handleTopicChange = useCallback((value: string) => {
+    setFilters(prev => ({ ...prev, topicId: value }))
   }, [])
 
   const handleDifficultyChange = useCallback((value: string) => {
@@ -162,6 +180,7 @@ const QuestionManagement: React.FC = () => {
 
   useEffect(() => {
     loadSubjects()
+    loadTopics()
   }, [])
 
   const loadSubjects = async () => {
@@ -175,6 +194,30 @@ const QuestionManagement: React.FC = () => {
       console.error('Failed to load subjects:', error)
     }
   }
+
+  const loadTopics = async () => {
+    try {
+      const response = await assessmentService.getTopics()
+      const data = response.data?.data
+      if (data && data.content) {
+        setAllTopics(data.content)
+      }
+    } catch (error) {
+      console.error('Failed to load topics:', error)
+    }
+  }
+
+  // Filter topics when subject changes
+  useEffect(() => {
+    if (filters.subjectId) {
+      const filteredTopics = allTopics.filter(topic => 
+        topic.subjectId === parseInt(filters.subjectId)
+      )
+      setTopics(filteredTopics)
+    } else {
+      setTopics([])
+    }
+  }, [filters.subjectId, allTopics])
 
   const handleEditQuestion = (questionId: number) => {
     const editPath = window.location.pathname.includes('/admin/') 
@@ -362,7 +405,7 @@ const QuestionManagement: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-5">
             <div>
               <label className="text-sm font-medium">Subject</label>
               <select 
@@ -373,6 +416,20 @@ const QuestionManagement: React.FC = () => {
                 <option value="">All Subjects</option>
                 {subjects.map(subject => (
                   <option key={subject.id} value={subject.id}>{subject.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Topic</label>
+              <select 
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.topicId}
+                onChange={(e) => handleTopicChange(e.target.value)}
+                disabled={!filters.subjectId}
+              >
+                <option value="">All Topics</option>
+                {topics.map(topic => (
+                  <option key={topic.id} value={topic.id}>{topic.name}</option>
                 ))}
               </select>
             </div>

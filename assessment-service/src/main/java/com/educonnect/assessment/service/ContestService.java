@@ -37,4 +37,5 @@ public interface ContestService {
     // Contest control
     void startContest(Long contestId);
     void endContest(Long contestId);
+    void finalizeContestSubmissions(Long contestId);
 }

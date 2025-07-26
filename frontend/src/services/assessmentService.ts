@@ -181,7 +181,39 @@ export const assessmentService = {
 
   // Daily Questions
   getDailyQuestions: (date?: string) =>
-    assessmentApi.get('/daily-questions', { params: { date } }),
+    date ? assessmentApi.get('/daily-questions', { params: { date } }) : assessmentApi.get('/daily-questions/today'),
+  
+  // Alternative endpoints for students (without authentication to avoid student token issues)
+  getPublicDailyQuestions: (date?: string) => {
+    const baseURL = assessmentApi.defaults.baseURL;
+    const url = date 
+      ? `${baseURL}/daily-questions?date=${date}`
+      : `${baseURL}/daily-questions/today`;
+    
+    return fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    }).then(response => response.json());
+  },
+  
+  getAllDailyQuestions: (startDate?: string, endDate?: string) => {
+    const baseURL = assessmentApi.defaults.baseURL;
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const url = `${baseURL}/daily-questions/all?${params.toString()}`;
+    
+    return fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    }).then(response => response.json());
+  },
   
   getDailyQuestionDetails: (date?: string) =>
     assessmentApi.get('/daily-questions/details', { params: { date } }),
@@ -194,6 +226,16 @@ export const assessmentService = {
     timeTaken: number
     explanation?: string
   }) => assessmentApi.post(`/daily-questions/${questionId}/submit`, data),
+  
+  submitDraftDailyQuestion: (questionId: number, data: {
+    answer: string
+    timeTaken: number
+    explanation?: string
+  }) => assessmentApi.post(`/daily-questions/${questionId}/draft-submit`, data),
+  
+  batchSubmitDailyQuestions: (data: {
+    date: string
+  }) => assessmentApi.post('/daily-questions/batch-submit', data),
   
   getDailyQuestionStreak: () => assessmentApi.get('/daily-questions/streak'),
   

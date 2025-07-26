@@ -174,6 +174,14 @@ public class ContestController {
         return ResponseEntity.ok(ApiResponse.success("Contest ended successfully"));
     }
 
+    // Finalize contest submissions (admin only)
+    @PostMapping("/{contestId}/finalize")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> finalizeContestSubmissions(@PathVariable Long contestId) {
+        contestService.finalizeContestSubmissions(contestId);
+        return ResponseEntity.ok(ApiResponse.success("Contest submissions finalized successfully"));
+    }
+
     // DTOs
     public static class ContestSubmissionRequest {
         private String answer;

@@ -7,6 +7,7 @@ import com.educonnect.assessment.entity.Question;
 import com.educonnect.assessment.entity.UserSubmission;
 import com.educonnect.assessment.enums.ContestStatus;
 import com.educonnect.assessment.enums.ContestType;
+import com.educonnect.assessment.enums.ExamSubmissionStatus;
 import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.exception.BadRequestException;
 import com.educonnect.assessment.repository.ContestRepository;
@@ -123,7 +124,7 @@ public class ContestServiceImpl implements ContestService {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
 
-        // Create submission
+        // Create submission with silent processing (no immediate feedback)
         UserSubmission submission = new UserSubmission();
         submission.setUserId(userId);
         submission.setQuestionId(questionId);
@@ -132,20 +133,22 @@ public class ContestServiceImpl implements ContestService {
         submission.setTimeTaken(timeTaken);
         submission.setExplanation(explanation);
         submission.setIsDailyQuestion(false);
+        submission.setSubmissionStatus(ExamSubmissionStatus.DRAFT); // Store as draft during contest
+        submission.setIsMarksCalculated(false); // Don't calculate marks until contest ends
 
-        // Check if answer is correct
-        boolean isCorrect = question.getCorrectAnswer().equals(answer);
-        submission.setIsCorrect(isCorrect);
-        submission.setPointsEarned(isCorrect ? question.getPoints() : 0);
+        // Don't calculate correct answer or points during active contest
+        submission.setIsCorrect(false); // Will be calculated when contest ends
+        submission.setPointsEarned(0); // Will be calculated when contest ends
 
         userSubmissionRepository.save(submission);
 
+        // Return minimal response without revealing answers
         Map<String, Object> result = new HashMap<>();
-        result.put("isCorrect", isCorrect);
-        result.put("pointsEarned", submission.getPointsEarned());
-        result.put("correctAnswer", question.getCorrectAnswer());
-        result.put("explanation", question.getExplanation());
-
+        result.put("status", "submitted");
+        result.put("submissionId", submission.getId());
+        result.put("message", "Answer submitted successfully");
+        result.put("contestActive", true);
+        
         return result;
     }
 
@@ -320,5 +323,46 @@ public class ContestServiceImpl implements ContestService {
 
     private boolean canSubmitToContest(Contest contest) {
         return canParticipateInContest(contest);
+    }
+
+    @Override
+    public void finalizeContestSubmissions(Long contestId) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
+
+        // Find all draft submissions for this contest
+        List<UserSubmission> draftSubmissions = userSubmissionRepository.findByContestIdAndSubmissionStatus(
+                contestId, ExamSubmissionStatus.DRAFT);
+
+        for (UserSubmission submission : draftSubmissions) {
+            Question question = questionRepository.findById(submission.getQuestionId())
+                    .orElse(null);
+
+            if (question != null) {
+                // Calculate if answer is correct
+                boolean isCorrect = checkAnswer(question, submission.getAnswer());
+                int pointsEarned = isCorrect ? question.getPoints() : 0;
+
+                // Update submission with calculated results
+                submission.setIsCorrect(isCorrect);
+                submission.setPointsEarned(pointsEarned);
+                submission.setSubmissionStatus(ExamSubmissionStatus.FINALIZED);
+                submission.setIsMarksCalculated(true);
+                submission.setFinalizedAt(LocalDateTime.now());
+
+                userSubmissionRepository.save(submission);
+            }
+        }
+    }
+
+    private boolean checkAnswer(Question question, String userAnswer) {
+        if (question.getCorrectAnswer() == null || userAnswer == null) {
+            return false;
+        }
+
+        String correctAnswer = question.getCorrectAnswer().trim().toLowerCase();
+        String providedAnswer = userAnswer.trim().toLowerCase();
+
+        return correctAnswer.equals(providedAnswer);
     }
 }

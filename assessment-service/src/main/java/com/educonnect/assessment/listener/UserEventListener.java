@@ -45,15 +45,27 @@ public class UserEventListener {
             }
         } catch (Exception e) {
             log.error("Error processing user event: {} for user ID: {}", event.getEventType(), event.getUserId(), e);
-            throw e; // Rethrow to trigger retry mechanism
+            // Don't rethrow constraint violations - they're handled gracefully above
+            if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+                log.warn("Constraint violation handled gracefully for user event: {} for user ID: {}", 
+                    event.getEventType(), event.getUserId());
+                return;
+            }
+            throw e; // Rethrow other exceptions to trigger retry mechanism
         }
     }
     
     private void handleUserCreated(UserEventSimple event) {
-        // Check if user already exists (idempotency)
+        // Check if user already exists by ID or email (idempotency)
         if (userRepository.existsById(event.getUserId())) {
             log.info("User with ID {} already exists, updating instead", event.getUserId());
             handleUserUpdated(event);
+            return;
+        }
+        
+        // Also check by email to prevent constraint violations
+        if (event.getEmail() != null && userRepository.existsByEmail(event.getEmail())) {
+            log.info("User with email {} already exists, skipping creation", event.getEmail());
             return;
         }
         
@@ -69,8 +81,19 @@ public class UserEventListener {
         user.setSyncedAt(LocalDateTime.now());
         user.setSyncVersion(event.getVersion() != null ? event.getVersion() : 1L);
         
-        userRepository.save(user);
-        log.info("Created user in Assessment Service: {} (ID: {})", user.getUsername(), user.getId());
+        try {
+            userRepository.save(user);
+            log.info("Created user in Assessment Service: {} (ID: {})", user.getUsername(), user.getId());
+        } catch (Exception e) {
+            // Handle constraint violations gracefully
+            if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+                log.warn("Duplicate key constraint violation for user {} (ID: {}), likely a race condition. Skipping creation.", 
+                    event.getUsername(), event.getUserId());
+                return;
+            }
+            log.error("Failed to create user {} (ID: {})", event.getUsername(), event.getUserId(), e);
+            throw e;
+        }
     }
     
     private void handleUserUpdated(UserEventSimple event) {
@@ -93,8 +116,19 @@ public class UserEventListener {
                         user.setSyncVersion(event.getVersion());
                     }
                     
-                    userRepository.save(user);
-                    log.info("Updated user in Assessment Service: {} (ID: {})", user.getUsername(), user.getId());
+                    try {
+                        userRepository.save(user);
+                        log.info("Updated user in Assessment Service: {} (ID: {})", user.getUsername(), user.getId());
+                    } catch (Exception e) {
+                        // Handle constraint violations gracefully
+                        if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+                            log.warn("Duplicate key constraint violation during update for user {} (ID: {}), skipping update.", 
+                                user.getUsername(), user.getId());
+                            return;
+                        }
+                        log.error("Failed to update user {} (ID: {})", user.getUsername(), user.getId(), e);
+                        throw e;
+                    }
                 },
                 () -> {
                     log.warn("User with ID {} not found for update, creating new user", event.getUserId());

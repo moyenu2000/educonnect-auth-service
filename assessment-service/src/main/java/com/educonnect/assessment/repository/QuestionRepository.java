@@ -93,4 +93,13 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
                               @Param("points") Integer points,
                               @Param("correctAnswerOptionId") Long correctAnswerOptionId,
                               @Param("correctAnswerText") String correctAnswerText);
+    
+    // Native query to get question options without entity loading
+    @Query(value = """
+        SELECT qo.id, qo.text, qo.option_order 
+        FROM question_options qo 
+        WHERE qo.question_id = :questionId 
+        ORDER BY qo.option_order
+    """, nativeQuery = true)
+    List<Object[]> findQuestionOptionsNative(@Param("questionId") Long questionId);
 }

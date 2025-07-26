@@ -3,6 +3,7 @@ package com.educonnect.assessment.repository;
 import com.educonnect.assessment.entity.UserSubmission;
 import com.educonnect.assessment.enums.ContestStatus;
 import com.educonnect.assessment.enums.Difficulty;
+import com.educonnect.assessment.enums.ExamSubmissionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,13 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
            "AND us.isDailyQuestion = true")
     long countTotalDailyAnswers(@Param("userId") Long userId);
     
+    @Query("SELECT us FROM UserSubmission us JOIN DailyQuestion dq ON us.questionId = dq.questionId " +
+           "WHERE us.userId = :userId AND us.isDailyQuestion = true " +
+           "AND dq.date = :date AND us.submissionStatus = 'DRAFT'")
+    List<UserSubmission> findDraftDailySubmissionsByUserAndDate(
+            @Param("userId") Long userId, 
+            @Param("date") LocalDate date);
+    
     List<UserSubmission> findByUserIdAndExamId(Long userId, Long examId);
     
     List<UserSubmission> findByUserIdAndContestId(Long userId, Long contestId);
@@ -66,6 +75,8 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
     boolean existsByUserIdAndQuestionIdAndContestId(Long userId, Long questionId, Long contestId);
     
     List<UserSubmission> findByUserIdAndContestIdOrderBySubmittedAtDesc(Long userId, Long contestId);
+    
+    List<UserSubmission> findByContestIdAndSubmissionStatus(Long contestId, ExamSubmissionStatus submissionStatus);
     
     Page<UserSubmission> findByUserIdAndContestIdIsNotNull(Long userId, Pageable pageable);
     

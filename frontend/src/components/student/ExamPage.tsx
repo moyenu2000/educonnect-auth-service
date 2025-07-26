@@ -38,11 +38,22 @@ interface Question {
   subjectName?: string
 }
 
+interface SubmissionResult {
+  questionId: number
+  answer: string
+  isCorrect: boolean
+  correctAnswer: string
+  explanation?: string
+  pointsEarned: number
+  timeTaken: number
+}
+
 interface ExamState {
   questions: Question[]
   currentQuestionIndex: number
   answers: Record<number, string>
-  savedAnswers: Record<number, boolean>
+  submissionResults: Record<number, SubmissionResult>
+  draftSubmissions: Record<number, boolean>
   timeRemaining?: number
   examType: 'daily' | 'practice' | 'contest'
   examDate?: string
@@ -56,13 +67,16 @@ const ExamPage: React.FC = () => {
     questions: [],
     currentQuestionIndex: 0,
     answers: {},
-    savedAnswers: {},
+    submissionResults: {},
+    draftSubmissions: {},
     examType: 'daily'
   })
   
   const [loading, setLoading] = useState(true)
-  const [submitting, setSaving] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+  const [questionStartTimes, setQuestionStartTimes] = useState<Record<number, number>>({})
 
   useEffect(() => {
     loadExamQuestions()
@@ -114,11 +128,19 @@ const ExamPage: React.FC = () => {
         questions,
         currentQuestionIndex: 0,
         answers: {},
-        savedAnswers: {},
+        submissionResults: {},
+        draftSubmissions: {},
         examType: examType as 'daily' | 'practice' | 'contest',
         examDate,
         timeRemaining: examType === 'contest' ? 3600 : undefined // 1 hour for contests
       })
+
+      // Initialize start times for all questions
+      const startTimes: Record<number, number> = {}
+      questions.forEach(q => {
+        startTimes[q.id] = Date.now()
+      })
+      setQuestionStartTimes(startTimes)
     } catch (error) {
       console.error('Failed to load exam questions:', error)
     } finally {
@@ -136,62 +158,134 @@ const ExamPage: React.FC = () => {
     }))
   }
 
-  const handleSaveCurrentQuestion = async () => {
+  const handleSubmitCurrentQuestion = async () => {
     const currentQuestion = examState.questions[examState.currentQuestionIndex]
     const answer = examState.answers[currentQuestion.id]
     
-    if (!answer) return
+    if (!answer) {
+      alert('Please select an answer before submitting.')
+      return
+    }
 
-    setSaving(true)
+    // Check if already submitted as draft
+    if (examState.draftSubmissions[currentQuestion.id]) {
+      alert('This question has already been saved.')
+      return
+    }
+
+    setSubmitting(true)
     try {
+      const startTime = questionStartTimes[currentQuestion.id] || Date.now()
+      const timeTaken = Math.round((Date.now() - startTime) / 1000) // in seconds
+
       if (examState.examType === 'daily') {
-        await assessmentService.submitDailyQuestion(currentQuestion.id, {
+        // Submit as draft - no marks calculated yet
+        await assessmentService.submitDraftDailyQuestion(currentQuestion.id, {
           answer,
-          timeTaken: 30
+          timeTaken
         })
+        
+        // Mark as draft submitted (no results shown)
+        setExamState(prev => ({
+          ...prev,
+          draftSubmissions: {
+            ...prev.draftSubmissions,
+            [currentQuestion.id]: true
+          }
+        }))
+
+        // Show success message without revealing correctness
+        alert('Answer saved successfully! Complete all questions and click "Submit Full" to see results.')
       }
       // Add similar handling for practice and contest modes here
       
-      setExamState(prev => ({
-        ...prev,
-        savedAnswers: {
-          ...prev.savedAnswers,
-          [currentQuestion.id]: true
-        }
-      }))
     } catch (error) {
-      console.error('Failed to save answer:', error)
+      console.error('Failed to submit question:', error)
+      alert('Failed to save answer. Please try again.')
     } finally {
-      setSaving(false)
+      setSubmitting(false)
     }
   }
 
   const handleSubmitFullExam = async () => {
-    setSaving(true)
+    // Check if all questions have draft submissions
+    const unsavedQuestions = examState.questions.filter(q => !examState.draftSubmissions[q.id])
+    
+    if (unsavedQuestions.length > 0) {
+      const proceed = confirm(`You have ${unsavedQuestions.length} unsaved questions. These will not count towards your score. Do you want to continue?`)
+      if (!proceed) {
+        setShowConfirmSubmit(false)
+        return
+      }
+    }
+
+    setSubmitting(true)
     try {
-      // Submit all answers
-      for (const question of examState.questions) {
-        const answer = examState.answers[question.id]
-        if (answer && !examState.savedAnswers[question.id]) {
-          if (examState.examType === 'daily') {
-            await assessmentService.submitDailyQuestion(question.id, {
-              answer,
-              timeTaken: 30
-            })
+      if (examState.examType === 'daily') {
+        // First, submit any unsaved questions as drafts
+        for (const question of unsavedQuestions) {
+          const answer = examState.answers[question.id]
+          if (answer) {
+            try {
+              const startTime = questionStartTimes[question.id] || Date.now()
+              const timeTaken = Math.round((Date.now() - startTime) / 1000)
+
+              await assessmentService.submitDraftDailyQuestion(question.id, {
+                answer,
+                timeTaken
+              })
+              
+              setExamState(prev => ({
+                ...prev,
+                draftSubmissions: {
+                  ...prev.draftSubmissions,
+                  [question.id]: true
+                }
+              }))
+            } catch (error) {
+              console.error(`Failed to save question ${question.id}:`, error)
+            }
           }
-          // Add handling for other exam types
+        }
+
+        // Now trigger batch submission to finalize all and calculate marks
+        const batchResponse = await assessmentService.batchSubmitDailyQuestions({
+          date: examState.examDate || new Date().toISOString().split('T')[0]
+        })
+
+        // Parse batch response to get all submission results
+        const batchData = batchResponse?.data?.data
+        if (batchData?.submissions) {
+          const newSubmissionResults: Record<number, SubmissionResult> = {}
+          
+          batchData.submissions.forEach((submission: any) => {
+            newSubmissionResults[submission.questionId] = {
+              questionId: submission.questionId,
+              answer: submission.answer,
+              isCorrect: submission.isCorrect,
+              correctAnswer: submission.correctAnswer,
+              explanation: submission.explanation || '',
+              pointsEarned: submission.pointsEarned,
+              timeTaken: submission.timeTaken
+            }
+          })
+
+          setExamState(prev => ({
+            ...prev,
+            submissionResults: newSubmissionResults
+          }))
         }
       }
       
-      // Navigate back with success message
-      navigate('/student/daily-questions', { 
-        state: { message: 'Exam submitted successfully!' }
-      })
+      // Show results after batch submission
+      setShowResults(true)
+      setShowConfirmSubmit(false)
+      
     } catch (error) {
       console.error('Failed to submit exam:', error)
+      alert('Failed to submit exam. Please try again.')
     } finally {
-      setSaving(false)
-      setShowConfirmSubmit(false)
+      setSubmitting(false)
     }
   }
 
@@ -249,7 +343,140 @@ const ExamPage: React.FC = () => {
 
   const currentQuestion = examState.questions[examState.currentQuestionIndex]
   const currentAnswer = examState.answers[currentQuestion.id]
-  const isCurrentSaved = examState.savedAnswers[currentQuestion.id]
+
+  // Results Summary Component
+  if (showResults) {
+    const submittedCount = Object.keys(examState.submissionResults).length
+    const correctCount = Object.values(examState.submissionResults).filter(r => r.isCorrect).length
+    const totalPoints = Object.values(examState.submissionResults).reduce((sum, r) => sum + r.pointsEarned, 0)
+    const totalPossiblePoints = examState.questions.reduce((sum, q) => sum + q.points, 0)
+    const accuracy = submittedCount > 0 ? Math.round((correctCount / submittedCount) * 100) : 0
+
+    return (
+      <div className="space-y-6">
+        {/* Results Header */}
+        <div className="text-center">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Exam Results</h1>
+          <p className="text-muted-foreground">
+            {examState.examType === 'daily' ? 'Daily Questions' : 
+             examState.examType === 'practice' ? 'Practice' : 'Contest'} completed
+          </p>
+        </div>
+
+        {/* Summary Stats */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Final Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{submittedCount}</div>
+                <div className="text-sm text-muted-foreground">Questions Answered</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{correctCount}</div>
+                <div className="text-sm text-muted-foreground">Correct Answers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{accuracy}%</div>
+                <div className="text-sm text-muted-foreground">Accuracy</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{totalPoints}</div>
+                <div className="text-sm text-muted-foreground">Total Points</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Detailed Results */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Question Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {examState.questions.map((question, index) => {
+                const result = examState.submissionResults[question.id]
+                const userAnswer = examState.answers[question.id]
+                
+                return (
+                  <div key={question.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold">Q{index + 1}</span>
+                        <Badge className={getDifficultyColor(question.difficulty)}>
+                          {question.difficulty}
+                        </Badge>
+                        <Badge variant="outline">{question.points} pts</Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {result ? (
+                          <>
+                            <Badge variant={result.isCorrect ? "default" : "destructive"}>
+                              {result.isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                            </Badge>
+                            <Badge variant="outline">{result.pointsEarned} pts earned</Badge>
+                          </>
+                        ) : (
+                          <Badge variant="secondary">Not Answered</Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm mb-3">{question.text}</p>
+                    
+                    {result && (
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <strong>Your Answer:</strong> <span className={result.isCorrect ? 'text-green-600' : 'text-red-600'}>{result.answer}</span>
+                        </div>
+                        {!result.isCorrect && (
+                          <div>
+                            <strong>Correct Answer:</strong> <span className="text-green-600">{result.correctAnswer}</span>
+                          </div>
+                        )}
+                        {result.explanation && (
+                          <div>
+                            <strong>Explanation:</strong> <span className="text-gray-600">{result.explanation}</span>
+                          </div>
+                        )}
+                        <div>
+                          <strong>Time Taken:</strong> {result.timeTaken} seconds
+                        </div>
+                      </div>
+                    )}
+                    
+                    {!result && userAnswer && (
+                      <div className="text-sm text-gray-600">
+                        <strong>Your Answer (Not Finalized):</strong> {userAnswer}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center gap-3">
+              <Button 
+                onClick={() => navigate('/student/daily-questions')}
+                className="flex items-center gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                Back to Daily Questions
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -290,21 +517,33 @@ const ExamPage: React.FC = () => {
             </Button>
             
             <div className="flex items-center gap-2">
-              {examState.questions.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => navigateToQuestion(index)}
-                  className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${
-                    index === examState.currentQuestionIndex
-                      ? 'bg-primary text-primary-foreground'
-                      : examState.answers[examState.questions[index].id]
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
+              {examState.questions.map((question, index) => {
+                const isDraftSubmitted = examState.draftSubmissions[question.id]
+                const hasAnswer = examState.answers[question.id]
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => navigateToQuestion(index)}
+                    className={`w-8 h-8 rounded-full text-sm font-medium transition-colors relative ${
+                      index === examState.currentQuestionIndex
+                        ? 'bg-primary text-primary-foreground'
+                        : isDraftSubmitted
+                        ? 'bg-blue-500 text-white'
+                        : hasAnswer
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {index + 1}
+                    {isDraftSubmitted && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">S</span>
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
             </div>
             
             <Button
@@ -334,9 +573,9 @@ const ExamPage: React.FC = () => {
               <Badge variant="outline">
                 {currentQuestion.points} pts
               </Badge>
-              {isCurrentSaved && (
-                <Badge variant="default" className="bg-green-600">
-                  <CheckCircle className="h-3 w-3 mr-1" />
+              {examState.draftSubmissions[currentQuestion.id] && (
+                <Badge variant="default" className="bg-blue-600">
+                  <Save className="h-3 w-3 mr-1" />
                   Saved
                 </Badge>
               )}
@@ -472,12 +711,12 @@ const ExamPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
-                onClick={handleSaveCurrentQuestion}
-                disabled={!currentAnswer || isCurrentSaved || submitting}
+                onClick={handleSubmitCurrentQuestion}
+                disabled={!currentAnswer || examState.draftSubmissions[currentQuestion.id] || submitting}
                 className="flex items-center gap-2"
               >
                 <Save className="h-4 w-4" />
-                {submitting ? 'Saving...' : isCurrentSaved ? 'Saved' : 'Save Current'}
+                {submitting ? 'Saving...' : examState.draftSubmissions[currentQuestion.id] ? 'Saved' : 'Save Answer'}
               </Button>
               
               <Button
@@ -486,7 +725,7 @@ const ExamPage: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <CheckCircle className="h-4 w-4" />
-                Submit Exam
+                Submit Full
               </Button>
             </div>
           </div>
@@ -497,9 +736,9 @@ const ExamPage: React.FC = () => {
       <Dialog open={showConfirmSubmit} onOpenChange={setShowConfirmSubmit}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Submit Exam?</DialogTitle>
+            <DialogTitle>Submit All Daily Questions?</DialogTitle>
             <DialogDescription>
-              Are you sure you want to submit your exam? This action cannot be undone.
+              This will finalize all your answers and calculate your marks. You will see detailed results after submission. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-end gap-3 mt-4">

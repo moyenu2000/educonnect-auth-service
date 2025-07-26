@@ -65,6 +65,13 @@ public class QuestionController {
         return ResponseEntity.ok(ApiResponse.success(question));
     }
 
+    @GetMapping("/public/{questionId}")
+    public ResponseEntity<ApiResponse<QuestionResponse>> getPublicQuestionById(@PathVariable Long questionId) {
+        // Public endpoint for students to access question details (used for daily questions)
+        QuestionResponse question = questionService.getQuestionResponseById(questionId);
+        return ResponseEntity.ok(ApiResponse.success(question));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
     public ResponseEntity<ApiResponse<QuestionResponse>> createQuestion(@Valid @RequestBody QuestionRequest request) {
