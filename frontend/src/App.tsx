@@ -22,6 +22,7 @@ import StudentDashboard from './components/student/StudentDashboard'
 
 // Student Components
 import DailyQuestions from './components/student/DailyQuestions'
+import ExamPage from './components/student/ExamPage'
 import Practice from './components/student/Practice'
 import Discussions from './components/student/Discussions'
 import Contests from './components/student/Contests'
@@ -254,6 +255,11 @@ const AppContent: React.FC = () => {
       <Route path="/student/daily-questions" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><DailyQuestions /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/exam" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><ExamPage /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/student/practice" element={

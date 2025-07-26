@@ -2,6 +2,7 @@ package com.educonnect.assessment.controller;
 
 import com.educonnect.assessment.dto.ApiResponse;
 import com.educonnect.assessment.enums.Period;
+import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.service.AnalyticsService;
 import com.educonnect.assessment.service.DailyQuestionService;
 import com.educonnect.assessment.service.PracticeProblemService;
@@ -41,14 +42,6 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(analytics));
     }
 
-    @PutMapping("/daily-questions")
-    public ResponseEntity<ApiResponse<String>> setDailyQuestions(
-            @RequestBody SetDailyQuestionsRequest request) {
-        
-        dailyQuestionService.setDailyQuestions(request.getDate(), request.getQuestionIds(), 
-                request.getSubjectDistribution());
-        return ResponseEntity.ok(ApiResponse.success("Daily questions updated successfully"));
-    }
 
     // Note: Live exams and contests would be implemented here
     // For now, returning mock responses
@@ -137,14 +130,37 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success(result, "Practice problems created successfully"));
     }
 
-    @PostMapping("/add-questions-to-daily")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
-    public ResponseEntity<ApiResponse<String>> addQuestionsToDailyQuestions(
-            @RequestBody AddQuestionsToDailyRequest request) {
+    @PutMapping("/daily-questions")
+    public ResponseEntity<ApiResponse<String>> setDailyQuestions(
+            @RequestBody SetDailyQuestionsRequest request) {
         
-        dailyQuestionService.setDailyQuestions(request.getDate(), request.getQuestionIds(), 
-                request.getSubjectDistribution());
-        return ResponseEntity.ok(ApiResponse.success("Questions added to daily questions successfully"));
+        try {
+            if (request.getQuestionIds() == null || request.getQuestionIds().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Question IDs cannot be empty"));
+            }
+            
+            if (request.getDate() == null) {
+                return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Date is required"));
+            }
+            
+            dailyQuestionService.setDailyQuestions(request.getDate(), request.getQuestionIds(), 
+                    request.getSubjectDistribution());
+            
+            return ResponseEntity.ok(ApiResponse.success(
+                String.format("Successfully set %d questions for %s", 
+                    request.getQuestionIds().size(), request.getDate())));
+                    
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Question not found: " + e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Error setting daily questions: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("Failed to set daily questions: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/add-questions-to-practice")
@@ -224,18 +240,4 @@ public class AdminController {
         }
     }
 
-    public static class AddQuestionsToDailyRequest {
-        private LocalDate date;
-        private List<Long> questionIds;
-        private Map<String, Object> subjectDistribution;
-
-        public LocalDate getDate() { return date; }
-        public void setDate(LocalDate date) { this.date = date; }
-        public List<Long> getQuestionIds() { return questionIds; }
-        public void setQuestionIds(List<Long> questionIds) { this.questionIds = questionIds; }
-        public Map<String, Object> getSubjectDistribution() { return subjectDistribution; }
-        public void setSubjectDistribution(Map<String, Object> subjectDistribution) { 
-            this.subjectDistribution = subjectDistribution; 
-        }
-    }
 }

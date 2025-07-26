@@ -3,9 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { 
-  ArrowLeft,
   Plus,
   X
 } from 'lucide-react'
@@ -32,40 +31,148 @@ interface Question {
   updatedAt: string
 }
 
+interface DailyQuestion {
+  id: number
+  questionId: number
+  date: string
+  subjectId: number
+  difficulty: string
+  points: number
+  bonusPoints?: number
+  createdAt: string
+}
+
 const DailyQuestionConfig: React.FC = () => {
   const navigate = useNavigate()
-  const location = useLocation()
-  const selectedQuestionIds = location.state?.selectedQuestions || []
-  const allQuestions = location.state?.allQuestions || []
 
   const [actionDate, setActionDate] = useState(new Date().toISOString().split('T')[0])
   const [questionConfigs, setQuestionConfigs] = useState<Record<number, {difficulty: string, points: number}>>({})
   const [dailyQuestionsList, setDailyQuestionsList] = useState<number[]>([])
-  const [availableQuestions, setAvailableQuestions] = useState<Question[]>([])
+  const [allQuestions, setAllQuestions] = useState<Question[]>([]) // All questions for left panel
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [existingDailyQuestions, setExistingDailyQuestions] = useState<DailyQuestion[]>([]) // Existing daily questions
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  
+  // API-based pagination
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalQuestions, setTotalQuestions] = useState(0)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const questionsPerPage = 20
+  
+  // Toast state
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error', show: boolean}>({
+    message: '', 
+    type: 'success', 
+    show: false
+  })
+  
+  // Calculate if there are more questions available
+  const hasMoreQuestions = allQuestions.length < totalQuestions
+
+  // Toast functions
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type, show: true })
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }))
+    }, 3000) // Hide after 3 seconds
+  }
+
+  // Load all questions from API
+  const loadQuestions = async (page: number = 0, append: boolean = false) => {
+    try {
+      if (append) {
+        setLoadingMore(true)
+      } else {
+        setLoading(true)
+      }
+
+      const params = {
+        page,
+        size: questionsPerPage
+      }
+
+      const response = await assessmentService.getQuestions(params)
+      const data = response.data?.data
+
+      if (data) {
+        const newQuestions = data.questions || []
+        
+        if (append) {
+          setAllQuestions(prev => [...prev, ...newQuestions])
+        } else {
+          setAllQuestions(newQuestions)
+        }
+        
+        setTotalQuestions(data.totalElements || 0)
+      }
+    } catch (error) {
+      console.error('Failed to load questions:', error)
+      alert('Failed to load questions. Please try again.')
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  // Load existing daily questions for a specific date
+  const loadDailyQuestionsForDate = async (date: string) => {
+    try {
+      setLoading(true)
+      const response = await assessmentService.getDailyQuestions(date)
+      const data = response.data?.data
+
+      if (data && data.questions) {
+        setExistingDailyQuestions(data.questions)
+        const questionIds = data.questions.map((dq: DailyQuestion) => dq.questionId)
+        setDailyQuestionsList(questionIds)
+        
+        // Set configurations for existing daily questions
+        const configs: Record<number, {difficulty: string, points: number}> = {}
+        data.questions.forEach((dq: DailyQuestion) => {
+          configs[dq.questionId] = {
+            difficulty: dq.difficulty || 'MEDIUM',
+            points: dq.points || 10
+          }
+        })
+        setQuestionConfigs(configs)
+      } else {
+        setExistingDailyQuestions([])
+        setDailyQuestionsList([])
+        setQuestionConfigs({})
+      }
+    } catch (error) {
+      console.error('Failed to load daily questions:', error)
+      setExistingDailyQuestions([])
+      setDailyQuestionsList([])
+      setQuestionConfigs({})
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load more function
+  const handleLoadMore = () => {
+    const nextPage = currentPage + 1
+    setCurrentPage(nextPage)
+    loadQuestions(nextPage, true)
+  }
 
   useEffect(() => {
-    // Initialize with selected questions
-    const configs: Record<number, {difficulty: string, points: number}> = {}
-    selectedQuestionIds.forEach((questionId: number) => {
-      const question = allQuestions.find((q: Question) => q.id === questionId)
-      configs[questionId] = {
-        difficulty: question?.difficulty || 'MEDIUM',
-        points: 10
-      }
-    })
-    setQuestionConfigs(configs)
-    setDailyQuestionsList([...selectedQuestionIds])
-    setAvailableQuestions(allQuestions.filter((q: Question) => !selectedQuestionIds.includes(q.id)))
-  }, [selectedQuestionIds, allQuestions])
+    // Load questions from API on component mount
+    loadQuestions(0, false)
+  }, [])
+
+  useEffect(() => {
+    // Load daily questions when date changes
+    loadDailyQuestionsForDate(actionDate)
+  }, [actionDate])
 
   const addQuestionToDailyList = (questionId: number) => {
     const question = allQuestions.find((q: Question) => q.id === questionId)
     if (!question) return
     
     setDailyQuestionsList(prev => [...prev, questionId])
-    setAvailableQuestions(prev => prev.filter(q => q.id !== questionId))
     
     // Initialize config for new question
     setQuestionConfigs(prev => ({
@@ -78,11 +185,8 @@ const DailyQuestionConfig: React.FC = () => {
   }
 
   const removeQuestionFromDailyList = (questionId: number) => {
-    const question = allQuestions.find((q: Question) => q.id === questionId)
-    if (!question) return
-    
+    // Remove from daily questions list
     setDailyQuestionsList(prev => prev.filter(id => id !== questionId))
-    setAvailableQuestions(prev => [...prev, question].sort((a, b) => a.id - b.id))
     
     // Remove config for removed question
     setQuestionConfigs(prev => {
@@ -125,7 +229,7 @@ const DailyQuestionConfig: React.FC = () => {
         points: questionConfigs[questionId]?.points || 10
       }))
 
-      const response = await assessmentService.addQuestionsToDailyQuestions({
+      const response = await assessmentService.setDailyQuestions({
         date: actionDate,
         questionIds: dailyQuestionsList,
         subjectDistribution: {
@@ -134,12 +238,14 @@ const DailyQuestionConfig: React.FC = () => {
       })
 
       if (response.data?.success) {
-        alert('Questions added to daily questions successfully')
-        navigate(-1) // Go back to previous page
+        showToast(`Daily questions updated successfully! ${dailyQuestionsList.length} questions set for ${actionDate}`, 'success')
+        setTimeout(() => {
+          navigate(-1) // Go back to previous page after showing toast
+        }, 1500)
       }
     } catch (error) {
       console.error('Failed to add questions to daily questions:', error)
-      alert('Failed to add questions to daily questions. Please try again.')
+      showToast('Failed to add questions to daily questions. Please try again.', 'error')
     } finally {
       setLoading(false)
     }
@@ -186,14 +292,16 @@ const DailyQuestionConfig: React.FC = () => {
 
       {/* Two-panel layout */}
       <div className="grid grid-cols-2 gap-6 min-h-[600px]">
-        {/* Left Panel - Available Questions */}
+        {/* Left Panel - All Questions */}
         <Card className="bg-gray-50">
           <CardHeader>
-            <CardTitle className="text-gray-800">Available Questions ({availableQuestions.length})</CardTitle>
+            <CardTitle className="text-gray-800">All Questions ({allQuestions.length})</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="max-h-[500px] overflow-y-auto p-4 space-y-3">
-              {availableQuestions.map(question => (
+              {allQuestions.map(question => {
+                const isInDailyList = dailyQuestionsList.includes(question.id)
+                return (
                 <div key={question.id} className="bg-white border rounded-lg p-4 hover:shadow-sm transition-shadow">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
@@ -208,23 +316,50 @@ const DailyQuestionConfig: React.FC = () => {
                       </div>
                       <p className="text-sm text-gray-700">{question.text}</p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-3 text-green-600 hover:text-green-700 hover:border-green-300"
-                      onClick={() => addQuestionToDailyList(question.id)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                    {isInDailyList ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="ml-3 text-red-600 hover:text-red-700 hover:border-red-300"
+                        onClick={() => removeQuestionFromDailyList(question.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="ml-3 text-green-600 hover:text-green-700 hover:border-green-300"
+                        onClick={() => addQuestionToDailyList(question.id)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
-              ))}
-              {availableQuestions.length === 0 && (
+                )
+              })}
+              {allQuestions.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  All questions have been added to daily questions
+                  No questions available
                 </div>
               )}
             </div>
+            
+            {/* Load More Button */}
+            {hasMoreQuestions && (
+              <div className="border-t p-4">
+                <Button 
+                  variant="outline" 
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="w-full"
+                >
+                  {loadingMore ? 'Loading...' : `Load More Questions (${totalQuestions - allQuestions.length} remaining)`}
+                </Button>
+              </div>
+            )}
+            
           </CardContent>
         </Card>
         
@@ -381,12 +516,34 @@ const DailyQuestionConfig: React.FC = () => {
                 onClick={handleSubmit}
                 disabled={dailyQuestionsList.length === 0 || loading}
               >
-                {loading ? 'Adding...' : `Add ${dailyQuestionsList.length} Questions to Daily`}
+                {loading ? 'Updating...' : `Set ${dailyQuestionsList.length} Questions for ${actionDate}`}
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          toast.type === 'success' 
+            ? 'bg-green-500 text-white' 
+            : 'bg-red-500 text-white'
+        }`}>
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            )}
+            <span className="font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

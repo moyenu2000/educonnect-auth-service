@@ -183,6 +183,9 @@ export const assessmentService = {
   getDailyQuestions: (date?: string) =>
     assessmentApi.get('/daily-questions', { params: { date } }),
   
+  getDailyQuestionDetails: (date?: string) =>
+    assessmentApi.get('/daily-questions/details', { params: { date } }),
+  
   getTodaysDailyQuestions: (subjectId?: number) =>
     assessmentApi.get('/daily-questions/today', { params: { subjectId } }),
   
@@ -196,8 +199,11 @@ export const assessmentService = {
   
   getDailyQuestionStats: () => assessmentApi.get('/daily-questions/stats'),
   
-  setDailyQuestions: (data: { date: string, questionIds: number[] }) =>
-    assessmentApi.put('/daily-questions', data),
+  setDailyQuestions: (data: { 
+    date: string
+    questionIds: number[]
+    subjectDistribution?: Record<string, unknown>
+  }) => assessmentApi.put('/daily-questions', data),
   
   removeDailyQuestion: (dailyQuestionId: number) =>
     assessmentApi.delete(`/daily-questions/${dailyQuestionId}`),
@@ -310,11 +316,11 @@ export const assessmentService = {
   // Question Management for Admin/Question Setter
   getQuestionStats: () => assessmentApi.get('/admin/questions/stats'),
   
-  addQuestionsToDailyQuestions: (data: {
+  setAdminDailyQuestions: (data: {
     date: string
     questionIds: number[]
-    subjectDistribution?: any
-  }) => assessmentApi.post('/admin/add-questions-to-daily', data),
+    subjectDistribution?: Record<string, unknown>
+  }) => assessmentApi.put('/admin/daily-questions', data),
   
   addQuestionsToPractice: (questionIds: number[]) =>
     assessmentApi.post('/admin/add-questions-to-practice', questionIds),

@@ -3,23 +3,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
-import { Calendar, Flame, Trophy, CheckCircle, XCircle } from 'lucide-react'
+import { Calendar, Flame, Trophy, Play } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
-interface DailyQuestion {
+interface DailyQuestionDetails {
   id: number
   questionId: number
+  questionText: string
+  difficulty: string
+  points: number
+  subjectId: number
   date: string
-  question: {
-    id: number
-    text: string
-    type: string
-    difficulty: string
-    options: Array<{ id: number, text: string, isCorrect: boolean }>
-    subjectName: string
-  }
-  isAnswered: boolean
+  attempted: boolean
+  correct?: boolean
   userAnswer?: string
-  isCorrect?: boolean
+  pointsEarned?: number
+  submittedAt?: string
+}
+
+interface DailyQuestionsByDate {
+  [date: string]: DailyQuestionDetails[]
 }
 
 interface StreakInfo {
@@ -28,22 +31,64 @@ interface StreakInfo {
 }
 
 const DailyQuestions: React.FC = () => {
-  const [questions, setQuestions] = useState<DailyQuestion[]>([])
+  const navigate = useNavigate()
+  const [questionsByDate, setQuestionsByDate] = useState<DailyQuestionsByDate>({})
   const [streakInfo, setStreakInfo] = useState<StreakInfo | null>(null)
   const [loading, setLoading] = useState(true)
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: string }>({})
-  const [submittedQuestions, setSubmittedQuestions] = useState<Set<number>>(new Set())
+  const [dateRange, setDateRange] = useState<string[]>([])
 
   useEffect(() => {
-    loadTodaysQuestions()
+    loadDailyQuestions()
   }, [])
 
-  const loadTodaysQuestions = async () => {
+  const generateDateRange = (days: number = 30): string[] => {
+    const dates: string[] = []
+    const today = new Date()
+    
+    for (let i = 0; i < days; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() - i)
+      dates.push(date.toISOString().split('T')[0])
+    }
+    
+    return dates
+  }
+
+  const loadDailyQuestions = async () => {
     try {
-      const response = await assessmentService.getTodaysDailyQuestions()
-      const data = response.data.data
-      setQuestions(data?.questions || [])
-      setStreakInfo(data?.streakInfo || { currentStreak: 0, longestStreak: 0 })
+      const dates = generateDateRange(30) // Last 30 days including today
+      setDateRange(dates)
+      
+      const questionsByDateMap: DailyQuestionsByDate = {}
+      let allStreakInfo: StreakInfo | null = null
+      
+      // Load questions for each date
+      for (const date of dates) {
+        try {
+          const response = await assessmentService.getDailyQuestions(date)
+          const data = response.data.data
+          
+          if (data?.questions && data.questions.length > 0) {
+            // Use the details endpoint to get full question information
+            const detailsResponse = await assessmentService.getDailyQuestionDetails(date)
+            const detailsData = detailsResponse.data.data
+            
+            if (detailsData?.questions) {
+              questionsByDateMap[date] = detailsData.questions
+            }
+          }
+          
+          // Get streak info from the first successful response
+          if (!allStreakInfo && data?.streakInfo) {
+            allStreakInfo = data.streakInfo
+          }
+        } catch (error) {
+          console.error(`Failed to load questions for ${date}:`, error)
+        }
+      }
+      
+      setQuestionsByDate(questionsByDateMap)
+      setStreakInfo(allStreakInfo || { currentStreak: 0, longestStreak: 0 })
     } catch (error) {
       console.error('Failed to load daily questions:', error)
     } finally {
@@ -51,44 +96,16 @@ const DailyQuestions: React.FC = () => {
     }
   }
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }))
-  }
-
-  const handleSubmitAnswer = async (question: DailyQuestion) => {
-    const selectedAnswer = selectedAnswers[question.id]
-    if (!selectedAnswer) return
-
-    try {
-      const response = await assessmentService.submitDailyQuestion(question.questionId, {
-        answer: selectedAnswer,
-        timeTaken: 30, // Mock time taken
-        explanation: ''
-      })
-      
-      setSubmittedQuestions(prev => new Set(prev.add(question.id)))
-      
-      // Update question status
-      setQuestions(prev => prev.map(q => 
-        q.id === question.id 
-          ? { 
-              ...q, 
-              isAnswered: true, 
-              userAnswer: selectedAnswer,
-              isCorrect: response.data.success 
-            }
-          : q
-      ))
-    } catch (error) {
-      console.error('Failed to submit answer:', error)
-    }
+  const handleSolveQuestions = (date: string) => {
+    const questions = questionsByDate[date]
+    if (!questions || questions.length === 0) return
+    
+    const questionIds = questions.map(q => q.questionId)
+    navigate(`/student/exam?type=daily&date=${date}&questions=${questionIds.join(',')}`)
   }
 
   const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
+    switch (difficulty?.toLowerCase()) {
       case 'easy':
         return 'bg-green-100 text-green-800'
       case 'medium':
@@ -99,6 +116,25 @@ const DailyQuestions: React.FC = () => {
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today'
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday'
+    } else {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      })
     }
   }
 
@@ -157,119 +193,90 @@ const DailyQuestions: React.FC = () => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {questions.filter(q => q.isAnswered).length}
+                {Object.values(questionsByDate).flat().filter(q => q.attempted).length}
               </div>
-              <div className="text-sm text-muted-foreground">Completed Today</div>
+              <div className="text-sm text-muted-foreground">Completed Total</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Questions */}
-      <div className="space-y-4">
-        {questions.length === 0 ? (
+      {/* Daily Questions by Date */}
+      <div className="space-y-6">
+        {dateRange.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No daily questions available</h3>
-              <p className="text-muted-foreground">Check back later for today's questions!</p>
+              <p className="text-muted-foreground">Check back later for daily questions!</p>
             </CardContent>
           </Card>
         ) : (
-          questions.map((question, index) => (
-            <Card key={question.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <span>Question {index + 1}</span>
-                    {question.isAnswered && (
-                      question.isCorrect ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-red-600" />
-                      )
-                    )}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{question.question?.subjectName || 'Unknown Subject'}</Badge>
-                    <Badge className={getDifficultyColor(question.question?.difficulty || 'MEDIUM')}>
-                      {question.question?.difficulty || 'MEDIUM'}
-                    </Badge>
+          dateRange.map((date) => {
+            const questions = questionsByDate[date]
+            if (!questions || questions.length === 0) return null
+            
+            const completedCount = questions.filter(q => q.attempted).length
+            const totalPoints = questions.reduce((sum, q) => sum + q.points, 0)
+            const earnedPoints = questions.reduce((sum, q) => sum + (q.pointsEarned || 0), 0)
+            
+            return (
+              <Card key={date} className="border-2">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-3">
+                        <Calendar className="h-5 w-5" />
+                        {formatDate(date)}
+                        <Badge variant="outline" className="ml-2">
+                          {completedCount}/{questions.length} completed
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        {questions.length} question{questions.length > 1 ? 's' : ''} • {totalPoints} points available
+                        {earnedPoints > 0 && ` • ${earnedPoints} points earned`}
+                      </CardDescription>
+                    </div>
+                    <Button 
+                      onClick={() => handleSolveQuestions(date)}
+                      className="flex items-center gap-2"
+                      variant={completedCount === questions.length ? "outline" : "default"}
+                    >
+                      <Play className="h-4 w-4" />
+                      {completedCount === questions.length ? 'Review' : 'Solve'}
+                    </Button>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg mb-4">{question.question?.text || 'Question text not available'}</p>
-                
-                {question.question?.type === 'MCQ' && question.question?.options && (
-                  <div className="space-y-2">
-                    {question.question.options.map((option) => (
-                      <label
-                        key={option.id}
-                        className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
-                          selectedAnswers[question.id] === option.text
-                            ? 'border-primary bg-primary/5'
-                            : 'border-input'
-                        } ${
-                          question.isAnswered
-                            ? option.isCorrect
-                              ? 'border-green-500 bg-green-50'
-                              : selectedAnswers[question.id] === option.text && !option.isCorrect
-                              ? 'border-red-500 bg-red-50'
-                              : ''
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.id}`}
-                          value={option.text}
-                          checked={selectedAnswers[question.id] === option.text}
-                          onChange={() => handleAnswerSelect(question.id, option.text)}
-                          disabled={question.isAnswered}
-                          className="sr-only"
-                        />
-                        <div className={`w-4 h-4 rounded-full border-2 ${
-                          selectedAnswers[question.id] === option.text
-                            ? 'border-primary bg-primary'
-                            : 'border-gray-300'
-                        }`}>
-                          {selectedAnswers[question.id] === option.text && (
-                            <div className="w-2 h-2 bg-white rounded-full m-0.5"></div>
-                          )}
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {questions.map((question, index) => (
+                      <div key={question.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium text-gray-600">Q{index + 1}</span>
+                            <Badge className={getDifficultyColor(question.difficulty)}>
+                              {question.difficulty}
+                            </Badge>
+                            <Badge variant="outline">
+                              {question.points} pts
+                            </Badge>
+                            {question.attempted && (
+                              <Badge variant={question.correct ? "default" : "destructive"}>
+                                {question.correct ? '✓ Correct' : '✗ Incorrect'}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-800 line-clamp-2">
+                            {question.questionText}
+                          </p>
                         </div>
-                        <span>{option.text}</span>
-                      </label>
+                      </div>
                     ))}
                   </div>
-                )}
-
-                {!question.isAnswered && (
-                  <Button 
-                    className="mt-4" 
-                    onClick={() => handleSubmitAnswer(question)}
-                    disabled={!selectedAnswers[question.id] || submittedQuestions.has(question.id)}
-                  >
-                    {submittedQuestions.has(question.id) ? 'Submitting...' : 'Submit Answer'}
-                  </Button>
-                )}
-
-                {question.isAnswered && (
-                  <div className="mt-4 p-3 rounded-lg bg-muted">
-                    <p className="text-sm">
-                      <strong>Your answer:</strong> {question.userAnswer}
-                    </p>
-                    <p className="text-sm">
-                      <strong>Result:</strong> {' '}
-                      <span className={question.isCorrect ? 'text-green-600' : 'text-red-600'}>
-                        {question.isCorrect ? 'Correct!' : 'Incorrect'}
-                      </span>
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            )
+          })
         )}
       </div>
     </div>

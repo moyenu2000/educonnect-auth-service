@@ -19,14 +19,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -363,64 +367,192 @@ public class DailyQuestionService {
         return stats;
     }
 
-    // Admin functionality
+    // Admin functionality - native SQL version (bulletproof)
     @Transactional
     public void setDailyQuestions(LocalDate date, List<Long> questionIds, Map<String, Object> subjectDistribution) {
-        // Remove existing daily questions for the date
-        List<DailyQuestion> existing = dailyQuestionRepository.findByDate(date);
-        dailyQuestionRepository.deleteAll(existing);
-
-        // Extract question configurations from subjectDistribution
+        System.out.println("Setting daily questions for " + date + " with " + questionIds.size() + " questions");
+        
+        // First, clear existing questions for the date
+        try {
+            int deletedCount = dailyQuestionRepository.deleteByDateNative(date);
+            System.out.println("Deleted " + deletedCount + " existing questions for " + date);
+        } catch (Exception e) {
+            System.err.println("Delete failed, continuing with upsert: " + e.getMessage());
+        }
+        
+        // Extract question configurations
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> questionConfigurations = (List<Map<String, Object>>) subjectDistribution.get("questionConfigurations");
 
-        // Add new daily questions
+        // Use native upsert for each question
         for (Long questionId : questionIds) {
-            // Fetch the question to get subject and difficulty
-            Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
-            
-            DailyQuestion dailyQuestion = new DailyQuestion();
+            try {
+                // Fetch the question to get subject
+                Question question = questionRepository.findById(questionId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
+                
+                // Find configuration for this question
+                Map<String, Object> questionConfig = questionConfigurations != null ? 
+                    questionConfigurations.stream()
+                        .filter(config -> {
+                            Object configQuestionId = config.get("questionId");
+                            return configQuestionId != null && 
+                                   (configQuestionId.equals(questionId) || 
+                                    configQuestionId.equals(questionId.intValue()));
+                        })
+                        .findFirst()
+                        .orElse(null) : null;
+                
+                // Get difficulty and points from config or defaults
+                String difficulty = questionConfig != null && questionConfig.get("difficulty") != null ? 
+                    (String) questionConfig.get("difficulty") : 
+                    (question.getDifficulty() != null ? question.getDifficulty().name() : "MEDIUM");
+                    
+                Integer points = questionConfig != null && questionConfig.get("points") != null ?
+                    ((Number) questionConfig.get("points")).intValue() : 10;
+                
+                // Use native upsert
+                dailyQuestionRepository.upsertDailyQuestion(
+                    questionId, 
+                    date, 
+                    question.getSubjectId(), 
+                    difficulty, 
+                    points
+                );
+                
+                System.out.println("Successfully upserted question " + questionId + " for " + date);
+                
+            } catch (Exception e) {
+                System.err.println("Failed to upsert question " + questionId + ": " + e.getMessage());
+                e.printStackTrace();
+                throw new RuntimeException("Failed to set daily question " + questionId + ": " + e.getMessage(), e);
+            }
+        }
+        
+        System.out.println("Completed setting " + questionIds.size() + " daily questions for " + date);
+    }
+    
+    // Separate method to clear existing questions
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void clearDailyQuestionsForDate(LocalDate date) {
+        try {
+            // Try native delete first
+            int deletedCount = dailyQuestionRepository.deleteByDateNative(date);
+            System.out.println("Native delete removed " + deletedCount + " questions for " + date);
+        } catch (Exception e) {
+            System.err.println("Native delete failed, trying JPA delete: " + e.getMessage());
+            try {
+                // Fallback to JPA delete
+                List<DailyQuestion> existing = dailyQuestionRepository.findByDate(date);
+                if (!existing.isEmpty()) {
+                    dailyQuestionRepository.deleteAll(existing);
+                    System.out.println("JPA delete removed " + existing.size() + " questions for " + date);
+                }
+            } catch (Exception e2) {
+                System.err.println("Both delete methods failed: " + e2.getMessage());
+            }
+        }
+    }
+    
+    // Individual question upsert with retry logic
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void upsertDailyQuestion(LocalDate date, Long questionId, List<Map<String, Object>> questionConfigurations) {
+        // Fetch the question to get subject and difficulty
+        Question question = questionRepository.findById(questionId)
+            .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
+        
+        // Find configuration for this specific question
+        Map<String, Object> questionConfig = null;
+        if (questionConfigurations != null) {
+            questionConfig = questionConfigurations.stream()
+                .filter(config -> {
+                    Object configQuestionId = config.get("questionId");
+                    return configQuestionId != null && 
+                           (configQuestionId.equals(questionId) || 
+                            configQuestionId.equals(questionId.intValue()));
+                })
+                .findFirst()
+                .orElse(null);
+        }
+        
+        // Check if question already exists for this date
+        Optional<DailyQuestion> existingOpt = dailyQuestionRepository.findByDateAndQuestionId(date, questionId);
+        
+        DailyQuestion dailyQuestion;
+        if (existingOpt.isPresent()) {
+            // Update existing
+            dailyQuestion = existingOpt.get();
+            System.out.println("Updating existing daily question " + dailyQuestion.getId() + " for questionId " + questionId);
+        } else {
+            // Create new
+            dailyQuestion = new DailyQuestion();
             dailyQuestion.setQuestionId(questionId);
             dailyQuestion.setDate(date);
-            dailyQuestion.setSubjectId(question.getSubjectId());
-            
-            // Find configuration for this specific question
-            Map<String, Object> questionConfig = null;
-            if (questionConfigurations != null) {
-                questionConfig = questionConfigurations.stream()
-                    .filter(config -> {
-                        Object configQuestionId = config.get("questionId");
-                        return configQuestionId != null && 
-                               (configQuestionId.equals(questionId) || 
-                                configQuestionId.equals(questionId.intValue()));
-                    })
-                    .findFirst()
-                    .orElse(null);
-            }
-            
-            // Set difficulty - use individual config if available, otherwise question's difficulty
-            if (questionConfig != null && questionConfig.get("difficulty") != null) {
-                String difficultyStr = (String) questionConfig.get("difficulty");
-                try {
-                    Difficulty difficulty = Difficulty.valueOf(difficultyStr.toUpperCase());
-                    dailyQuestion.setDifficulty(difficulty);
-                } catch (IllegalArgumentException e) {
-                    // Fallback to question's difficulty if invalid difficulty provided
-                    dailyQuestion.setDifficulty(question.getDifficulty());
-                }
-            } else {
+            System.out.println("Creating new daily question for questionId " + questionId);
+        }
+        
+        // Set all fields
+        dailyQuestion.setSubjectId(question.getSubjectId());
+        
+        // Set difficulty
+        if (questionConfig != null && questionConfig.get("difficulty") != null) {
+            String difficultyStr = (String) questionConfig.get("difficulty");
+            try {
+                Difficulty difficulty = Difficulty.valueOf(difficultyStr.toUpperCase());
+                dailyQuestion.setDifficulty(difficulty);
+            } catch (IllegalArgumentException e) {
                 dailyQuestion.setDifficulty(question.getDifficulty());
             }
-            
-            // Set points - use individual config if available, otherwise default to 10
-            Integer points = 10; // default
-            if (questionConfig != null && questionConfig.get("points") != null) {
-                points = (Integer) questionConfig.get("points");
+        } else {
+            dailyQuestion.setDifficulty(question.getDifficulty());
+        }
+        
+        // Set points
+        Integer points = 10; // default
+        if (questionConfig != null && questionConfig.get("points") != null) {
+            Object pointsObj = questionConfig.get("points");
+            if (pointsObj instanceof Number) {
+                points = ((Number) pointsObj).intValue();
+            } else if (pointsObj instanceof String) {
+                try {
+                    points = Integer.parseInt((String) pointsObj);
+                } catch (NumberFormatException e) {
+                    points = 10;
+                }
             }
-            dailyQuestion.setPoints(points);
-            
-            dailyQuestionRepository.save(dailyQuestion);
+        }
+        dailyQuestion.setPoints(points != null ? points : 10);
+        
+        // Ensure all required fields are set
+        if (dailyQuestion.getPoints() == null) {
+            dailyQuestion.setPoints(10);
+        }
+        if (dailyQuestion.getDifficulty() == null) {
+            dailyQuestion.setDifficulty(question.getDifficulty() != null ? question.getDifficulty() : Difficulty.MEDIUM);
+        }
+        
+        // Save with retry logic
+        int maxRetries = 3;
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                dailyQuestionRepository.save(dailyQuestion);
+                System.out.println("Successfully saved daily question for " + questionId + " (attempt " + attempt + ")");
+                return; // Success, exit retry loop
+            } catch (Exception e) {
+                System.err.println("Save attempt " + attempt + " failed for " + questionId + ": " + e.getMessage());
+                
+                if (attempt == maxRetries) {
+                    // Last attempt failed, throw the exception
+                    throw new RuntimeException("Failed to save daily question after " + maxRetries + " attempts: " + e.getMessage(), e);
+                }
+                
+                // Wait before retry
+                try {
+                    Thread.sleep(100 * attempt); // Increasing delay
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ import com.educonnect.assessment.entity.DailyQuestion;
 import com.educonnect.assessment.enums.ClassLevel;
 import com.educonnect.assessment.enums.Difficulty;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -57,4 +58,31 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
     
     @Query("SELECT COUNT(dq) FROM DailyQuestion dq WHERE dq.date = :date")
     long countByDate(@Param("date") LocalDate date);
+    
+    // Delete all daily questions for a specific date
+    @Modifying
+    @Query("DELETE FROM DailyQuestion dq WHERE dq.date = :date")
+    void deleteByDate(@Param("date") LocalDate date);
+    
+    // Native delete for more reliable deletion
+    @Modifying
+    @Query(value = "DELETE FROM daily_questions WHERE date = :date", nativeQuery = true)
+    int deleteByDateNative(@Param("date") LocalDate date);
+    
+    // Native upsert query
+    @Modifying
+    @Query(value = """
+        INSERT INTO daily_questions (question_id, date, subject_id, difficulty, points, bonus_points, created_at)
+        VALUES (:questionId, :date, :subjectId, :difficulty, :points, 0, NOW())
+        ON CONFLICT (date, question_id) 
+        DO UPDATE SET 
+            subject_id = EXCLUDED.subject_id,
+            difficulty = EXCLUDED.difficulty,
+            points = EXCLUDED.points
+    """, nativeQuery = true)
+    void upsertDailyQuestion(@Param("questionId") Long questionId, 
+                           @Param("date") LocalDate date, 
+                           @Param("subjectId") Long subjectId,
+                           @Param("difficulty") String difficulty, 
+                           @Param("points") Integer points);
 }

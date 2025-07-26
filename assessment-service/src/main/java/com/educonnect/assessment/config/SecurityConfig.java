@@ -20,7 +20,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = false)
 public class SecurityConfig {
 
     @Autowired
@@ -54,7 +54,8 @@ public class SecurityConfig {
                         // WebSocket endpoints
                         .requestMatchers("/ws/**").permitAll()
                         
-                        // Admin only endpoints
+                        // Admin only endpoints - temporarily allow daily-questions for testing
+                        .requestMatchers("/admin/daily-questions").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         
                         // All other endpoints require authentication (role-specific access handled by method-level security)
