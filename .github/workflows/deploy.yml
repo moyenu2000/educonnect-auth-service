@@ -173,6 +173,7 @@ jobs:
           gcloud compute scp docker-compose.prod.yml auth-service-vm:~/ --zone=us-central1-a
           gcloud compute scp scripts/cleanup.sh auth-service-vm:~/ --zone=us-central1-a
           gcloud compute scp educonnect-init-db.sql auth-service-vm:~/ --zone=us-central1-a
+          gcloud compute scp nginx-fixed.conf auth-service-vm:~/ --zone=us-central1-a
           
           gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
             # Clean up disk space
