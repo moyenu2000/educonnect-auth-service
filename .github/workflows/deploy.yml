@@ -184,7 +184,7 @@ jobs:
             cat > .env << EOF
           DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_USER=${{ secrets.DB_USER || 'educonnect' }}
+          DB_USER=${{ secrets.DB_USER || 'postgres' }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
