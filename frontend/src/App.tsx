@@ -32,6 +32,8 @@ import ContestDetails from './components/student/ContestDetails'
 import ContestTaking from './components/student/ContestTaking'
 import ContestResults from './components/student/ContestResults'
 import LiveExams from './components/student/LiveExams'
+import Messages from './components/Messages'
+import MessagingDemo from './components/MessagingDemo'
 
 // Admin Components  
 import SubjectManagement from './components/admin/SubjectManagement'
@@ -243,6 +245,11 @@ const AppContent: React.FC = () => {
           <Layout><ContestEditor /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/admin/messages" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><Messages /></Layout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/question-setter" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
@@ -289,6 +296,11 @@ const AppContent: React.FC = () => {
           <Layout><ContestEditor /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/question-setter/messages" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><Messages /></Layout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/student" element={
         <ProtectedRoute requiredRole="STUDENT">
@@ -323,6 +335,11 @@ const AppContent: React.FC = () => {
       <Route path="/student/discussions" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><Discussions /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/messages" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><Messages /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/student/contests" element={
@@ -360,6 +377,7 @@ const AppContent: React.FC = () => {
           <Layout><TwoFactorSetup /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/messaging-demo" element={<MessagingDemo />} />
       <Route path="/test" element={
         <ProtectedRoute>
           <Layout><TestPage /></Layout>

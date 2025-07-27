@@ -56,6 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Live Exams', href: '/admin/live-exams', icon: Calendar },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Discussions', href: '/admin/discussions', icon: MessageSquare },
+    { name: 'Messages', href: '/admin/messages', icon: MessageSquare },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 
@@ -65,6 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Subjects & Topics', href: '/question-setter/subjects', icon: BookOpen },
     { name: 'Create Question', href: '/question-setter/create-question', icon: Brain },
     { name: 'Contests', href: '/question-setter/contests', icon: Trophy },
+    { name: 'Messages', href: '/question-setter/messages', icon: MessageSquare },
     { name: 'Analytics', href: '/question-setter/analytics', icon: BarChart3 },
   ]
 

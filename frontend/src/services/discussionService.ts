@@ -72,12 +72,12 @@ export interface GroupMember {
 export interface Message {
   id: number
   content: string
-  senderId: number
-  senderName: string
-  recipientId: number
-  recipientName: string
+  sender: User
+  recipient: User
+  conversationId: number
   type: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO'
   isRead: boolean
+  isEdited?: boolean
   createdAt: string
   updatedAt?: string
   attachments: string[]
@@ -85,13 +85,11 @@ export interface Message {
 
 export interface Conversation {
   id: number
-  participantId: number
-  participantName: string
-  participantAvatar?: string
-  lastMessage: string
-  lastMessageTime: string
+  participants: User[]
+  lastMessage?: Message
   unreadCount: number
-  isOnline: boolean
+  createdAt: string
+  updatedAt?: string
 }
 
 export interface Notification {
@@ -312,7 +310,7 @@ export const discussionService = {
   sendMessage: (data: {
     recipientId: number
     content: string
-    type?: string
+    type: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO'
     attachments?: string[]
   }) => discussionApi.post('/messages', data),
   
