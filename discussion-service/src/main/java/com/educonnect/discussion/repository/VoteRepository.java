@@ -2,6 +2,7 @@ package com.educonnect.discussion.repository;
 
 import com.educonnect.discussion.entity.Vote;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -30,4 +31,12 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
     void deleteByUserIdAndDiscussionId(Long userId, Long discussionId);
     
     void deleteByUserIdAndAnswerId(Long userId, Long answerId);
+    
+    @Modifying
+    @Query("DELETE FROM Vote v WHERE v.discussion.id = :discussionId")
+    void deleteByDiscussionId(@Param("discussionId") Long discussionId);
+    
+    @Modifying
+    @Query("DELETE FROM Vote v WHERE v.answer.id = :answerId")
+    void deleteByAnswerId(@Param("answerId") Long answerId);
 }

@@ -354,4 +354,131 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
 
         return correctAnswer.equals(providedAnswer);
     }
+
+    // Admin management methods implementation
+    @Override
+    public PracticeProblemDto createPracticeProblem(Long questionId, Integer customPoints, Difficulty customDifficulty, 
+                                                  String hintText, List<String> hints, String solutionSteps) {
+        Question question = questionRepository.findByIdAndIsActiveTrue(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with ID: " + questionId));
+
+        // Check if practice problem already exists for this question
+        if (practiceProblemRepository.existsByQuestionId(questionId)) {
+            throw new BadRequestException("Practice problem already exists for question ID: " + questionId);
+        }
+
+        PracticeProblem problem = new PracticeProblem();
+        problem.setQuestionId(questionId);
+        problem.setDifficulty(customDifficulty != null ? customDifficulty : question.getDifficulty());
+        problem.setTopicId(question.getTopicId());
+        problem.setSubjectId(question.getSubjectId());
+        problem.setType(question.getType());
+        problem.setPoints(customPoints != null ? customPoints : question.getPoints());
+        
+        // Set custom practice problem details
+        problem.setHintText(hintText);
+        problem.setHints(hints);
+        problem.setSolutionSteps(solutionSteps);
+
+        problem = practiceProblemRepository.save(problem);
+        return convertToDto(problem, null);
+    }
+
+    @Override
+    public PracticeProblemDto updatePracticeProblem(Long problemId, Integer customPoints, Difficulty customDifficulty, 
+                                                  String hintText, List<String> hints, String solutionSteps) {
+        PracticeProblem problem = practiceProblemRepository.findById(problemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Practice problem not found with ID: " + problemId));
+
+        // Update fields if provided
+        if (customPoints != null) {
+            problem.setPoints(customPoints);
+        }
+        if (customDifficulty != null) {
+            problem.setDifficulty(customDifficulty);
+        }
+        if (hintText != null) {
+            problem.setHintText(hintText);
+        }
+        if (hints != null) {
+            problem.setHints(hints);
+        }
+        if (solutionSteps != null) {
+            problem.setSolutionSteps(solutionSteps);
+        }
+
+        problem = practiceProblemRepository.save(problem);
+        return convertToDto(problem, null);
+    }
+
+    @Override
+    public void deletePracticeProblem(Long problemId) {
+        PracticeProblem problem = practiceProblemRepository.findById(problemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Practice problem not found with ID: " + problemId));
+        
+        // Soft delete by setting isActive to false
+        problem.setIsActive(false);
+        practiceProblemRepository.save(problem);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PracticeProblemDto> getAllProblemsForAdmin(Long subjectId, Long topicId, Difficulty difficulty, 
+                                                         String search, Pageable pageable) {
+        String difficultyStr = difficulty != null ? difficulty.name() : null;
+        Page<PracticeProblem> problemPage = practiceProblemRepository.findActiveProblemsWithFilters(
+                subjectId, topicId, difficultyStr, search, pageable);
+
+        return problemPage.map(problem -> convertToDto(problem, null));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isPracticeQuestion(Long questionId) {
+        return practiceProblemRepository.existsByQuestionIdAndIsActive(questionId, true);
+    }
+
+    @Override
+    public List<PracticeProblemDto> bulkCreateFromQuestions(List<Long> questionIds, Integer defaultPoints, 
+                                                          Difficulty defaultDifficulty) {
+        List<PracticeProblemDto> createdProblems = new ArrayList<>();
+        
+        for (Long questionId : questionIds) {
+            try {
+                // Skip if already exists
+                if (!practiceProblemRepository.existsByQuestionId(questionId)) {
+                    Question question = questionRepository.findByIdAndIsActiveTrue(questionId)
+                            .orElse(null);
+                    
+                    if (question != null) {
+                        PracticeProblem problem = new PracticeProblem();
+                        problem.setQuestionId(questionId);
+                        problem.setDifficulty(defaultDifficulty != null ? defaultDifficulty : question.getDifficulty());
+                        problem.setTopicId(question.getTopicId());
+                        problem.setSubjectId(question.getSubjectId());
+                        problem.setType(question.getType());
+                        problem.setPoints(defaultPoints != null ? defaultPoints : question.getPoints());
+
+                        problem = practiceProblemRepository.save(problem);
+                        createdProblems.add(convertToDto(problem, null));
+                    }
+                }
+            } catch (Exception e) {
+                // Log error but continue with other questions
+                System.err.println("Failed to create practice problem for question ID: " + questionId + 
+                                 ". Error: " + e.getMessage());
+            }
+        }
+        
+        return createdProblems;
+    }
+
+    @Override
+    public void activateDeactivateProblem(Long problemId, Boolean isActive) {
+        PracticeProblem problem = practiceProblemRepository.findById(problemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Practice problem not found with ID: " + problemId));
+        
+        problem.setIsActive(isActive);
+        practiceProblemRepository.save(problem);
+    }
 }

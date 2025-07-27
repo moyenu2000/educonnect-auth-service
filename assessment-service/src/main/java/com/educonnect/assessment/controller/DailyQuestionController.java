@@ -78,6 +78,18 @@ public class DailyQuestionController {
         return ResponseEntity.ok(ApiResponse.success(questions));
     }
 
+    @GetMapping("/practice-today")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getTodaysPracticeQuestions() {
+        try {
+            Map<String, Object> result = dailyQuestionService.getTodaysPracticeQuestions();
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            System.out.println("DEBUG Controller: Exception in /practice-today: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Failed to get today's practice questions: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/{questionId}/submit")
     // @PreAuthorize("hasRole('STUDENT')") // Temporarily disabled for testing
     public ResponseEntity<ApiResponse<Map<String, Object>>> submitDailyQuestionAnswer(
@@ -118,6 +130,20 @@ public class DailyQuestionController {
             return ResponseEntity.ok(ApiResponse.success(result));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(ApiResponse.error("Failed to batch submit daily questions: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/submission-status")
+    // @PreAuthorize("hasRole('STUDENT')") // Temporarily disabled for testing
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkSubmissionStatus(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        
+        try {
+            LocalDate queryDate = (date != null) ? date : LocalDate.now();
+            Map<String, Object> result = dailyQuestionService.checkDailyQuestionSubmissionStatus(queryDate);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error("Failed to check submission status: " + e.getMessage()));
         }
     }
 
@@ -280,12 +306,47 @@ public class DailyQuestionController {
     }
     
     @GetMapping("/all")
+    public ResponseEntity<ApiResponse<PagedResponse<Map<String, Object>>>> getAllDailyQuestionsPaginated(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        try {
+            System.out.println("DEBUG Controller: /all endpoint called with startDate=" + startDate + ", endDate=" + endDate + ", page=" + page + ", size=" + size);
+            
+            // Default to last 30 days if no dates specified
+            if (startDate == null && endDate == null) {
+                endDate = LocalDate.now();
+                startDate = endDate.minusDays(30);
+            } else if (startDate == null) {
+                startDate = endDate.minusDays(30);
+            } else if (endDate == null) {
+                endDate = LocalDate.now();
+            }
+            
+            // Validate page and size parameters
+            if (page < 0) page = 0;
+            if (size <= 0 || size > 100) size = 20; // Limit max size to 100
+            
+            PagedResponse<Map<String, Object>> result = dailyQuestionService.getAllDailyQuestionsPaginated(
+                    startDate, endDate, page, size);
+            
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            System.out.println("DEBUG Controller: Exception in /all: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(ApiResponse.error("Failed to get paginated daily questions: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/all-legacy")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getAllDailyQuestions(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
         try {
-            System.out.println("DEBUG Controller: /all endpoint called with startDate=" + startDate + ", endDate=" + endDate);
+            System.out.println("DEBUG Controller: /all-legacy endpoint called with startDate=" + startDate + ", endDate=" + endDate);
             
             // Default to last 30 days if no dates specified
             if (startDate == null && endDate == null) {
@@ -324,7 +385,7 @@ public class DailyQuestionController {
             
             return ResponseEntity.ok(ApiResponse.success(result));
         } catch (Exception e) {
-            System.out.println("DEBUG Controller: Exception in /all: " + e.getMessage());
+            System.out.println("DEBUG Controller: Exception in /all-legacy: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(500).body(ApiResponse.error("Failed to get all daily questions: " + e.getMessage()));
         }

@@ -48,6 +48,15 @@ public class QuestionService {
     @Autowired
     private PracticeProblemService practiceProblemService;
 
+    @Autowired
+    private com.educonnect.assessment.repository.DailyQuestionRepository dailyQuestionRepository;
+
+    @Autowired
+    private com.educonnect.assessment.repository.PracticeProblemRepository practiceProblemRepository;
+
+    @Autowired
+    private com.educonnect.assessment.repository.ContestRepository contestRepository;
+
     public PagedResponse<Question> getAllQuestions(int page, int size, Long subjectId, Long topicId, 
                                                  Difficulty difficulty, QuestionType type, String search) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
@@ -389,6 +398,17 @@ public class QuestionService {
     }
 
     @Transactional(readOnly = true)
+    public QuestionResponse getPublicQuestionResponseById(Long questionId) {
+        // Check if this question is publicly accessible
+        if (!isQuestionPubliclyAccessible(questionId)) {
+            throw new ResourceNotFoundException("Question not found or not publicly accessible");
+        }
+        
+        Question question = getActiveQuestionById(questionId);
+        return convertToResponse(question);
+    }
+
+    @Transactional(readOnly = true)
     public List<QuestionResponse> getRandomQuestionResponses(Long subjectId, Difficulty difficulty, int count) {
         List<Question> questions = getRandomQuestions(subjectId, difficulty, count);
         return convertToResponseList(questions);
@@ -461,5 +481,33 @@ public class QuestionService {
         stats.put("questionsByType", questionsByType);
         
         return stats;
+    }
+
+    @Transactional(readOnly = true)
+    private boolean isQuestionPubliclyAccessible(Long questionId) {
+        try {
+            // Check if question is part of daily questions
+            boolean isDailyQuestion = dailyQuestionRepository.existsByQuestionId(questionId);
+            if (isDailyQuestion) {
+                return true;
+            }
+
+            // Check if question is part of practice problems
+            boolean isPracticeProblem = practiceProblemRepository.existsByQuestionId(questionId);
+            if (isPracticeProblem) {
+                return true;
+            }
+
+            // Check if question is part of active contests
+            boolean isActiveContestQuestion = contestRepository.existsActiveContestByQuestionId(questionId);
+            if (isActiveContestQuestion) {
+                return true;
+            }
+
+            return false;
+        } catch (Exception e) {
+            // If any error occurs, deny access for security
+            return false;
+        }
     }
 }

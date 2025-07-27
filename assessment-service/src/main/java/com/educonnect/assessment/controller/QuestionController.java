@@ -67,8 +67,9 @@ public class QuestionController {
 
     @GetMapping("/public/{questionId}")
     public ResponseEntity<ApiResponse<QuestionResponse>> getPublicQuestionById(@PathVariable Long questionId) {
-        // Public endpoint for students to access question details (used for daily questions)
-        QuestionResponse question = questionService.getQuestionResponseById(questionId);
+        // Secure endpoint that only allows access to questions that are publicly available
+        // (daily questions, practice problems, or active contests)
+        QuestionResponse question = questionService.getPublicQuestionResponseById(questionId);
         return ResponseEntity.ok(ApiResponse.success(question));
     }
 

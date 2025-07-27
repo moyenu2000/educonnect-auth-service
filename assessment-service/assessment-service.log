@@ -13,7 +13,7 @@
 [INFO] 
 [INFO] --- compiler:3.14.0:compile (default-compile) @ assessment-service ---
 [INFO] Recompiling the module because of changed source code.
-[INFO] Compiling 111 source files with javac [debug parameters release 17] to target/classes
+[INFO] Compiling 127 source files with javac [debug parameters release 17] to target/classes
 [INFO] /home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service/src/main/java/com/educonnect/assessment/entity/DailyAnalytics.java: /home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service/src/main/java/com/educonnect/assessment/entity/DailyAnalytics.java uses or overrides a deprecated API.
 [INFO] /home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service/src/main/java/com/educonnect/assessment/entity/DailyAnalytics.java: Recompile with -Xlint:deprecation for details.
 [INFO] 
@@ -39,48 +39,50 @@
 
  :: Spring Boot ::                (v3.5.3)
 
-2025-07-26 22:24:33 [main] INFO  c.e.a.EduConnectAssessmentServiceApplication - Starting EduConnectAssessmentServiceApplication using Java 17.0.15 with PID 71851 (/home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service/target/classes started by pridesys in /home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service)
-2025-07-26 22:24:33 [main] INFO  c.e.a.EduConnectAssessmentServiceApplication - No active profile set, falling back to 1 default profile: "default"
-2025-07-26 22:24:35 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
-2025-07-26 22:24:35 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2025-07-26 22:24:36 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 606 ms. Found 20 JPA repository interfaces.
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ContestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.DailyAnalyticsRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.DailyQuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.DailyQuestionSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamAnswerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamRegistrationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamResultRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamSessionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.LiveExamRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.PersonalizedExamRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.PracticeProblemRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ProblemBookmarkRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ProblemSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.QuestionOptionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.QuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.SubjectRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.TopicRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.UserStreakRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.UserSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
-2025-07-26 22:24:37 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 57 ms. Found 0 Redis repository interfaces.
-2025-07-26 22:24:39 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8083 (http)
-2025-07-26 22:24:39 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
-2025-07-26 22:24:39 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.42]
-2025-07-26 22:24:39 [main] INFO  o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
-2025-07-26 22:24:39 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 5940 ms
-2025-07-26 22:24:40 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
-2025-07-26 22:24:40 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.18.Final
-2025-07-26 22:24:40 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
-2025-07-26 22:24:41 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
-2025-07-26 22:24:41 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
-2025-07-26 22:24:41 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@123c48d0
-2025-07-26 22:24:41 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
-2025-07-26 22:24:41 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2025-07-26 22:24:41 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
+2025-07-27 19:38:32 [main] INFO  c.e.a.EduConnectAssessmentServiceApplication - Starting EduConnectAssessmentServiceApplication using Java 17.0.15 with PID 396706 (/home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service/target/classes started by pridesys in /home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service)
+2025-07-27 19:38:32 [main] INFO  c.e.a.EduConnectAssessmentServiceApplication - No active profile set, falling back to 1 default profile: "default"
+2025-07-27 19:38:33 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-07-27 19:38:33 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-07-27 19:38:33 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 193 ms. Found 22 JPA repository interfaces.
+2025-07-27 19:38:33 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2025-07-27 19:38:33 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ContestParticipationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ContestRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.DailyAnalyticsRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.DailyQuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.DailyQuestionSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamAnswerRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamRegistrationRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamResultRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ExamSessionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.LiveExamRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.PersonalizedExamRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.PracticeProblemRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.PracticeQuestionSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ProblemBookmarkRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.ProblemSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.QuestionOptionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.QuestionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.SubjectRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.TopicRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.UserStreakRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationExtensionSupport - Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.educonnect.assessment.repository.UserSubmissionRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2025-07-27 19:38:34 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 18 ms. Found 0 Redis repository interfaces.
+2025-07-27 19:38:34 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8083 (http)
+2025-07-27 19:38:34 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-07-27 19:38:34 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.42]
+2025-07-27 19:38:34 [main] INFO  o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2025-07-27 19:38:34 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2282 ms
+2025-07-27 19:38:35 [main] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-07-27 19:38:35 [main] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.6.18.Final
+2025-07-27 19:38:35 [main] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-07-27 19:38:35 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-07-27 19:38:35 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-07-27 19:38:35 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@10a064bd
+2025-07-27 19:38:35 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-07-27 19:38:35 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-07-27 19:38:35 [main] INFO  o.hibernate.orm.connections.pooling - HHH10001005: Database info:
 	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 	Database driver: undefined/unknown
 	Database version: 15.13
@@ -88,6 +90,546 @@
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2025-07-26 22:24:45 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2025-07-26 22:24:53 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
-2025-07-26 22:24:54 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-07-27 19:38:37 [main] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-07-27 19:38:39 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-07-27 19:38:40 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-07-27 19:38:44 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-07-27 19:38:45 [main] INFO  o.s.b.a.e.web.EndpointLinksResolver - Exposing 3 endpoints beneath base path '/actuator'
+2025-07-27 19:38:45 [main] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 7de7a616-8c1e-46d6-871c-e2546c33ddec
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-07-27 19:38:45 [main] INFO  o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-07-27 19:38:46 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Starting...
+2025-07-27 19:38:46 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - BrokerAvailabilityEvent[available=true, SimpleBrokerMessageHandler [org.springframework.messaging.simp.broker.DefaultSubscriptionRegistry@3400a4a9]]
+2025-07-27 19:38:46 [main] INFO  o.s.m.s.b.SimpleBrokerMessageHandler - Started.
+2025-07-27 19:38:46 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8083 (http) with context path '/api/v1'
+2025-07-27 19:38:46 [main] INFO  o.s.a.r.c.CachingConnectionFactory - Attempting to connect to: [localhost:5672]
+2025-07-27 19:38:46 [main] INFO  o.s.a.r.c.CachingConnectionFactory - Created new connection: rabbitConnectionFactory#51814137:0/SimpleConnection@57fe16a9 [delegate=amqp://educonnect@127.0.0.1:5672/, localPort=59204]
+2025-07-27 19:38:46 [main] INFO  c.e.a.EduConnectAssessmentServiceApplication - Started EduConnectAssessmentServiceApplication in 14.67 seconds (process running for 15.057)
+2025-07-27 19:38:54 [http-nio-8083-exec-1] INFO  o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-07-27 19:38:54 [http-nio-8083-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2025-07-27 19:38:54 [http-nio-8083-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2025-07-27 19:38:54 [http-nio-8083-exec-1] ERROR c.e.a.e.GlobalExceptionHandler - Unexpected error occurred: No static resource health.
+org.springframework.web.servlet.resource.NoResourceFoundException: No static resource health.
+	at org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(ResourceHttpRequestHandler.java:585)
+	at org.springframework.web.servlet.mvc.HttpRequestHandlerAdapter.handle(HttpRequestHandlerAdapter.java:52)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
+	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340)
+	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128)
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:101)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:125)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:119)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at com.educonnect.assessment.security.JwtAuthenticationFilterFixed.doFilterInternal(JwtAuthenticationFilterFixed.java:70)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.ServletRequestPathFilter.doFilter(ServletRequestPathFilter.java:52)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebSecurityConfiguration.java:319)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$4(HandlerMappingIntrospector.java:267)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:240)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:114)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:116)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:398)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:903)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1769)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1189)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:658)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2025-07-27 19:39:46 [MessageBroker-3] INFO  o.s.w.s.c.WebSocketMessageBrokerStats - WebSocketSession[0 current WS(0)-HttpStream(0)-HttpPoll(0), 0 total, 0 closed abnormally (0 connect failure, 0 send limit, 0 transport error)], stompSubProtocol[processed CONNECT(0)-CONNECTED(0)-DISCONNECT(0)], stompBrokerRelay[null], inboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], outboundChannel[pool size = 0, active threads = 0, queued tasks = 0, completed tasks = 0], sockJsScheduler[pool size = 6, active threads = 1, queued tasks = 3, completed tasks = 2]
+2025-07-27 19:46:46 [MessageBroker-6] INFO  c.e.a.s.ContestSchedulerService - Auto-ending contest: Test Contest - 10 Minutes (ID: 5)
+2025-07-27 19:46:46 [MessageBroker-6] INFO  c.e.a.s.ContestSchedulerService - Finalizing submissions for contest: Test Contest - 10 Minutes (ID: 5)
+2025-07-27 19:46:46 [MessageBroker-6] INFO  c.e.a.s.ContestSchedulerService - Contest Test Contest - 10 Minutes (ID: 5) has been ended and finalized
+2025-07-27 19:46:46 [MessageBroker-6] INFO  c.e.a.s.ContestSchedulerService - Auto-ended and finalized 1 contest(s)
+2025-07-27 19:48:46 [MessageBroker-3] INFO  c.e.a.s.ContestSchedulerService - Auto-ending contest: Live Test Contest - 10 Minutes (ID: 6)
+2025-07-27 19:48:46 [MessageBroker-3] INFO  c.e.a.s.ContestSchedulerService - Finalizing submissions for contest: Live Test Contest - 10 Minutes (ID: 6)
+2025-07-27 19:48:46 [MessageBroker-3] INFO  c.e.a.s.ContestSchedulerService - Contest Live Test Contest - 10 Minutes (ID: 6) has been ended and finalized
+2025-07-27 19:48:46 [MessageBroker-3] INFO  c.e.a.s.ContestSchedulerService - Auto-ended and finalized 1 contest(s)
+Contest participation check - Now: 2025-07-27T19:50:52.984024579, Start: 2025-07-27T13:46:21.865540, End: 2025-07-27T13:56:21.865540, Status: COMPLETED, TimeValid: false, StatusAllows: false
+2025-07-27 19:56:46 [MessageBroker-7] INFO  c.e.a.s.ContestSchedulerService - Auto-starting contest: Physics (ID: 7)
+2025-07-27 19:56:46 [MessageBroker-7] INFO  c.e.a.s.ContestSchedulerService - Auto-started 1 contest(s)
+2025-07-27 19:57:46 [MessageBroker-4] INFO  c.e.a.s.ContestSchedulerService - Auto-ending contest: Physics (ID: 7)
+2025-07-27 19:57:46 [MessageBroker-4] INFO  c.e.a.s.ContestSchedulerService - Finalizing submissions for contest: Physics (ID: 7)
+2025-07-27 19:57:46 [MessageBroker-4] INFO  c.e.a.s.ContestSchedulerService - Contest Physics (ID: 7) has been ended and finalized
+2025-07-27 19:57:46 [MessageBroker-4] INFO  c.e.a.s.ContestSchedulerService - Auto-ended and finalized 1 contest(s)
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@47c1a909, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@47c1a909
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 95
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@40922c80, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@40922c80
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@19b96c93, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@19b96c93
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@a1a2325, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@a1a2325
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@735e4466, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@735e4466
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@4d07f413, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@4d07f413
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@6f49eea5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@6f49eea5
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5ad56b6d, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5ad56b6d
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@63db0dd1, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@63db0dd1
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@94823ef, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@94823ef
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@29250b06, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@29250b06
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@406e791e, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@406e791e
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@849eede, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@849eede
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@1fa4e4d4, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@1fa4e4d4
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@18e67e53, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@18e67e53
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@602c0d58, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@602c0d58
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@4cec819b, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@4cec819b
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5b5a0df9, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5b5a0df9
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@70950156, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@70950156
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@1491d460, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@1491d460
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@12e56283, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@12e56283
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5eafdc8d, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5eafdc8d
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@7ecaed37, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@7ecaed37
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@170e9b82, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@170e9b82
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@9815591, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@9815591
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@741811da, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@741811da
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@6034d50, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@6034d50
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@734f8cc5, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@734f8cc5
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@263b7517, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@263b7517
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@6270e30a, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@6270e30a
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@6f89d8db, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@6f89d8db
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5c9537f7, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5c9537f7
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 95
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@6c4ebdc0, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@6c4ebdc0
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@4b8e0c7b, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@4b8e0c7b
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@1d7db744, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@1d7db744
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@4a9de6c4, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@4a9de6c4
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@b53d10, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@b53d10
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@27cf5a95, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@27cf5a95
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5c1377ad, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5c1377ad
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@1a8d69e0, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@1a8d69e0
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@443507c8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@443507c8
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@2ab3221d, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@2ab3221d
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@562828d0, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@562828d0
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@cda590e, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@cda590e
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@521a23ec, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@521a23ec
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@3ea93d93, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@3ea93d93
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5fc4fab7, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5fc4fab7
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@2a832a03, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@2a832a03
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@4d60d589, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@4d60d589
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5a7e5163, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5a7e5163
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@249d2030, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@249d2030
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@3fb8af0d, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@3fb8af0d
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@7c555487, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@7c555487
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@4039ce65, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@4039ce65
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@74bec57b, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@74bec57b
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@7097c2a0, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@7097c2a0
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@5611e955, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@5611e955
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@718fea28, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@718fea28
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@2a7ddac8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@2a7ddac8
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@fea6794, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@fea6794
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@529494d8, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@529494d8
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info
+DEBUG SecurityUtils: Authentication = UsernamePasswordAuthenticationToken [Principal=com.educonnect.assessment.security.UserPrincipal@26f8b4ff, Credentials=[PROTECTED], Authenticated=true, Details=WebAuthenticationDetails [RemoteIpAddress=0:0:0:0:0:0:0:1, SessionId=null], Granted Authorities=[ROLE_STUDENT]]
+DEBUG SecurityUtils: Principal = com.educonnect.assessment.security.UserPrincipal@26f8b4ff
+DEBUG SecurityUtils: Principal class = class com.educonnect.assessment.security.UserPrincipal
+DEBUG SecurityUtils: Found userId = 93
+DEBUG: Getting streak info for user 93 and subject null
+DEBUG: Successfully created safe default streak info

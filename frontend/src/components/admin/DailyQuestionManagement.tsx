@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, Trash2, Calendar, Filter, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { assessmentService } from '../../services/assessmentService';
+import Pagination from '../ui/pagination';
 
 interface DailyQuestion {
   id: number;
@@ -68,12 +69,20 @@ const DailyQuestionManagement: React.FC = () => {
     total: 0
   });
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
   useEffect(() => {
     loadDailyQuestions();
     loadSubjects();
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
+    // Only apply client-side filters if we're not using server-side pagination
+    // For pagination, filtering should be handled on the server side
     applyFilters();
   }, [dailyQuestions, filters]);
 
@@ -82,33 +91,37 @@ const DailyQuestionManagement: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await assessmentService.getDailyQuestions();
-      console.log('Daily questions API response:', response);
+      // Calculate date range for better filtering (last 365 days by default)
+      const endDate = new Date().toISOString().split('T')[0];
+      const startDate = new Date();
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      const startDateStr = startDate.toISOString().split('T')[0];
       
-      // Handle different response structures
-      let questionsData = [];
-      if (response.data) {
-        // Try different possible structures
-        if (Array.isArray(response.data)) {
-          questionsData = response.data;
-        } else if (response.data.data && response.data.data.questions && Array.isArray(response.data.data.questions)) {
-          // This matches the actual API response structure
-          questionsData = response.data.data.questions;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          questionsData = response.data.data;
-        } else if (response.data.content && Array.isArray(response.data.content)) {
-          questionsData = response.data.content;
-        } else if (response.data.questions && Array.isArray(response.data.questions)) {
-          questionsData = response.data.questions;
-        } else {
-          console.warn('Unexpected response structure:', response.data);
-          questionsData = [];
-        }
+      const response = await assessmentService.getAllDailyQuestions(
+        startDateStr, 
+        endDate, 
+        currentPage, 
+        pageSize
+      );
+      console.log('Paginated daily questions API response:', response);
+      
+      if (response.data && response.data.data) {
+        const paginatedData = response.data.data;
+        const questionsData = paginatedData.content || [];
+        
+        setDailyQuestions(questionsData);
+        setTotalElements(paginatedData.totalElements || 0);
+        setTotalPages(paginatedData.totalPages || 0);
+        
+        // Calculate stats from all available data (not just current page)
+        calculateStats(questionsData);
+      } else {
+        console.warn('Unexpected response structure:', response.data);
+        setDailyQuestions([]);
+        setTotalElements(0);
+        setTotalPages(0);
+        calculateStats([]);
       }
-      
-      console.log('Processed questions data:', questionsData);
-      setDailyQuestions(questionsData);
-      calculateStats(questionsData);
     } catch (err: any) {
       console.error('Error loading daily questions:', err);
       
@@ -125,6 +138,8 @@ const DailyQuestionManagement: React.FC = () => {
       
       // Set empty array as fallback
       setDailyQuestions([]);
+      setTotalElements(0);
+      setTotalPages(0);
       calculateStats([]);
     } finally {
       setLoading(false);
@@ -233,6 +248,16 @@ const DailyQuestionManagement: React.FC = () => {
     filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     setFilteredQuestions(filtered);
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(0); // Reset to first page when changing page size
   };
 
   const handleRemoveFromDaily = async (dailyQuestionId: number) => {
@@ -500,103 +525,117 @@ const DailyQuestionManagement: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Question
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Subject
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Difficulty
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Points
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredQuestions.map((dailyQuestion) => {
-                    const dateStatus = getDateStatus(dailyQuestion.date);
-                    const StatusIcon = dateStatus.icon;
-                    
-                    return (
-                      <tr key={dailyQuestion.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <StatusIcon className={`h-4 w-4 mr-2 ${dateStatus.color}`} />
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {formatDate(dailyQuestion.date)}
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Question
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Subject
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Difficulty
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Points
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredQuestions.map((dailyQuestion) => {
+                      const dateStatus = getDateStatus(dailyQuestion.date);
+                      const StatusIcon = dateStatus.icon;
+                      
+                      return (
+                        <tr key={dailyQuestion.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <StatusIcon className={`h-4 w-4 mr-2 ${dateStatus.color}`} />
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {formatDate(dailyQuestion.date)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {dailyQuestion.date}
+                                </div>
                               </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-900 max-w-md truncate">
+                              {dailyQuestion.question?.text || `Question ID: ${dailyQuestion.questionId}`}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {dailyQuestion.question?.type ? `Type: ${dailyQuestion.question.type}` : 'Question details not loaded'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {dailyQuestion.question?.subjectName || 
+                               (subjects.find(s => s.id === dailyQuestion.subjectId)?.name || `Subject ID: ${dailyQuestion.subjectId}`)}
+                            </div>
+                            {dailyQuestion.question?.topicName && (
                               <div className="text-xs text-gray-500">
-                                {dailyQuestion.date}
+                                {dailyQuestion.question.topicName}
                               </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(dailyQuestion.difficulty)}`}>
+                              {dailyQuestion.difficulty}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {dailyQuestion.points} pts
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 max-w-md truncate">
-                            {dailyQuestion.question?.text || `Question ID: ${dailyQuestion.questionId}`}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            {dailyQuestion.question?.type ? `Type: ${dailyQuestion.question.type}` : 'Question details not loaded'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {dailyQuestion.question?.subjectName || 
-                             (subjects.find(s => s.id === dailyQuestion.subjectId)?.name || `Subject ID: ${dailyQuestion.subjectId}`)}
-                          </div>
-                          {dailyQuestion.question?.topicName && (
-                            <div className="text-xs text-gray-500">
-                              {dailyQuestion.question.topicName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleViewQuestion(dailyQuestion)}
+                                className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
+                                title="View Question"
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleRemoveFromDaily(dailyQuestion.id)}
+                                className="text-red-600 hover:text-red-900 p-1 rounded"
+                                title="Remove from Daily Questions"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(dailyQuestion.difficulty)}`}>
-                            {dailyQuestion.difficulty}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {dailyQuestion.points} pts
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleViewQuestion(dailyQuestion)}
-                              className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
-                              title="View Question"
-                            >
-                              <Eye size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleRemoveFromDaily(dailyQuestion.id)}
-                              className="text-red-600 hover:text-red-900 p-1 rounded"
-                              title="Remove from Daily Questions"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              
+              {!loading && totalElements > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalElements}
+                  pageSize={pageSize}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  loading={loading}
+                />
+              )}
+            </>
           )}
         </div>
 

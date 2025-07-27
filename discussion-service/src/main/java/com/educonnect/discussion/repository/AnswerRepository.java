@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -30,4 +31,11 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     
     @Query("SELECT COUNT(a) FROM Answer a WHERE a.author.id = :authorId")
     Long countByAuthorId(@Param("authorId") Long authorId);
+    
+    @Modifying
+    @Query("DELETE FROM Answer a WHERE a.discussion.id = :discussionId")
+    void deleteByDiscussionId(@Param("discussionId") Long discussionId);
+    
+    @Query("SELECT a.id FROM Answer a WHERE a.discussion.id = :discussionId")
+    List<Long> findAnswerIdsByDiscussionId(@Param("discussionId") Long discussionId);
 }

@@ -3,6 +3,7 @@ package com.educonnect.discussion.service.impl;
 import com.educonnect.discussion.dto.DiscussionDto;
 import com.educonnect.discussion.dto.DiscussionRequest;
 import com.educonnect.discussion.dto.PagedResponse;
+import com.educonnect.discussion.entity.Answer;
 import com.educonnect.discussion.entity.Discussion;
 import com.educonnect.discussion.entity.User;
 import com.educonnect.discussion.entity.Vote;
@@ -44,6 +45,9 @@ public class DiscussionServiceImpl implements DiscussionService {
 
     @Autowired
     private GroupMemberRepository groupMemberRepository;
+
+    @Autowired
+    private AnswerRepository answerRepository;
 
     @Autowired
     private UserSyncService userSyncService;
@@ -133,6 +137,7 @@ public class DiscussionServiceImpl implements DiscussionService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteDiscussion(Long id, Long currentUserId) {
         Discussion discussion = discussionRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Discussion not found with id: " + id));
@@ -141,7 +146,28 @@ public class DiscussionServiceImpl implements DiscussionService {
             throw new UnauthorizedException("You can only delete your own discussions");
         }
         
-        discussionRepository.delete(discussion);
+        // Delete related entities to avoid foreign key constraint violations
+        // Use a simple approach with native queries for better control
+        
+        // Get answer IDs first to delete their votes
+        List<Long> answerIds = answerRepository.findAnswerIdsByDiscussionId(id);
+        
+        // Delete votes for answers first
+        for (Long answerId : answerIds) {
+            voteRepository.deleteByAnswerId(answerId);
+        }
+        
+        // Delete votes for this discussion
+        voteRepository.deleteByDiscussionId(id);
+        
+        // Delete bookmarks for this discussion
+        bookmarkRepository.deleteByDiscussionId(id);
+        
+        // Delete answers for this discussion
+        answerRepository.deleteByDiscussionId(id);
+        
+        // Now safe to delete the discussion by ID
+        discussionRepository.deleteById(id);
     }
 
     @Override

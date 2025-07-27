@@ -32,4 +32,23 @@ public interface PracticeProblemService {
     void createProblemFromQuestionWithDetails(Long questionId, String hintText, Integer hintLevel, String solutionSteps);
     
     void updateProblemDifficulty(Long problemId, Difficulty difficulty);
+    
+    // Admin management methods
+    PracticeProblemDto createPracticeProblem(Long questionId, Integer customPoints, Difficulty customDifficulty, 
+                                           String hintText, List<String> hints, String solutionSteps);
+    
+    PracticeProblemDto updatePracticeProblem(Long problemId, Integer customPoints, Difficulty customDifficulty, 
+                                           String hintText, List<String> hints, String solutionSteps);
+    
+    void deletePracticeProblem(Long problemId);
+    
+    Page<PracticeProblemDto> getAllProblemsForAdmin(Long subjectId, Long topicId, Difficulty difficulty, 
+                                                   String search, Pageable pageable);
+    
+    boolean isPracticeQuestion(Long questionId);
+    
+    List<PracticeProblemDto> bulkCreateFromQuestions(List<Long> questionIds, Integer defaultPoints, 
+                                                   Difficulty defaultDifficulty);
+    
+    void activateDeactivateProblem(Long problemId, Boolean isActive);
 }

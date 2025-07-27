@@ -111,7 +111,7 @@ public class GroupController {
 
     @GetMapping("/{groupId}/members")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<PagedResponse<GroupMember>>> getGroupMembers(
+    public ResponseEntity<ApiResponse<PagedResponse<GroupMemberDto>>> getGroupMembers(
             @PathVariable Long groupId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -121,7 +121,19 @@ public class GroupController {
         Pageable pageable = PageRequest.of(page, size);
         PagedResponse<GroupMember> members = groupService.getGroupMembers(groupId, role, pageable, currentUser.getId());
         
-        return ResponseEntity.ok(ApiResponse.success(members));
+        // Convert to DTOs to avoid Hibernate serialization issues
+        PagedResponse<GroupMemberDto> memberDtos = new PagedResponse<>(
+            members.getContent().stream().map(GroupMemberDto::fromEntity).toList(),
+            members.getTotalElements(),
+            members.getTotalPages(),
+            members.getCurrentPage(),
+            members.getSize(),
+            members.isFirst(),
+            members.isLast(),
+            members.isEmpty()
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(memberDtos));
     }
 
     @PutMapping("/{groupId}/members/{userId}/role")

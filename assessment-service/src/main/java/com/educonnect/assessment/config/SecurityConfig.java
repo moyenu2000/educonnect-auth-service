@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/questions").permitAll() // Allow basic questions access
                         .requestMatchers("/leaderboard/public").permitAll()
                         .requestMatchers("/test/**").permitAll()
+                        .requestMatchers("/admin/practice-problems-test").permitAll() // Temporary for testing
                         
                         // Health check endpoints  
                         .requestMatchers("/actuator/**").permitAll()

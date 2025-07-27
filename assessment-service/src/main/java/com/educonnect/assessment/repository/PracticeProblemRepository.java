@@ -59,4 +59,24 @@ public interface PracticeProblemRepository extends JpaRepository<PracticeProblem
     long countByTopicIdAndIsActiveTrue(Long topicId);
     
     boolean existsByQuestionId(Long questionId);
+    
+    boolean existsByQuestionIdAndIsActive(Long questionId, Boolean isActive);
+    
+    Optional<PracticeProblem> findByQuestionIdAndIsActive(Long questionId, Boolean isActive);
+    
+    @Query(value = "SELECT pp.* FROM practice_problems pp " +
+           "JOIN questions q ON pp.question_id = q.id " +
+           "WHERE pp.is_active = true AND " +
+           "(:subjectId IS NULL OR pp.subject_id = :subjectId) AND " +
+           "(:topicId IS NULL OR pp.topic_id = :topicId) AND " +
+           "(:difficulty IS NULL OR pp.difficulty = CAST(:difficulty AS VARCHAR)) AND " +
+           "(:search IS NULL OR q.text ILIKE CONCAT('%', :search, '%')) " +
+           "ORDER BY pp.created_at DESC",
+           nativeQuery = true)
+    Page<PracticeProblem> findActiveProblemsWithFilters(
+            @Param("subjectId") Long subjectId,
+            @Param("topicId") Long topicId,
+            @Param("difficulty") String difficulty,
+            @Param("search") String search,
+            Pageable pageable);
 }

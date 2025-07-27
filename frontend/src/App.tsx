@@ -24,13 +24,21 @@ import StudentDashboard from './components/student/StudentDashboard'
 import DailyQuestions from './components/student/DailyQuestions'
 import ExamPage from './components/student/ExamPage'
 import Practice from './components/student/Practice'
+import PracticeQuestions from './components/student/PracticeQuestions'
+import PracticeSubmissionHistory from './components/student/PracticeSubmissionHistory'
 import Discussions from './components/student/Discussions'
 import Contests from './components/student/Contests'
+import ContestDetails from './components/student/ContestDetails'
+import ContestTaking from './components/student/ContestTaking'
+import ContestResults from './components/student/ContestResults'
 import LiveExams from './components/student/LiveExams'
 
 // Admin Components  
 import SubjectManagement from './components/admin/SubjectManagement'
 import DailyQuestionManagement from './components/admin/DailyQuestionManagement'
+import PracticeProblemManagement from './components/admin/PracticeProblemManagement'
+import ContestManagement from './components/admin/ContestManagement'
+import ContestEditor from './components/admin/ContestEditor'
 
 // Test Component
 import TestPage from './components/TestPage'
@@ -215,6 +223,26 @@ const AppContent: React.FC = () => {
           <Layout><DailyQuestionManagement /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/admin/practice-problems" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><PracticeProblemManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/contests" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><ContestManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/contests/create" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><ContestEditor /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/contests/edit/:id" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><ContestEditor /></Layout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/question-setter" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
@@ -246,6 +274,21 @@ const AppContent: React.FC = () => {
           <Layout><DailyQuestionConfig /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/question-setter/contests" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><ContestManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/contests/create" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><ContestEditor /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/contests/edit/:id" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><ContestEditor /></Layout>
+        </ProtectedRoute>
+      } />
 
       <Route path="/student" element={
         <ProtectedRoute requiredRole="STUDENT">
@@ -267,6 +310,16 @@ const AppContent: React.FC = () => {
           <Layout><Practice /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/student/practice-questions" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><PracticeQuestions /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/practice-questions/submissions" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><PracticeSubmissionHistory /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/student/discussions" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><Discussions /></Layout>
@@ -275,6 +328,21 @@ const AppContent: React.FC = () => {
       <Route path="/student/contests" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><Contests /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/contest/:contestId/details" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><ContestDetails /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/contest/:contestId" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><ContestTaking /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/contest/:contestId/results" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><ContestResults /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/student/exams" element={

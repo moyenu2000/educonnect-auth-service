@@ -3,6 +3,8 @@ package com.educonnect.assessment.repository;
 import com.educonnect.assessment.entity.DailyQuestion;
 import com.educonnect.assessment.enums.ClassLevel;
 import com.educonnect.assessment.enums.Difficulty;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -41,6 +43,8 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
     List<DailyQuestion> findByDateBetween(LocalDate startDate, LocalDate endDate);
     
     boolean existsByDateAndQuestionId(LocalDate date, Long questionId);
+    
+    boolean existsByQuestionId(Long questionId);
     
     // Find by subject for a date range
     @Query("SELECT dq FROM DailyQuestion dq WHERE dq.subjectId = :subjectId " +
@@ -111,4 +115,5 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
     """, nativeQuery = true)
     List<Object[]> findAllDailyQuestionsNative(@Param("startDate") LocalDate startDate, 
                                              @Param("endDate") LocalDate endDate);
+
 }

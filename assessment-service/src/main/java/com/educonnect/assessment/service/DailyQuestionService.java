@@ -341,6 +341,17 @@ public class DailyQuestionService {
                         details.put("points", dq.getPoints());
                         details.put("subjectId", dq.getSubjectId());
                         details.put("date", dq.getDate());
+                        details.put("type", question.getType());
+                        
+                        // For previous days' questions, include correct answers for learning
+                        LocalDate today = LocalDate.now();
+                        boolean isPreviousDay = dq.getDate().isBefore(today);
+                        
+                        if (isPreviousDay) {
+                            details.put("correctAnswerOptionId", question.getCorrectAnswerOptionId());
+                            details.put("correctAnswerText", question.getCorrectAnswerText());
+                            details.put("explanation", question.getExplanation());
+                        }
                         
                         // Check if user has attempted this question
                         Optional<UserSubmission> submission = userSubmissionRepository
@@ -385,6 +396,46 @@ public class DailyQuestionService {
         }
         
         return todayQuestions;
+    }
+    
+    /**
+     * Get today's practice questions for students - returns all practice questions for today
+     * All questions added to practice for today are available to students
+     */
+    public Map<String, Object> getTodaysPracticeQuestions() {
+        LocalDate today = LocalDate.now();
+        
+        try {
+            // Use the existing raw method to get today's questions with full details
+            Map<String, Object> result = getDailyQuestionsRaw(today, null, null, null);
+            
+            // The result already contains questions, totalQuestions, and streakInfo
+            // Just add a message for clarity
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> questions = (List<Map<String, Object>>) result.get("questions");
+            
+            if (questions == null || questions.isEmpty()) {
+                result.put("hasPracticeQuestions", false);
+                result.put("message", "No practice questions available for today");
+            } else {
+                result.put("hasPracticeQuestions", true);
+                result.put("message", "Today's practice questions retrieved successfully");
+            }
+            
+            return result;
+            
+        } catch (Exception e) {
+            System.out.println("ERROR: Failed to get today's practice questions: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("hasPracticeQuestions", false);
+            result.put("message", "Error retrieving today's practice questions");
+            result.put("questions", new ArrayList<>());
+            result.put("totalQuestions", 0);
+            result.put("streakInfo", getDefaultStreakInfo());
+            return result;
+        }
     }
     
     private void createSampleDailyQuestions(LocalDate date) {
@@ -441,12 +492,13 @@ public class DailyQuestionService {
             return result;
         }
 
-        // Find today's daily question
+        // Find today's daily question - ONLY allow submissions for today's date
+        LocalDate today = LocalDate.now();
         Optional<DailyQuestion> dailyQuestion = dailyQuestionRepository
-                .findByDateAndQuestionId(LocalDate.now(), questionId);
+                .findByDateAndQuestionId(today, questionId);
         
         if (dailyQuestion.isEmpty()) {
-            throw new IllegalArgumentException("This is not a daily question for today");
+            throw new IllegalArgumentException("This is not a daily question for today. Daily questions can only be submitted on their assigned date.");
         }
 
         DailyQuestion dq = dailyQuestion.get();
@@ -486,12 +538,13 @@ public class DailyQuestionService {
             throw new IllegalArgumentException("You have already answered this daily question");
         }
 
-        // Find today's daily question
+        // Find today's daily question - ONLY allow submissions for today's date
+        LocalDate today = LocalDate.now();
         Optional<DailyQuestion> dailyQuestion = dailyQuestionRepository
-                .findByDateAndQuestionId(LocalDate.now(), questionId);
+                .findByDateAndQuestionId(today, questionId);
         
         if (dailyQuestion.isEmpty()) {
-            throw new IllegalArgumentException("This is not a daily question for today");
+            throw new IllegalArgumentException("This is not a daily question for today. Daily questions can only be submitted on their assigned date.");
         }
 
         DailyQuestion dq = dailyQuestion.get();
@@ -536,6 +589,12 @@ public class DailyQuestionService {
     public Map<String, Object> batchSubmitDailyQuestions(LocalDate date) {
         Long userId = SecurityUtils.getCurrentUserId()
                 .orElse(39L); // TEMPORARY: Use test user ID 39 for testing
+
+        // IMPORTANT: Only allow batch submission for today's date
+        LocalDate today = LocalDate.now();
+        if (!date.equals(today)) {
+            throw new IllegalArgumentException("Daily questions can only be submitted on their assigned date. Today is " + today + " but you're trying to submit for " + date);
+        }
 
         // Get all draft submissions for this user and date
         List<UserSubmission> draftSubmissions = userSubmissionRepository
@@ -765,15 +824,94 @@ public class DailyQuestionService {
         return stats;
     }
 
+    public Map<String, Object> checkDailyQuestionSubmissionStatus(LocalDate date) {
+        Long userId = SecurityUtils.getCurrentUserId()
+                .orElse(39L); // TEMPORARY: Use test user ID 39 for testing
+
+        // Get all daily questions for the specified date
+        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findByDate(date);
+        
+        if (dailyQuestions.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("hasQuestions", false);
+            result.put("isSubmitted", false);
+            result.put("canSubmit", false);
+            result.put("message", "No daily questions found for this date");
+            return result;
+        }
+
+        // Check if user has finalized submissions for all daily questions of this date
+        List<UserSubmission> finalizedSubmissions = userSubmissionRepository
+                .findFinalizedDailySubmissionsByUserAndDate(userId, date);
+
+        // Count how many questions have finalized submissions
+        Set<Long> submittedQuestionIds = finalizedSubmissions.stream()
+                .map(UserSubmission::getQuestionId)
+                .collect(Collectors.toSet());
+
+        Set<Long> allQuestionIds = dailyQuestions.stream()
+                .map(DailyQuestion::getQuestionId)
+                .collect(Collectors.toSet());
+
+        boolean allSubmitted = submittedQuestionIds.containsAll(allQuestionIds);
+        
+        // Also check for draft submissions
+        List<UserSubmission> draftSubmissions = userSubmissionRepository
+                .findDraftDailySubmissionsByUserAndDate(userId, date);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("hasQuestions", true);
+        result.put("isSubmitted", allSubmitted);
+        result.put("canSubmit", !allSubmitted);
+        result.put("totalQuestions", allQuestionIds.size());
+        result.put("submittedQuestions", submittedQuestionIds.size());
+        result.put("draftSubmissions", draftSubmissions.size());
+        
+        if (allSubmitted) {
+            result.put("message", "All daily questions for this date have been submitted and finalized");
+            // Include the results for viewing
+            result.put("submissionResults", finalizedSubmissions.stream()
+                    .map(submission -> {
+                        Map<String, Object> submissionResult = new HashMap<>();
+                        submissionResult.put("questionId", submission.getQuestionId());
+                        submissionResult.put("answer", submission.getAnswer());
+                        submissionResult.put("isCorrect", submission.getIsCorrect());
+                        submissionResult.put("pointsEarned", submission.getPointsEarned());
+                        submissionResult.put("timeTaken", submission.getTimeTaken());
+                        submissionResult.put("submittedAt", submission.getSubmittedAt());
+                        
+                        // Get correct answer and explanation from question
+                        try {
+                            Optional<Question> questionOpt = questionRepository.findById(submission.getQuestionId());
+                            if (questionOpt.isPresent()) {
+                                Question question = questionOpt.get();
+                                submissionResult.put("correctAnswer", question.getCorrectAnswer());
+                                submissionResult.put("explanation", question.getExplanation());
+                            }
+                        } catch (Exception e) {
+                            // Ignore errors in getting question details
+                        }
+                        
+                        return submissionResult;
+                    })
+                    .toList());
+        } else {
+            result.put("message", "Daily questions can still be submitted for this date");
+        }
+
+        return result;
+    }
+
     // Admin functionality - native SQL version (bulletproof)
     @Transactional
     public void setDailyQuestions(LocalDate date, List<Long> questionIds, Map<String, Object> subjectDistribution) {
         System.out.println("Setting daily questions for " + date + " with " + questionIds.size() + " questions");
         
-        // First, clear existing questions for the date
+        // Clear existing questions for the date before adding new ones
+        // This ensures that the practice questions for a date are exactly what is being set
         try {
             int deletedCount = dailyQuestionRepository.deleteByDateNative(date);
-            System.out.println("Deleted " + deletedCount + " existing questions for " + date);
+            System.out.println("Deleted " + deletedCount + " existing questions for " + date + " before setting new practice questions");
         } catch (Exception e) {
             System.err.println("Delete failed, continuing with upsert: " + e.getMessage());
         }
@@ -952,5 +1090,62 @@ public class DailyQuestionService {
                 }
             }
         }
+    }
+
+    public PagedResponse<Map<String, Object>> getAllDailyQuestionsPaginated(
+            LocalDate startDate, LocalDate endDate, int page, int size) {
+        
+        // Use the existing approach that works: get a date range and iterate
+        if (startDate == null && endDate == null) {
+            endDate = LocalDate.now();
+            startDate = endDate.minusDays(30);
+        } else if (startDate == null) {
+            startDate = endDate.minusDays(30);
+        } else if (endDate == null) {
+            endDate = LocalDate.now();
+        }
+        
+        List<Map<String, Object>> allQuestions = new ArrayList<>();
+        
+        // Get questions for each day in the range
+        LocalDate currentDate = startDate;
+        while (!currentDate.isAfter(endDate)) {
+            try {
+                Map<String, Object> dayResult = getDailyQuestionsRaw(currentDate, null, null, null);
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> dayQuestions = (List<Map<String, Object>>) dayResult.get("questions");
+                if (dayQuestions != null && !dayQuestions.isEmpty()) {
+                    allQuestions.addAll(dayQuestions);
+                }
+            } catch (Exception e) {
+                System.out.println("DEBUG: Failed to get questions for " + currentDate + ": " + e.getMessage());
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        // Sort by date desc
+        allQuestions.sort((a, b) -> {
+            LocalDate dateA = LocalDate.parse(a.get("date").toString());
+            LocalDate dateB = LocalDate.parse(b.get("date").toString());
+            return dateB.compareTo(dateA);
+        });
+        
+        // Apply pagination manually
+        int totalElements = allQuestions.size();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        int start = page * size;
+        int end = Math.min(start + size, totalElements);
+        
+        List<Map<String, Object>> pageContent = (start < totalElements) 
+            ? allQuestions.subList(start, end) 
+            : new ArrayList<>();
+        
+        return new PagedResponse<>(
+                pageContent,
+                totalElements,
+                totalPages,
+                page,
+                size
+        );
     }
 }

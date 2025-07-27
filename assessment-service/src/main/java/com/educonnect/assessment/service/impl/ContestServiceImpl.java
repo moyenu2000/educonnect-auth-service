@@ -3,6 +3,7 @@ package com.educonnect.assessment.service.impl;
 import com.educonnect.assessment.controller.ContestController;
 import com.educonnect.assessment.dto.PagedResponse;
 import com.educonnect.assessment.entity.Contest;
+import com.educonnect.assessment.entity.ContestParticipation;
 import com.educonnect.assessment.entity.Question;
 import com.educonnect.assessment.entity.UserSubmission;
 import com.educonnect.assessment.enums.ContestStatus;
@@ -11,6 +12,7 @@ import com.educonnect.assessment.enums.ExamSubmissionStatus;
 import com.educonnect.assessment.exception.ResourceNotFoundException;
 import com.educonnect.assessment.exception.BadRequestException;
 import com.educonnect.assessment.repository.ContestRepository;
+import com.educonnect.assessment.repository.ContestParticipationRepository;
 import com.educonnect.assessment.repository.QuestionRepository;
 import com.educonnect.assessment.repository.UserSubmissionRepository;
 import com.educonnect.assessment.service.ContestService;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -32,6 +35,9 @@ public class ContestServiceImpl implements ContestService {
 
     @Autowired
     private ContestRepository contestRepository;
+
+    @Autowired
+    private ContestParticipationRepository contestParticipationRepository;
 
     @Autowired
     private QuestionRepository questionRepository;
@@ -96,7 +102,18 @@ public class ContestServiceImpl implements ContestService {
             return new ArrayList<>();
         }
 
-        return questionRepository.findAllById(contest.getProblemIds());
+        try {
+            List<Question> questions = questionRepository.findAllById(contest.getProblemIds());
+            // Filter out any null questions and log missing ones
+            if (questions.size() != contest.getProblemIds().size()) {
+                System.out.println("Warning: Some contest questions were not found. Expected: " + 
+                    contest.getProblemIds().size() + ", Found: " + questions.size());
+            }
+            return questions;
+        } catch (Exception e) {
+            System.err.println("Error loading contest questions: " + e.getMessage());
+            throw new BadRequestException("Failed to load contest questions");
+        }
     }
 
     @Override
@@ -116,23 +133,32 @@ public class ContestServiceImpl implements ContestService {
         }
 
         // Check if user already submitted for this question in this contest
-        boolean alreadySubmitted = userSubmissionRepository.existsByUserIdAndQuestionIdAndContestId(userId, questionId, contestId);
-        if (alreadySubmitted) {
-            throw new BadRequestException("You have already submitted an answer for this question");
+        UserSubmission existingSubmission = userSubmissionRepository.findByUserIdAndQuestionIdAndContestId(userId, questionId, contestId);
+        
+        UserSubmission submission;
+        if (existingSubmission != null) {
+            // Update existing submission (allow multiple updates during contest)
+            submission = existingSubmission;
+            submission.setAnswer(answer);
+            submission.setTimeTaken(timeTaken);
+            submission.setExplanation(explanation);
+            submission.setSubmittedAt(LocalDateTime.now()); // Update submission time
+        } else {
+            // Create new submission
+            submission = new UserSubmission();
+            submission.setUserId(userId);
+            submission.setQuestionId(questionId);
+            submission.setContestId(contestId);
+            submission.setAnswer(answer);
+            submission.setTimeTaken(timeTaken);
+            submission.setExplanation(explanation);
+            submission.setIsDailyQuestion(false);
         }
 
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
 
-        // Create submission with silent processing (no immediate feedback)
-        UserSubmission submission = new UserSubmission();
-        submission.setUserId(userId);
-        submission.setQuestionId(questionId);
-        submission.setContestId(contestId);
-        submission.setAnswer(answer);
-        submission.setTimeTaken(timeTaken);
-        submission.setExplanation(explanation);
-        submission.setIsDailyQuestion(false);
+        // Set common submission properties for silent processing (no immediate feedback)
         submission.setSubmissionStatus(ExamSubmissionStatus.DRAFT); // Store as draft during contest
         submission.setIsMarksCalculated(false); // Don't calculate marks until contest ends
 
@@ -142,12 +168,24 @@ public class ContestServiceImpl implements ContestService {
 
         userSubmissionRepository.save(submission);
 
+        // Mark user as having completed the contest (participated by submitting at least one answer)
+        Optional<ContestParticipation> participationOpt = 
+            contestParticipationRepository.findByUserIdAndContestId(userId, contestId);
+        
+        if (participationOpt.isPresent() && !participationOpt.get().getHasCompleted()) {
+            ContestParticipation participation = participationOpt.get();
+            participation.setHasCompleted(true);
+            // Don't set completion time yet - only when user clicks "End Contest" or contest auto-ends
+            contestParticipationRepository.save(participation);
+        }
+
         // Return minimal response without revealing answers
         Map<String, Object> result = new HashMap<>();
         result.put("status", "submitted");
         result.put("submissionId", submission.getId());
-        result.put("message", "Answer submitted successfully");
+        result.put("message", existingSubmission != null ? "Answer updated successfully" : "Answer submitted successfully");
         result.put("contestActive", true);
+        result.put("isUpdate", existingSubmission != null);
         
         return result;
     }
@@ -161,10 +199,54 @@ public class ContestServiceImpl implements ContestService {
             throw new BadRequestException("Cannot join contest that has ended");
         }
 
-        // For now, we just increment participant count
-        // In a real implementation, you might want a separate ContestParticipant entity
-        contest.setParticipants(contest.getParticipants() + 1);
-        contestRepository.save(contest);
+        // Check if user already joined
+        Optional<ContestParticipation> existingParticipation = 
+            contestParticipationRepository.findByUserIdAndContestId(userId, contestId);
+        
+        if (existingParticipation.isEmpty()) {
+            // Create new participation record
+            ContestParticipation participation = new ContestParticipation();
+            participation.setUserId(userId);
+            participation.setContestId(contestId);
+            contestParticipationRepository.save(participation);
+            
+            // Increment participant count
+            contest.setParticipants(contest.getParticipants() + 1);
+            contestRepository.save(contest);
+        }
+    }
+
+    @Override
+    public Map<String, Object> endContestParticipation(Long contestId, Long userId) {
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
+
+        // Check if contest is active and user can participate
+        if (!canParticipateInContest(contest)) {
+            throw new BadRequestException("Contest is not active");
+        }
+
+        // Find user's participation record
+        ContestParticipation participation = contestParticipationRepository
+                .findByUserIdAndContestId(userId, contestId)
+                .orElseThrow(() -> new BadRequestException("User has not joined this contest"));
+
+        if (participation.getHasCompleted()) {
+            throw new BadRequestException("Contest already completed by user");
+        }
+
+        // Mark as completed
+        participation.setCompletedAt(LocalDateTime.now());
+        participation.setHasCompleted(true);
+        contestParticipationRepository.save(participation);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("message", "Contest completed successfully");
+        result.put("completedAt", participation.getCompletedAt());
+        result.put("contestId", contestId);
+        result.put("userId", userId);
+        
+        return result;
     }
 
     @Override
@@ -316,9 +398,21 @@ public class ContestServiceImpl implements ContestService {
 
     private boolean canParticipateInContest(Contest contest) {
         LocalDateTime now = LocalDateTime.now();
-        return contest.getStatus() == ContestStatus.ACTIVE && 
-               now.isAfter(contest.getStartTime()) && 
-               now.isBefore(contest.getEndTime());
+        // Allow participation if time is within contest window, regardless of status
+        // This handles cases where status hasn't been automatically updated
+        boolean timeIsValid = now.isAfter(contest.getStartTime()) && now.isBefore(contest.getEndTime());
+        boolean statusAllowsParticipation = contest.getStatus() == ContestStatus.ACTIVE || 
+                                          (contest.getStatus() == ContestStatus.UPCOMING && timeIsValid);
+        
+        // Debug logging
+        System.out.println("Contest participation check - Now: " + now + 
+                          ", Start: " + contest.getStartTime() + 
+                          ", End: " + contest.getEndTime() + 
+                          ", Status: " + contest.getStatus() + 
+                          ", TimeValid: " + timeIsValid + 
+                          ", StatusAllows: " + statusAllowsParticipation);
+        
+        return statusAllowsParticipation && timeIsValid;
     }
 
     private boolean canSubmitToContest(Contest contest) {
@@ -351,6 +445,30 @@ public class ContestServiceImpl implements ContestService {
                 submission.setFinalizedAt(LocalDateTime.now());
 
                 userSubmissionRepository.save(submission);
+            }
+        }
+
+        // Update contest participations for users who submitted at least one question
+        // Set hasCompleted = true and completedAt = contest end time (if not already set)
+        List<Long> userIdsWithSubmissions = draftSubmissions.stream()
+                .map(UserSubmission::getUserId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        for (Long userId : userIdsWithSubmissions) {
+            Optional<ContestParticipation> participationOpt = 
+                contestParticipationRepository.findByUserIdAndContestId(userId, contestId);
+            
+            if (participationOpt.isPresent()) {
+                ContestParticipation participation = participationOpt.get();
+                participation.setHasCompleted(true);
+                
+                // Set completion time to contest end time if not already set (user didn't click "End Contest")
+                if (participation.getCompletedAt() == null) {
+                    participation.setCompletedAt(contest.getEndTime());
+                }
+                
+                contestParticipationRepository.save(participation);
             }
         }
     }

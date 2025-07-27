@@ -54,6 +54,13 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
             @Param("userId") Long userId, 
             @Param("date") LocalDate date);
     
+    @Query("SELECT us FROM UserSubmission us JOIN DailyQuestion dq ON us.questionId = dq.questionId " +
+           "WHERE us.userId = :userId AND us.isDailyQuestion = true " +
+           "AND dq.date = :date AND us.submissionStatus = 'FINALIZED'")
+    List<UserSubmission> findFinalizedDailySubmissionsByUserAndDate(
+            @Param("userId") Long userId, 
+            @Param("date") LocalDate date);
+    
     List<UserSubmission> findByUserIdAndExamId(Long userId, Long examId);
     
     List<UserSubmission> findByUserIdAndContestId(Long userId, Long contestId);
@@ -67,12 +74,18 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
             @Param("endDate") LocalDateTime endDate);
     
     // Contest-related methods
-    @Query("SELECT new map(u.userId as userId, COUNT(u.id) as totalSubmissions, SUM(u.pointsEarned) as totalPoints) " +
-           "FROM UserSubmission u WHERE u.contestId = :contestId " +
-           "GROUP BY u.userId ORDER BY SUM(u.pointsEarned) DESC")
+    @Query("SELECT new map(u.userId as userId, COUNT(u.id) as totalSubmissions, SUM(u.pointsEarned) as totalPoints, " +
+           "cp.completedAt as completedAt, cp.hasCompleted as hasCompleted) " +
+           "FROM UserSubmission u " +
+           "INNER JOIN ContestParticipation cp ON u.userId = cp.userId AND u.contestId = cp.contestId " +
+           "WHERE u.contestId = :contestId AND cp.hasCompleted = true " +
+           "GROUP BY u.userId, cp.completedAt, cp.hasCompleted " +
+           "ORDER BY SUM(u.pointsEarned) DESC, cp.completedAt ASC")
     List<Map<String, Object>> getContestLeaderboard(@Param("contestId") Long contestId, Pageable pageable);
     
     boolean existsByUserIdAndQuestionIdAndContestId(Long userId, Long questionId, Long contestId);
+    
+    UserSubmission findByUserIdAndQuestionIdAndContestId(Long userId, Long questionId, Long contestId);
     
     List<UserSubmission> findByUserIdAndContestIdOrderBySubmittedAtDesc(Long userId, Long contestId);
     

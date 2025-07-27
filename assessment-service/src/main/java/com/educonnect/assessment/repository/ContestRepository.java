@@ -37,4 +37,14 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
     
     @Query("SELECT c FROM Contest c WHERE c.startTime <= :now AND c.status = 'UPCOMING'")
     List<Contest> findContestsToStart(@Param("now") LocalDateTime now);
+    
+    // Check if a question is part of any active or upcoming contest
+    @Query("SELECT COUNT(c) > 0 FROM Contest c WHERE :questionId MEMBER OF c.problemIds " +
+           "AND c.status IN ('ACTIVE', 'UPCOMING')")
+    boolean existsActiveContestByQuestionId(@Param("questionId") Long questionId);
+    
+    // Scheduler support methods
+    List<Contest> findByStatusAndStartTimeBefore(ContestStatus status, LocalDateTime dateTime);
+    
+    List<Contest> findByStatusAndEndTimeBefore(ContestStatus status, LocalDateTime dateTime);
 }
