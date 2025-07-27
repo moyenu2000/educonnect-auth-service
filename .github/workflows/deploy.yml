@@ -23,6 +23,10 @@ jobs:
             echo "Error: JWT_SECRET secret is not set"
             exit 1
           fi
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "Error: GCP_SA_KEY secret is not set"
+            exit 1
+          fi
           echo "All required environment variables are set"
 
   # Unit Testing for Auth Service only
@@ -204,6 +208,8 @@ jobs:
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           APP_BASE_URL=${{ secrets.APP_BASE_URL }}
           FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'educonnect' }}
+          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD || 'educonnect123' }}
           EOF
             
             # Make cleanup script executable
@@ -214,7 +220,7 @@ jobs:
             
             # Start infrastructure services
             echo "Starting infrastructure services..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d postgres redis
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d postgres redis rabbitmq
             
             # Wait for database to be ready
             echo "Waiting for database to be ready..."
@@ -245,6 +251,18 @@ jobs:
               timeout=$((timeout - 2))
             done
             
+            # Wait for RabbitMQ to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T rabbitmq rabbitmq-diagnostics ping; then
+                echo "RabbitMQ is ready!"
+                break
+              fi
+              echo "RabbitMQ not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            
             echo "Infrastructure ready!"
           '
 
@@ -266,7 +284,7 @@ jobs:
             # Wait for Auth Service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
+              if wget --no-verbose --tries=1 --spider http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Auth Service is ready!"
                 exit 0
               fi
@@ -296,7 +314,7 @@ jobs:
             # Wait for Discussion Service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
+              if wget --no-verbose --tries=1 --spider http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Discussion Service is ready!"
                 exit 0
               fi
@@ -326,7 +344,7 @@ jobs:
             # Wait for Assessment Service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
+              if wget --no-verbose --tries=1 --spider http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Assessment Service is ready!"
                 sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
                 exit 0

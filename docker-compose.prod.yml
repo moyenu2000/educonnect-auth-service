@@ -43,6 +43,28 @@ services:
       start_period: 40s
     restart: unless-stopped
 
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: educonnect-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-educonnect}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-educonnect123}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - educonnect-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
   # Auth Service
   auth-service:
     image: ${DOCKER_HUB_USERNAME}/auth-service:latest
@@ -60,15 +82,21 @@ services:
       - APP_BASE_URL=${APP_BASE_URL}
       - FRONTEND_URL=${FRONTEND_URL}
       - SERVER_SERVLET_CONTEXT_PATH=/api/v1
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -86,17 +114,23 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - SERVER_SERVLET_CONTEXT_PATH=/api/v1
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       auth-service:
         condition: service_healthy
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/api/v1/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -114,10 +148,16 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - SERVER_SERVLET_CONTEXT_PATH=/api/v1
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       auth-service:
         condition: service_healthy
@@ -126,7 +166,7 @@ services:
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/api/v1/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -141,4 +181,6 @@ volumes:
   postgres_data:
     driver: local
   redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local
