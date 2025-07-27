@@ -263,124 +263,93 @@ jobs:
             echo "Infrastructure ready!"
           '
 
-  deploy-auth:
+  deploy-services:
     runs-on: ubuntu-latest
     needs: deploy-infrastructure
+    strategy:
+      matrix:
+        service: [auth-service, discussion-service, assessment-service, frontend]
+        include:
+          - service: auth-service
+            port: 8081
+            health_path: /api/v1/actuator/health
+          - service: discussion-service
+            port: 8082
+            health_path: /api/v1/actuator/health
+          - service: assessment-service
+            port: 8083
+            health_path: /api/v1/actuator/health
+          - service: frontend
+            port: 3000
+            health_path: /
     steps:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           
-      - name: Deploy Auth Service
+      - name: Deploy ${{ matrix.service }}
         run: |
           gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
-            echo "Starting Auth Service..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d auth-service
+            echo "Starting ${{ matrix.service }}..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d ${{ matrix.service }}
             
-            # Wait for Auth Service to be ready
+            # Wait for ${{ matrix.service }} to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
-                echo "Auth Service is ready!"
+              if wget --no-verbose --tries=1 --spider http://localhost:${{ matrix.port }}${{ matrix.health_path }} >/dev/null 2>&1; then
+                echo "${{ matrix.service }} is ready!"
                 exit 0
               fi
-              echo "Auth Service not ready yet, waiting..."
+              echo "${{ matrix.service }} not ready yet, waiting..."
               sleep 5
               timeout=$((timeout - 5))
             done
-            echo "Auth Service failed to start"
+            echo "${{ matrix.service }} failed to start"
             exit 1
           '
 
-  deploy-discussion:
+  verify-deployment:
     runs-on: ubuntu-latest
-    needs: deploy-auth
+    needs: deploy-services
     steps:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           
-      - name: Deploy Discussion Service
+      - name: Verify All Services
         run: |
           gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
-            echo "Starting Discussion Service..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d discussion-service
+            echo "🔍 Verifying all services are running..."
             
-            # Wait for Discussion Service to be ready
-            timeout=120
-            while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
-                echo "Discussion Service is ready!"
-                exit 0
-              fi
-              echo "Discussion Service not ready yet, waiting..."
-              sleep 5
-              timeout=$((timeout - 5))
-            done
-            echo "Discussion Service failed to start"
-            exit 1
-          '
-
-  deploy-assessment:
-    runs-on: ubuntu-latest
-    needs: deploy-discussion
-    steps:
-      - name: Setup Google Cloud CLI
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          
-      - name: Deploy Assessment Service
-        run: |
-          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
-            echo "Starting Assessment Service..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d assessment-service
+            # Check all services
+            services=(
+              "auth-service:8081:/api/v1/actuator/health"
+              "discussion-service:8082:/api/v1/actuator/health"
+              "assessment-service:8083:/api/v1/actuator/health"
+              "frontend:3000:/"
+            )
             
-            # Wait for Assessment Service to be ready
-            timeout=120
-            while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
-                echo "Assessment Service is ready!"
-                sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
-                exit 0
+            all_healthy=true
+            for service_info in "${services[@]}"; do
+              IFS=: read -r service_name port health_path <<< "$service_info"
+              echo "🔍 Checking $service_name on port $port..."
+              
+              if wget --no-verbose --tries=1 --spider "http://localhost:$port$health_path" >/dev/null 2>&1; then
+                echo "✅ $service_name is healthy"
+              else
+                echo "❌ $service_name is not responding"
+                all_healthy=false
               fi
-              echo "Assessment Service not ready yet, waiting..."
-              sleep 5
-              timeout=$((timeout - 5))
             done
-            echo "Assessment Service failed to start"
-            exit 1
-          '
-
-  deploy-frontend:
-    runs-on: ubuntu-latest
-    needs: deploy-assessment
-    steps:
-      - name: Setup Google Cloud CLI
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-          
-      - name: Deploy Frontend
-        run: |
-          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
-            echo "Starting Frontend..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d frontend
             
-            # Wait for Frontend to be ready
-            timeout=120
-            while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:3000 >/dev/null 2>&1; then
-                echo "Frontend is ready!"
-                sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
-                exit 0
-              fi
-              echo "Frontend not ready yet, waiting..."
-              sleep 5
-              timeout=$((timeout - 5))
-            done
-            echo "Frontend failed to start"
-            exit 1
+            if [ "$all_healthy" = true ]; then
+              echo "🎉 All services are running successfully!"
+              echo "📊 Final service status:"
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
+            else
+              echo "❌ Some services are not healthy"
+              exit 1
+            fi
           '
