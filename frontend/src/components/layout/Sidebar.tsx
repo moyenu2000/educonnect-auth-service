@@ -18,6 +18,7 @@ import {
   User,
   GraduationCap,
   LogOut,
+  Bot,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -80,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Discussions', href: '/student/discussions', icon: MessageSquare },
     { name: 'Groups', href: '/student/groups', icon: Users },
     { name: 'Messages', href: '/student/messages', icon: MessageSquare },
-    { name: 'AI Assistant', href: '/student/ai', icon: Brain },
+    { name: 'AI Assistant', href: '/student/ai', icon: Bot },
     { name: 'Leaderboard', href: '/student/leaderboard', icon: BarChart3 },
   ]
 

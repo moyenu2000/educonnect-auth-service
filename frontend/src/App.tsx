@@ -32,6 +32,7 @@ import ContestDetails from './components/student/ContestDetails'
 import ContestTaking from './components/student/ContestTaking'
 import ContestResults from './components/student/ContestResults'
 import LiveExams from './components/student/LiveExams'
+import AIAssistant from './components/student/AIAssistant'
 import Messages from './components/Messages'
 import MessagingDemo from './components/MessagingDemo'
 
@@ -365,6 +366,11 @@ const AppContent: React.FC = () => {
       <Route path="/student/exams" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><LiveExams /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/ai" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><AIAssistant /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/student/profile" element={

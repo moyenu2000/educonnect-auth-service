@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
 import { useNavigate } from 'react-router-dom'
+import { getTodayDateString } from '@/lib/utils'
 import { 
   Plus,
   X
@@ -45,7 +46,7 @@ interface DailyQuestion {
 const DailyQuestionConfig: React.FC = () => {
   const navigate = useNavigate()
 
-  const [actionDate, setActionDate] = useState(new Date().toISOString().split('T')[0])
+  const [actionDate, setActionDate] = useState(getTodayDateString())
   const [questionConfigs, setQuestionConfigs] = useState<Record<number, {difficulty: string, points: number}>>({})
   const [dailyQuestionsList, setDailyQuestionsList] = useState<number[]>([])
   const [allQuestions, setAllQuestions] = useState<Question[]>([]) // All questions for left panel

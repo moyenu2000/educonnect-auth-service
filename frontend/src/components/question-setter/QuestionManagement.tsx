@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
 import { Link, useNavigate } from 'react-router-dom'
+import { getTodayDateString } from '@/lib/utils'
 import { 
   Plus, 
   Eye, 
@@ -97,7 +98,7 @@ const QuestionManagement: React.FC = () => {
   // Action states
   const [showActionPanel, setShowActionPanel] = useState(false)
   const [actionType, setActionType] = useState<'daily' | 'practice' | 'contest' | null>(null)
-  const [actionDate, setActionDate] = useState(new Date().toISOString().split('T')[0])
+  const [actionDate, setActionDate] = useState(getTodayDateString())
 
   const loadQuestions = useCallback(async () => {
     try {

@@ -92,10 +92,10 @@ const DailyQuestionManagement: React.FC = () => {
       setError(null);
       
       // Calculate date range for better filtering (last 365 days by default)
-      const endDate = new Date().toISOString().split('T')[0];
+      const endDate = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
       const startDate = new Date();
       startDate.setFullYear(startDate.getFullYear() - 1);
-      const startDateStr = startDate.toISOString().split('T')[0];
+      const startDateStr = startDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
       
       const response = await assessmentService.getAllDailyQuestions(
         startDateStr, 
@@ -185,7 +185,7 @@ const DailyQuestionManagement: React.FC = () => {
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
     const todayQuestions = questions.filter(q => q.date === today);
     const previousQuestions = questions.filter(q => q.date < today);
     const futureQuestions = questions.filter(q => q.date > today);
@@ -207,7 +207,7 @@ const DailyQuestionManagement: React.FC = () => {
     }
 
     let filtered = [...dailyQuestions];
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
 
     // Date filter
     switch (filters.dateFilter) {
@@ -299,7 +299,7 @@ const DailyQuestionManagement: React.FC = () => {
   };
 
   const getDateStatus = (date: string) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
     if (date === today) return { status: 'today', icon: CheckCircle, color: 'text-green-600' };
     if (date < today) return { status: 'previous', icon: CheckCircle, color: 'text-gray-600' };
     return { status: 'future', icon: Clock, color: 'text-blue-600' };
@@ -313,9 +313,9 @@ const DailyQuestionManagement: React.FC = () => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    if (dateString === today.toISOString().split('T')[0]) return 'Today';
-    if (dateString === yesterday.toISOString().split('T')[0]) return 'Yesterday';
-    if (dateString === tomorrow.toISOString().split('T')[0]) return 'Tomorrow';
+    if (dateString === today.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' })) return 'Today';
+    if (dateString === yesterday.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' })) return 'Yesterday';
+    if (dateString === tomorrow.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' })) return 'Tomorrow';
     
     return date.toLocaleDateString('en-US', { 
       weekday: 'short', 
