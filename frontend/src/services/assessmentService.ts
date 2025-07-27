@@ -312,7 +312,6 @@ export const assessmentService = {
   
   getUserContestSubmissions: (contestId: number) => assessmentApi.get(`/contests/${contestId}/submissions`),
   
-  createContest: (data: Partial<Contest>) => assessmentApi.post('/contests', data),
 
   // Live Exams
   getLiveExams: (params?: {
@@ -514,8 +513,4 @@ export const assessmentService = {
   getQuestionById: (id: number) =>
     assessmentApi.get(`/questions/${id}`),
 
-  getRandomQuestions: (count: number, subjectId?: number) =>
-    assessmentApi.get('/questions/random', { 
-      params: { count, subjectId } 
-    }),
 }

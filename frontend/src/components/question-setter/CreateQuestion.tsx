@@ -273,7 +273,7 @@ const CreateQuestion: React.FC = () => {
           formData.options
             .filter(opt => opt.text.trim() !== '')
             .map((opt, index) => ({
-              id: opt.id || undefined, // Include existing ID for updates
+              ...(opt.id && { id: opt.id }), // Only include id if it exists
               text: opt.text,
               optionOrder: index
             })) : [],

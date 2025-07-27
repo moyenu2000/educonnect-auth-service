@@ -29,7 +29,7 @@ const BASE_URL = 'http://localhost:8081/api/v1';
 export const CACHE_BUSTER = Date.now();
 
 class AuthService {
-  private getAuthHeaders() {
+  private getAuthHeaders(): Record<string, string> {
     const token = localStorage.getItem('accessToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }

@@ -515,10 +515,10 @@ const PracticeProblemManagement: React.FC = () => {
 
   const handleAddQuestion = async (data: {
     questionId: number;
-    subjectId: number;
-    topicId?: number;
     difficulty: string;
     points: number;
+    subjectId?: number;
+    topicId?: number;
     hintText?: string;
     hints?: string[];
     solutionSteps?: string;
