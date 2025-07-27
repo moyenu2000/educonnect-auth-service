@@ -252,7 +252,7 @@ jobs:
 
   deploy-auth:
     runs-on: ubuntu-latest
-    needs: deploy-infrastructure
+    needs: [deploy-infrastructure, build-auth]
     steps:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
@@ -282,7 +282,7 @@ jobs:
 
   deploy-discussion:
     runs-on: ubuntu-latest
-    needs: deploy-auth
+    needs: [deploy-infrastructure, build-discussion]
     steps:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
@@ -312,7 +312,7 @@ jobs:
 
   deploy-assessment:
     runs-on: ubuntu-latest
-    needs: deploy-discussion
+    needs: [deploy-infrastructure, build-assessment]
     steps:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
@@ -343,7 +343,7 @@ jobs:
 
   deploy-frontend:
     runs-on: ubuntu-latest
-    needs: deploy-assessment
+    needs: [deploy-infrastructure, build-frontend]
     steps:
       - name: Setup Google Cloud CLI
         uses: google-github-actions/auth@v2
