@@ -173,6 +173,29 @@ services:
       start_period: 60s
     restart: unless-stopped
 
+  # Frontend
+  frontend:
+    image: ${DOCKER_HUB_USERNAME}/educonnect-frontend:latest
+    container_name: educonnect-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      discussion-service:
+        condition: service_healthy
+      assessment-service:
+        condition: service_healthy
+    networks:
+      - educonnect-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
 networks:
   educonnect-network:
     driver: bridge

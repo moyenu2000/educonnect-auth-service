@@ -122,9 +122,44 @@ jobs:
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/assessment-service:latest ./assessment-service
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/assessment-service:latest
 
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+          
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Build and push Frontend
+        run: |
+          cd frontend
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/educonnect-frontend:latest .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/educonnect-frontend:latest
+
   deploy-infrastructure:
     runs-on: ubuntu-latest
-    needs: [build-auth, build-discussion, build-assessment]
+    needs: [build-auth, build-discussion, build-assessment, build-frontend]
     steps:
       - uses: actions/checkout@v4
       
@@ -303,5 +338,36 @@ jobs:
               timeout=$((timeout - 5))
             done
             echo "Assessment Service failed to start"
+            exit 1
+          '
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: deploy-assessment
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Deploy Frontend
+        run: |
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            echo "Starting Frontend..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d frontend
+            
+            # Wait for Frontend to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if wget --no-verbose --tries=1 --spider http://localhost:3000 >/dev/null 2>&1; then
+                echo "Frontend is ready!"
+                sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
+                exit 0
+              fi
+              echo "Frontend not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            echo "Frontend failed to start"
             exit 1
           '
