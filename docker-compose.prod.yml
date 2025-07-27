@@ -125,8 +125,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      auth-service:
-        condition: service_healthy
     networks:
       - educonnect-network
     healthcheck:
@@ -159,10 +157,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      auth-service:
-        condition: service_healthy
-      discussion-service:
-        condition: service_healthy
     networks:
       - educonnect-network
     healthcheck:
@@ -179,13 +173,6 @@ services:
     container_name: educonnect-frontend
     ports:
       - "3000:80"
-    depends_on:
-      auth-service:
-        condition: service_healthy
-      discussion-service:
-        condition: service_healthy
-      assessment-service:
-        condition: service_healthy
     networks:
       - educonnect-network
     healthcheck:
