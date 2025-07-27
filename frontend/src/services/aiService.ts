@@ -1,6 +1,7 @@
 // API Configuration
+const VM_IP = import.meta.env.VITE_VM_IP || '35.188.75.223';
 const API_CONFIG = {
-  DISCUSSION_SERVICE: 'http://localhost:8082/api/v1',
+  DISCUSSION_SERVICE: `http://${VM_IP}:8082/api/v1`,
 }
 
 export interface AIQueryRequest {

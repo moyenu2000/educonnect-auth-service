@@ -33,6 +33,9 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     @Query("SELECT COUNT(gm) FROM GroupMember gm WHERE gm.group.id = :groupId")
     Long countByGroupId(@Param("groupId") Long groupId);
     
+    @Query("SELECT COUNT(gm) FROM GroupMember gm WHERE gm.group.id = :groupId AND gm.role = :role")
+    Long countByGroupIdAndRole(@Param("groupId") Long groupId, @Param("role") GroupRole role);
+    
     boolean existsByGroupIdAndUserId(Long groupId, Long userId);
     
     void deleteByGroupIdAndUserId(Long groupId, Long userId);

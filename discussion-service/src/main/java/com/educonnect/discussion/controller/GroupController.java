@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -78,7 +79,8 @@ public class GroupController {
         
         Group group = groupService.createGroup(request, currentUser.getId());
         
-        return ResponseEntity.ok(ApiResponse.success(GroupDto.fromEntity(group), "Group created successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.success(GroupDto.fromEntity(group), "Group created successfully"));
     }
 
     @PutMapping("/{groupId}")
@@ -145,6 +147,11 @@ public class GroupController {
             @CurrentUser UserPrincipal currentUser) {
         
         GroupRole role = requestBody.get("role");
+        if (role == null) {
+            return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Role is required"));
+        }
+        
         groupService.changeGroupMemberRole(groupId, userId, role, currentUser.getId());
         
         return ResponseEntity.ok(ApiResponse.success("Member role updated successfully"));
@@ -159,7 +166,8 @@ public class GroupController {
         
         groupService.removeGroupMember(groupId, userId, currentUser.getId());
         
-        return ResponseEntity.ok(ApiResponse.success("Member removed successfully"));
+        return ResponseEntity.status(HttpStatus.NO_CONTENT)
+            .body(ApiResponse.success("Member removed successfully"));
     }
 
     @GetMapping("/{groupId}/discussions")
@@ -187,6 +195,7 @@ public class GroupController {
         
         DiscussionDto discussion = discussionService.createGroupDiscussion(groupId, request, currentUser.getId());
         
-        return ResponseEntity.ok(ApiResponse.success(discussion, "Group discussion created successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.success(discussion, "Group discussion created successfully"));
     }
 }

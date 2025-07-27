@@ -64,7 +64,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
       - APP_BASE_URL=http://auth-service:8081
-      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://${VM_IP:-localhost}:3000}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
@@ -108,7 +108,7 @@ services:
       - ASSESSMENT_SERVICE_URL=http://assessment-service:8083
       - JWT_SECRET=${JWT_SECRET}
       - FILE_UPLOAD_DIR=/app/uploads
-      - FILE_BASE_URL=http://localhost:8082/api/v1/files
+      - FILE_BASE_URL=http://${VM_IP:-localhost}:8082/api/v1/files
     ports:
       - "8082:8082"
     volumes:

@@ -23,7 +23,8 @@ export type {
   UsersPageResponse
 };
 
-const BASE_URL = 'http://localhost:8081/api/v1';
+const VM_IP = import.meta.env.VITE_VM_IP || '35.188.75.223';
+const BASE_URL = `http://${VM_IP}:8081/api/v1`;
 
 // Force module refresh
 export const CACHE_BUSTER = Date.now();

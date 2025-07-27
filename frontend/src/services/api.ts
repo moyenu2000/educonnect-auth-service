@@ -2,10 +2,11 @@ import axios from 'axios'
 import type { InternalAxiosRequestConfig, AxiosError } from 'axios'
 
 // API Configuration
+const VM_IP = import.meta.env.VITE_VM_IP || '35.188.75.223';
 const API_CONFIG = {
-  AUTH_SERVICE: 'http://localhost:8081/api/v1',
-  ASSESSMENT_SERVICE: 'http://localhost:8083/api/v1', 
-  DISCUSSION_SERVICE: 'http://localhost:8082/api/v1',
+  AUTH_SERVICE: `http://${VM_IP}:8081/api/v1`,
+  ASSESSMENT_SERVICE: `http://${VM_IP}:8083/api/v1`, 
+  DISCUSSION_SERVICE: `http://${VM_IP}:8082/api/v1`,
 }
 
 // Create axios instances for each service

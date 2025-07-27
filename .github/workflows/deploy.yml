@@ -140,6 +140,15 @@ jobs:
           cd frontend
           npm ci
           
+      - name: Create frontend environment file
+        run: |
+          cd frontend
+          cat > .env << EOF
+          VM_IP=35.188.75.223
+          VITE_VM_IP=35.188.75.223
+          VITE_API_BASE_URL=http://35.188.75.223
+          EOF
+          
       - name: Build frontend
         run: |
           cd frontend
@@ -181,8 +190,9 @@ jobs:
             sudo apt-get autoremove -y
             sudo apt-get autoclean
             
-            # Create .env file
+            # Create .env file with VM IP configuration
             cat > .env << EOF
+          VM_IP=35.188.75.223
           DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           DB_USER=${{ secrets.DB_USER || 'postgres' }}
@@ -191,10 +201,12 @@ jobs:
           MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          APP_BASE_URL=${{ secrets.APP_BASE_URL }}
-          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          APP_BASE_URL=http://35.188.75.223:8081
+          FRONTEND_URL=http://35.188.75.223:3000
+          FILE_BASE_URL=http://35.188.75.223:8082/api/v1/files
           RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'educonnect' }}
           RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD || 'educonnect123' }}
+          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
           EOF
             
             # Make cleanup script executable

@@ -7,6 +7,7 @@ import com.educonnect.discussion.entity.GroupMember;
 import com.educonnect.discussion.entity.User;
 import com.educonnect.discussion.enums.GroupRole;
 import com.educonnect.discussion.enums.GroupType;
+import com.educonnect.discussion.exception.BadRequestException;
 import com.educonnect.discussion.exception.ResourceNotFoundException;
 import com.educonnect.discussion.exception.UnauthorizedException;
 import com.educonnect.discussion.repository.GroupMemberRepository;
@@ -55,7 +56,10 @@ public class GroupServiceImpl implements GroupService {
             .orElseThrow(() -> new ResourceNotFoundException("Group not found with id: " + id));
         
         // Check if private group and user is not a member
-        if (group.getIsPrivate() && currentUserId != null) {
+        if (group.getIsPrivate()) {
+            if (currentUserId == null) {
+                throw new UnauthorizedException("Authentication required to view private groups");
+            }
             boolean isMember = groupMemberRepository.existsByGroupIdAndUserId(id, currentUserId);
             if (!isMember) {
                 throw new UnauthorizedException("You must be a member to view this private group");
@@ -150,6 +154,10 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void changeGroupMemberRole(Long groupId, Long userId, GroupRole newRole, Long currentUserId) {
+        if (newRole == null) {
+            throw new BadRequestException("Role cannot be null");
+        }
+        
         // Check if current user is admin
         GroupMember currentUserMembership = groupMemberRepository.findByGroupIdAndUserId(groupId, currentUserId)
             .orElseThrow(() -> new UnauthorizedException("You must be a member to change roles"));
@@ -160,6 +168,14 @@ public class GroupServiceImpl implements GroupService {
         
         GroupMember targetMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
             .orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
+        
+        // Prevent demoting the last admin
+        if (targetMember.getRole() == GroupRole.ADMIN && newRole != GroupRole.ADMIN) {
+            long adminCount = groupMemberRepository.countByGroupIdAndRole(groupId, GroupRole.ADMIN);
+            if (adminCount <= 1) {
+                throw new BadRequestException("Cannot remove the last admin from the group");
+            }
+        }
         
         targetMember.setRole(newRole);
         groupMemberRepository.save(targetMember);
@@ -175,8 +191,15 @@ public class GroupServiceImpl implements GroupService {
             throw new UnauthorizedException("Only admins and moderators can remove members");
         }
         
-        if (!groupMemberRepository.existsByGroupIdAndUserId(groupId, userId)) {
-            throw new ResourceNotFoundException("User is not a member of this group");
+        GroupMember targetMember = groupMemberRepository.findByGroupIdAndUserId(groupId, userId)
+            .orElseThrow(() -> new ResourceNotFoundException("User is not a member of this group"));
+        
+        // Prevent removing the last admin
+        if (targetMember.getRole() == GroupRole.ADMIN) {
+            long adminCount = groupMemberRepository.countByGroupIdAndRole(groupId, GroupRole.ADMIN);
+            if (adminCount <= 1) {
+                throw new BadRequestException("Cannot remove the last admin from the group");
+            }
         }
         
         groupMemberRepository.deleteByGroupIdAndUserId(groupId, userId);
