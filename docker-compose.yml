@@ -172,6 +172,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: educonnect-frontend
+    environment:
+      - VITE_AUTH_URL=${VITE_AUTH_URL}
+      - VITE_ASSESSMENT_URL=${VITE_ASSESSMENT_URL}
+      - VITE_DISCUSSION_URL=${VITE_DISCUSSION_URL}
     ports:
       - "3000:80"
     depends_on:
