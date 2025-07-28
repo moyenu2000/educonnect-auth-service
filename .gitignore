@@ -1,0 +1,23 @@
+# Compiled class files
+*.class
+
+# Maven build artifacts
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Application-specific
+uploads/
+temp/

@@ -1,0 +1,588 @@
+# ASSESSMENT SERVICE API REFERENCE
+Base URL: http://localhost:8083/api/v1
+
+## PUBLIC ENDPOINTS (No Authentication Required)
+
+## Public Test Endpoint
+GET /test/public
+Response:
+Public test endpoint working
+
+## JWT Configuration Test
+GET /test/jwt-config
+Response:
+JWT Config Test - Validation attempt completed (expected to fail): false
+
+## SUBJECT MANAGEMENT
+
+## Get All Subjects
+GET /subjects
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[{"id":2,"name":"Mathematics","description":"Core mathematical concepts and problem solving","classLevel":"CLASS_10","displayOrder":1,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":3,"name":"Physics","description":"Fundamental principles of physics and mechanics","classLevel":"CLASS_10","displayOrder":2,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":4,"name":"Chemistry","description":"Chemical reactions and molecular structures","classLevel":"CLASS_10","displayOrder":3,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":5,"name":"Biology","description":"Life sciences and biological processes","classLevel":"CLASS_10","displayOrder":4,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":6,"name":"Computer Science","description":"Programming and computational thinking","classLevel":"CLASS_12","displayOrder":8,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0}],"totalElements":5,"totalPages":1,"currentPage":0,"size":20,"first":true,"last":true}}
+
+## Get Public Subjects
+GET /subjects/public
+Response:
+{"success":true,"data":[{"id":2,"name":"Mathematics","description":"Core mathematical concepts and problem solving","classLevel":"CLASS_10","displayOrder":1,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":3,"name":"Physics","description":"Fundamental principles of physics and mechanics","classLevel":"CLASS_10","displayOrder":2,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":4,"name":"Chemistry","description":"Chemical reactions and molecular structures","classLevel":"CLASS_10","displayOrder":3,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":5,"name":"Biology","description":"Life sciences and biological processes","classLevel":"CLASS_10","displayOrder":4,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":6,"name":"Computer Science","description":"Programming and computational thinking","classLevel":"CLASS_12","displayOrder":8,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0}]}
+
+## Get Subject by ID
+GET /subjects/2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"id":2,"name":"Mathematics","description":"Core mathematical concepts and problem solving","classLevel":"CLASS_10","displayOrder":1,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1}}
+
+## Get Subjects with Pagination
+GET /subjects?page=0&size=5
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[{"id":2,"name":"Mathematics","description":"Core mathematical concepts and problem solving","classLevel":"CLASS_10","displayOrder":1,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":3,"name":"Physics","description":"Fundamental principles of physics and mechanics","classLevel":"CLASS_10","displayOrder":2,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":4,"name":"Chemistry","description":"Chemical reactions and molecular structures","classLevel":"CLASS_10","displayOrder":3,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":5,"name":"Biology","description":"Life sciences and biological processes","classLevel":"CLASS_10","displayOrder":4,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":6,"name":"Computer Science","description":"Programming and computational thinking","classLevel":"CLASS_12","displayOrder":8,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0}],"totalElements":5,"totalPages":1,"currentPage":0,"size":5,"first":true,"last":true}}
+
+## Get Subjects by Class Level
+GET /subjects?classLevel=CLASS_10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[{"id":2,"name":"Mathematics","description":"Core mathematical concepts and problem solving","classLevel":"CLASS_10","displayOrder":1,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":3,"name":"Physics","description":"Fundamental principles of physics and mechanics","classLevel":"CLASS_10","displayOrder":2,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":1},{"id":4,"name":"Chemistry","description":"Chemical reactions and molecular structures","classLevel":"CLASS_10","displayOrder":3,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0},{"id":5,"name":"Biology","description":"Life sciences and biological processes","classLevel":"CLASS_10","displayOrder":4,"isActive":true,"createdAt":"2025-07-21T06:44:11.008135","updatedAt":"2025-07-21T06:44:11.008135","topicsCount":0,"questionsCount":0}],"totalElements":4,"totalPages":1,"currentPage":0,"size":20,"first":true,"last":true}}
+
+## Create Subject (ADMIN)
+POST /subjects
+Headers: Authorization: Bearer <token>
+Request:
+{"name":"Test Subject","description":"Test subject description","classLevel":"CLASS_10","displayOrder":99}
+Response:
+{"success":true,"data":{"id":7,"name":"Test Subject","description":"Test subject description","classLevel":"CLASS_10","displayOrder":99,"isActive":true,"createdAt":"2025-07-22T10:31:50.870771001","updatedAt":"2025-07-22T10:31:50.870788736","topicsCount":0,"questionsCount":0},"message":"Subject created successfully"}
+
+## TOPIC MANAGEMENT
+
+## Get All Topics
+GET /topics
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"totalElements":0,"totalPages":0,"currentPage":0,"size":20,"first":true,"last":false}}
+
+## Get Public Topics by Subject
+GET /topics/public/by-subject/2
+Response:
+{"success":true,"data":[]}
+
+## Get Topics by Subject ID
+GET /topics?subjectId=2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"totalElements":0,"totalPages":0,"currentPage":0,"size":20,"first":true,"last":false}}
+
+## Get Topics with Pagination
+GET /topics?page=0&size=10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"totalElements":0,"totalPages":0,"currentPage":0,"size":10,"first":true,"last":false}}
+
+## Create Topic (ADMIN)
+POST /topics
+Headers: Authorization: Bearer <token>
+Request:
+{"name":"Test Topic","description":"Test topic description","subjectId":2}
+Response:
+{"success":true,"data":{"id":1,"name":"Test Topic","description":"Test topic description","subjectId":2,"displayOrder":0,"isActive":true,"createdAt":"2025-07-22T10:31:51.049425394","updatedAt":"2025-07-22T10:31:51.049452909","questionsCount":0},"message":"Topic created successfully"}
+
+## QUESTION MANAGEMENT
+
+## Get All Questions (ADMIN)
+GET /questions
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"size":20,"questions":[{"id":6,"text":"What is the force formula?","type":"MCQ","subjectId":3,"topicId":null,"subjectName":"Physics","topicName":null,"difficulty":"MEDIUM","options":[],"points":2,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:32.057884","updatedAt":"2025-07-21T06:44:32.057884"},{"id":5,"text":"What is 2+2?","type":"MCQ","subjectId":2,"topicId":null,"subjectName":"Mathematics","topicName":null,"difficulty":"EASY","options":[],"points":1,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:31.991934","updatedAt":"2025-07-21T06:44:31.991934"}],"totalPages":1,"filters":{"types":["MCQ","TRUE_FALSE","FILL_BLANK","NUMERIC","ESSAY"],"difficulties":["EASY","MEDIUM","HARD","EXPERT"]},"currentPage":0,"totalElements":2}}
+
+## Get Random Questions
+GET /questions/random?subjectId=2&count=3
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":[{"id":5,"text":"What is 2+2?","type":"MCQ","subjectId":2,"topicId":null,"subjectName":"Mathematics","topicName":null,"difficulty":"EASY","options":[],"points":1,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:31.991934","updatedAt":"2025-07-21T06:44:31.991934"}]}
+
+## Get Random Questions by Difficulty
+GET /questions/random?difficulty=EASY&count=5
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":[]}
+
+## Get Public Daily Questions
+GET /questions/public/daily
+Response:
+{"success":true,"data":[{"id":5,"text":"What is 2+2?","type":"MCQ","subjectId":2,"topicId":null,"subjectName":"Mathematics","topicName":null,"difficulty":"EASY","options":[],"points":1,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:31.991934","updatedAt":"2025-07-21T06:44:31.991934"},{"id":6,"text":"What is the force formula?","type":"MCQ","subjectId":3,"topicId":null,"subjectName":"Physics","topicName":null,"difficulty":"MEDIUM","options":[],"points":2,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:32.057884","updatedAt":"2025-07-21T06:44:32.057884"}]}
+
+## Get Questions with Pagination
+GET /questions?page=0&size=10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"size":10,"questions":[{"id":6,"text":"What is the force formula?","type":"MCQ","subjectId":3,"topicId":null,"subjectName":"Physics","topicName":null,"difficulty":"MEDIUM","options":[],"points":2,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:32.057884","updatedAt":"2025-07-21T06:44:32.057884"},{"id":5,"text":"What is 2+2?","type":"MCQ","subjectId":2,"topicId":null,"subjectName":"Mathematics","topicName":null,"difficulty":"EASY","options":[],"points":1,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:31.991934","updatedAt":"2025-07-21T06:44:31.991934"}],"totalPages":1,"filters":{"types":["MCQ","TRUE_FALSE","FILL_BLANK","NUMERIC","ESSAY"],"difficulties":["EASY","MEDIUM","HARD","EXPERT"]},"currentPage":0,"totalElements":2}}
+
+## Get Questions with Filters
+GET /questions?subjectId=2&difficulty=EASY
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"size":20,"questions":[{"id":5,"text":"What is 2+2?","type":"MCQ","subjectId":2,"topicId":null,"subjectName":"Mathematics","topicName":null,"difficulty":"EASY","options":[],"points":1,"tags":[],"attachments":[],"isActive":true,"createdBy":1,"createdAt":"2025-07-21T06:44:31.991934","updatedAt":"2025-07-21T06:44:31.991934"}],"totalPages":1,"filters":{"types":["MCQ","TRUE_FALSE","FILL_BLANK","NUMERIC","ESSAY"],"difficulties":["EASY","MEDIUM","HARD","EXPERT"]},"currentPage":0,"totalElements":1}}
+
+## Create Question (ADMIN)
+POST /questions
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "content": "What is 2 + 2?",
+  "type": "MULTIPLE_CHOICE",
+  "difficulty": "EASY",
+  "subjectId": 2,
+  "topicId": null,
+  "options": [
+    {"optionText": "3", "isCorrect": false, "explanation": "Incorrect"},
+    {"optionText": "4", "isCorrect": true, "explanation": "Correct answer"},
+    {"optionText": "5", "isCorrect": false, "explanation": "Incorrect"}
+  ],
+  "explanation": "Basic arithmetic",
+  "points": 1,
+  "timeLimit": 60,
+  "classLevel": "CLASS_10"
+}
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## DAILY QUESTIONS
+
+## Get Daily Questions
+GET /daily-questions
+Response:
+{"success":true,"data":{"totalQuestions":0,"questions":[]}}
+
+## Get Public Daily Questions
+GET /daily-questions/public
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Today's Daily Questions
+GET /daily-questions/today
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"totalQuestions":0,"streakInfo":{"currentStreak":0,"subjectStreaks":[],"streakHistory":[],"longestStreak":0},"questions":[]}}
+
+## Get Today's Daily Questions by Subject
+GET /daily-questions/today?subjectId=2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"totalQuestions":0,"streakInfo":{"currentStreak":0,"subjectStreaks":[],"streakHistory":[],"longestStreak":0},"questions":[]}}
+
+## Get Daily Question Streak
+GET /daily-questions/streak
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Daily Question Statistics
+GET /daily-questions/stats
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Daily Question Details
+GET /daily-questions/details
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Daily Question History
+GET /daily-questions/history
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Daily Questions by Date
+GET /daily-questions?date=2025-07-22
+Response:
+{"success":true,"data":{"totalQuestions":0,"questions":[]}}
+
+## Submit Daily Question Answer
+POST /daily-questions/1/submit
+Headers: Authorization: Bearer <token>
+Request:
+{"answer":"4","timeTaken":30,"explanation":"Simple addition"}
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Set Daily Questions (ADMIN)
+PUT /daily-questions
+Headers: Authorization: Bearer <token>
+Request:
+{"date":"2025-07-23","questionIds":[1,2,3]}
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## ANALYTICS
+
+## Get Analytics Dashboard
+GET /analytics/dashboard
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Weekly Analytics Dashboard
+GET /analytics/dashboard?period=WEEKLY
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Performance Analytics
+GET /analytics/performance
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Subject Performance Analytics
+GET /analytics/performance?period=MONTHLY&subjectId=2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Progress Analytics
+GET /analytics/progress
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Subject Progress
+GET /analytics/progress?subjectId=2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get User Rankings
+GET /analytics/rankings
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"globalRank":2,"subjectRanks":[],"percentile":99.8,"history":[{"date":"2024-01-1","change":"up","rank":50},{"date":"2024-01-2","change":"down","rank":51},{"date":"2024-01-3","change":"same","rank":52},{"date":"2024-01-4","change":"up","rank":53},{"date":"2024-01-5","change":"down","rank":54},{"date":"2024-01-6","change":"same","rank":55},{"date":"2024-01-7","change":"up","rank":56},{"date":"2024-01-8","change":"down","rank":57},{"date":"2024-01-9","change":"same","rank":58},{"date":"2024-01-10","change":"up","rank":59}],"classRank":3}}
+
+## Get Global Weekly Rankings
+GET /analytics/rankings?type=GLOBAL&period=WEEKLY
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"globalRank":2,"subjectRanks":[],"percentile":99.8,"history":[{"date":"2024-01-1","change":"up","rank":50},{"date":"2024-01-2","change":"down","rank":51},{"date":"2024-01-3","change":"same","rank":52},{"date":"2024-01-4","change":"up","rank":53},{"date":"2024-01-5","change":"down","rank":54},{"date":"2024-01-6","change":"same","rank":55},{"date":"2024-01-7","change":"up","rank":56},{"date":"2024-01-8","change":"down","rank":57},{"date":"2024-01-9","change":"same","rank":58},{"date":"2024-01-10","change":"up","rank":59}],"classRank":3}}
+
+## CONTESTS
+
+## Get All Contests
+GET /contests
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"totalElements":0,"totalPages":0,"currentPage":0,"size":20,"first":true,"last":false}}
+
+## Get Public Contests
+GET /contests/public
+Response:
+{"path":"/contests/public","success":false,"message":"Unauthorized access - Invalid or expired token","error":"Full authentication is required to access this resource"}
+
+## Get Contests with Pagination
+GET /contests?page=0&size=10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"totalElements":0,"totalPages":0,"currentPage":0,"size":10,"first":true,"last":false}}
+
+## Get Active Contests
+GET /contests?status=ACTIVE
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"totalElements":0,"totalPages":0,"currentPage":0,"size":20,"first":true,"last":false}}
+
+## Get Public Contest Type
+GET /contests?type=PUBLIC
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Create Contest (ADMIN)
+POST /contests
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "title": "Test Contest",
+  "description": "Test contest description", 
+  "type": "PUBLIC",
+  "startTime": "2025-07-25T10:00:00",
+  "endTime": "2025-07-25T12:00:00",
+  "duration": 120,
+  "questionIds": [1, 2],
+  "subjectId": 2,
+  "classLevel": "CLASS_10",
+  "maxParticipants": 100,
+  "prizeMoney": 1000
+}
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Contest by ID
+GET /contests/1
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Contest not found with id: 1"}
+
+## Join Contest
+POST /contests/1/join
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Contest Leaderboard
+GET /contests/1/leaderboard
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Contest not found with id: 1"}
+
+## Get Contest Results
+GET /contests/1/results
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Contest not found with id: 1"}
+
+## LIVE EXAMS
+
+## Get All Live Exams
+GET /live-exams
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Get Upcoming Live Exams
+GET /live-exams/upcoming
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Get Current Live Exams
+GET /live-exams/live
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Get Scheduled Live Exams
+GET /live-exams?status=SCHEDULED
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Get Live Exams by Class
+GET /live-exams?classLevel=CLASS_10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Get Live Exam by ID
+GET /live-exams/1
+Headers: Authorization: Bearer <token>
+Response:
+
+
+## Register for Live Exam
+POST /live-exams/1/register
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Join Live Exam
+POST /live-exams/1/join
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## PRACTICE PROBLEMS
+
+## Get Practice Problems
+GET /practice-problems
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Practice Problems with Pagination
+GET /practice-problems?page=0&size=10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Practice Problems by Subject
+GET /practice-problems?subjectId=2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Easy Practice Problems
+GET /practice-problems?difficulty=EASY
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Coding Practice Problems
+GET /practice-problems?type=CODING
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Get Problem Recommendations
+GET /practice-problems/recommendations
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Recommended Problems with Filters
+GET /practice-problems/recommendations?count=5&difficulty=MEDIUM
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Practice Problem by ID
+GET /practice-problems/1
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Practice Problem Hint
+GET /practice-problems/1/hint?hintLevel=1
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Toggle Problem Bookmark
+POST /practice-problems/1/bookmark
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Submit Practice Problem Solution
+POST /practice-problems/1/submit
+Headers: Authorization: Bearer <token>
+Request:
+{"solution":"print(4)","language":"python","explanation":"Simple solution"}
+Response:
+{"success":false,"error":"Validation failed: {timeTaken=Time taken is required, answer=Answer is required}"}
+
+## LEADERBOARD
+
+## Get Global Leaderboard
+GET /leaderboard/global
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"leaderboard":[{"badges":["Top 10","Podium Finisher","Champion"],"score":990,"problemsSolved":99,"rank":1,"accuracy":94.5,"streak":29,"user":{"displayName":"Student 1","id":1,"avatar":"https://example.com/avatar1.jpg","username":"User1"}},{"badges":["Top 10","Podium Finisher"],"score":980,"problemsSolved":98,"rank":2,"accuracy":94.0,"streak":28,"user":{"displayName":"Student 2","id":2,"avatar":"https://example.com/avatar2.jpg","username":"User2"}},{"badges":["Top 10","Podium Finisher"],"score":970,"problemsSolved":97,"rank":3,"accuracy":93.5,"streak":27,"user":{"displayName":"Student 3","id":3,"avatar":"https://example.com/avatar3.jpg","username":"User3"}},{"badges":["Top 10"],"score":960,"problemsSolved":96,"rank":4,"accuracy":93.0,"streak":26,"user":{"displayName":"Student 4","id":4,"avatar":"https://example.com/avatar4.jpg","username":"User4"}},{"badges":["Top 10"],"score":950,"problemsSolved":95,"rank":5,"accuracy":92.5,"streak":25,"user":{"displayName":"Student 5","id":5,"avatar":"https://example.com/avatar5.jpg","username":"User5"}},{"badges":["Top 10"],"score":940,"problemsSolved":94,"rank":6,"accuracy":92.0,"streak":24,"user":{"displayName":"Student 6","id":6,"avatar":"https://example.com/avatar6.jpg","username":"User6"}},{"badges":["Top 10"],"score":930,"problemsSolved":93,"rank":7,"accuracy":91.5,"streak":23,"user":{"displayName":"Student 7","id":7,"avatar":"https://example.com/avatar7.jpg","username":"User7"}},{"badges":["Top 10"],"score":920,"problemsSolved":92,"rank":8,"accuracy":91.0,"streak":22,"user":{"displayName":"Student 8","id":8,"avatar":"https://example.com/avatar8.jpg","username":"User8"}},{"badges":["Top 10"],"score":910,"problemsSolved":91,"rank":9,"accuracy":90.5,"streak":21,"user":{"displayName":"Student 9","id":9,"avatar":"https://example.com/avatar9.jpg","username":"User9"}},{"badges":["Top 10"],"score":900,"problemsSolved":90,"rank":10,"accuracy":90.0,"streak":20,"user":{"displayName":"Student 10","id":10,"avatar":"https://example.com/avatar10.jpg","username":"User10"}},{"badges":[],"score":890,"problemsSolved":89,"rank":11,"accuracy":89.5,"streak":19,"user":{"displayName":"Student 11","id":11,"avatar":"https://example.com/avatar11.jpg","username":"User11"}},{"badges":[],"score":880,"problemsSolved":88,"rank":12,"accuracy":89.0,"streak":18,"user":{"displayName":"Student 12","id":12,"avatar":"https://example.com/avatar12.jpg","username":"User12"}},{"badges":[],"score":870,"problemsSolved":87,"rank":13,"accuracy":88.5,"streak":17,"user":{"displayName":"Student 13","id":13,"avatar":"https://example.com/avatar13.jpg","username":"User13"}},{"badges":[],"score":860,"problemsSolved":86,"rank":14,"accuracy":88.0,"streak":16,"user":{"displayName":"Student 14","id":14,"avatar":"https://example.com/avatar14.jpg","username":"User14"}},{"badges":[],"score":850,"problemsSolved":85,"rank":15,"accuracy":87.5,"streak":15,"user":{"displayName":"Student 15","id":15,"avatar":"https://example.com/avatar15.jpg","username":"User15"}},{"badges":[],"score":840,"problemsSolved":84,"rank":16,"accuracy":87.0,"streak":14,"user":{"displayName":"Student 16","id":16,"avatar":"https://example.com/avatar16.jpg","username":"User16"}},{"badges":[],"score":830,"problemsSolved":83,"rank":17,"accuracy":86.5,"streak":13,"user":{"displayName":"Student 17","id":17,"avatar":"https://example.com/avatar17.jpg","username":"User17"}},{"badges":[],"score":820,"problemsSolved":82,"rank":18,"accuracy":86.0,"streak":12,"user":{"displayName":"Student 18","id":18,"avatar":"https://example.com/avatar18.jpg","username":"User18"}},{"badges":[],"score":810,"problemsSolved":81,"rank":19,"accuracy":85.5,"streak":11,"user":{"displayName":"Student 19","id":19,"avatar":"https://example.com/avatar19.jpg","username":"User19"}},{"badges":[],"score":800,"problemsSolved":80,"rank":20,"accuracy":85.0,"streak":10,"user":{"displayName":"Student 20","id":20,"avatar":"https://example.com/avatar20.jpg","username":"User20"}}],"period":"ALL_TIME","totalUsers":1000,"userRank":2}}
+
+## Get Public Leaderboard
+GET /leaderboard/public
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"leaderboard":[{"badges":["Top 10","Podium Finisher","Champion"],"score":990,"problemsSolved":99,"rank":1,"accuracy":94.5,"streak":29,"user":{"displayName":"Student 1","id":1,"avatar":"https://example.com/avatar1.jpg","username":"User1"}},{"badges":["Top 10","Podium Finisher"],"score":980,"problemsSolved":98,"rank":2,"accuracy":94.0,"streak":28,"user":{"displayName":"Student 2","id":2,"avatar":"https://example.com/avatar2.jpg","username":"User2"}},{"badges":["Top 10","Podium Finisher"],"score":970,"problemsSolved":97,"rank":3,"accuracy":93.5,"streak":27,"user":{"displayName":"Student 3","id":3,"avatar":"https://example.com/avatar3.jpg","username":"User3"}},{"badges":["Top 10"],"score":960,"problemsSolved":96,"rank":4,"accuracy":93.0,"streak":26,"user":{"displayName":"Student 4","id":4,"avatar":"https://example.com/avatar4.jpg","username":"User4"}},{"badges":["Top 10"],"score":950,"problemsSolved":95,"rank":5,"accuracy":92.5,"streak":25,"user":{"displayName":"Student 5","id":5,"avatar":"https://example.com/avatar5.jpg","username":"User5"}},{"badges":["Top 10"],"score":940,"problemsSolved":94,"rank":6,"accuracy":92.0,"streak":24,"user":{"displayName":"Student 6","id":6,"avatar":"https://example.com/avatar6.jpg","username":"User6"}},{"badges":["Top 10"],"score":930,"problemsSolved":93,"rank":7,"accuracy":91.5,"streak":23,"user":{"displayName":"Student 7","id":7,"avatar":"https://example.com/avatar7.jpg","username":"User7"}},{"badges":["Top 10"],"score":920,"problemsSolved":92,"rank":8,"accuracy":91.0,"streak":22,"user":{"displayName":"Student 8","id":8,"avatar":"https://example.com/avatar8.jpg","username":"User8"}},{"badges":["Top 10"],"score":910,"problemsSolved":91,"rank":9,"accuracy":90.5,"streak":21,"user":{"displayName":"Student 9","id":9,"avatar":"https://example.com/avatar9.jpg","username":"User9"}},{"badges":["Top 10"],"score":900,"problemsSolved":90,"rank":10,"accuracy":90.0,"streak":20,"user":{"displayName":"Student 10","id":10,"avatar":"https://example.com/avatar10.jpg","username":"User10"}},{"badges":[],"score":890,"problemsSolved":89,"rank":11,"accuracy":89.5,"streak":19,"user":{"displayName":"Student 11","id":11,"avatar":"https://example.com/avatar11.jpg","username":"User11"}},{"badges":[],"score":880,"problemsSolved":88,"rank":12,"accuracy":89.0,"streak":18,"user":{"displayName":"Student 12","id":12,"avatar":"https://example.com/avatar12.jpg","username":"User12"}},{"badges":[],"score":870,"problemsSolved":87,"rank":13,"accuracy":88.5,"streak":17,"user":{"displayName":"Student 13","id":13,"avatar":"https://example.com/avatar13.jpg","username":"User13"}},{"badges":[],"score":860,"problemsSolved":86,"rank":14,"accuracy":88.0,"streak":16,"user":{"displayName":"Student 14","id":14,"avatar":"https://example.com/avatar14.jpg","username":"User14"}},{"badges":[],"score":850,"problemsSolved":85,"rank":15,"accuracy":87.5,"streak":15,"user":{"displayName":"Student 15","id":15,"avatar":"https://example.com/avatar15.jpg","username":"User15"}},{"badges":[],"score":840,"problemsSolved":84,"rank":16,"accuracy":87.0,"streak":14,"user":{"displayName":"Student 16","id":16,"avatar":"https://example.com/avatar16.jpg","username":"User16"}},{"badges":[],"score":830,"problemsSolved":83,"rank":17,"accuracy":86.5,"streak":13,"user":{"displayName":"Student 17","id":17,"avatar":"https://example.com/avatar17.jpg","username":"User17"}},{"badges":[],"score":820,"problemsSolved":82,"rank":18,"accuracy":86.0,"streak":12,"user":{"displayName":"Student 18","id":18,"avatar":"https://example.com/avatar18.jpg","username":"User18"}},{"badges":[],"score":810,"problemsSolved":81,"rank":19,"accuracy":85.5,"streak":11,"user":{"displayName":"Student 19","id":19,"avatar":"https://example.com/avatar19.jpg","username":"User19"}},{"badges":[],"score":800,"problemsSolved":80,"rank":20,"accuracy":85.0,"streak":10,"user":{"displayName":"Student 20","id":20,"avatar":"https://example.com/avatar20.jpg","username":"User20"}}],"period":"ALL_TIME","totalUsers":1000,"userRank":2}}
+
+## Get Weekly Global Leaderboard
+GET /leaderboard/global?period=WEEKLY
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"leaderboard":[{"badges":["Top 10","Podium Finisher","Champion"],"score":990,"problemsSolved":99,"rank":1,"accuracy":94.5,"streak":29,"user":{"displayName":"Student 1","id":1,"avatar":"https://example.com/avatar1.jpg","username":"User1"}},{"badges":["Top 10","Podium Finisher"],"score":980,"problemsSolved":98,"rank":2,"accuracy":94.0,"streak":28,"user":{"displayName":"Student 2","id":2,"avatar":"https://example.com/avatar2.jpg","username":"User2"}},{"badges":["Top 10","Podium Finisher"],"score":970,"problemsSolved":97,"rank":3,"accuracy":93.5,"streak":27,"user":{"displayName":"Student 3","id":3,"avatar":"https://example.com/avatar3.jpg","username":"User3"}},{"badges":["Top 10"],"score":960,"problemsSolved":96,"rank":4,"accuracy":93.0,"streak":26,"user":{"displayName":"Student 4","id":4,"avatar":"https://example.com/avatar4.jpg","username":"User4"}},{"badges":["Top 10"],"score":950,"problemsSolved":95,"rank":5,"accuracy":92.5,"streak":25,"user":{"displayName":"Student 5","id":5,"avatar":"https://example.com/avatar5.jpg","username":"User5"}},{"badges":["Top 10"],"score":940,"problemsSolved":94,"rank":6,"accuracy":92.0,"streak":24,"user":{"displayName":"Student 6","id":6,"avatar":"https://example.com/avatar6.jpg","username":"User6"}},{"badges":["Top 10"],"score":930,"problemsSolved":93,"rank":7,"accuracy":91.5,"streak":23,"user":{"displayName":"Student 7","id":7,"avatar":"https://example.com/avatar7.jpg","username":"User7"}},{"badges":["Top 10"],"score":920,"problemsSolved":92,"rank":8,"accuracy":91.0,"streak":22,"user":{"displayName":"Student 8","id":8,"avatar":"https://example.com/avatar8.jpg","username":"User8"}},{"badges":["Top 10"],"score":910,"problemsSolved":91,"rank":9,"accuracy":90.5,"streak":21,"user":{"displayName":"Student 9","id":9,"avatar":"https://example.com/avatar9.jpg","username":"User9"}},{"badges":["Top 10"],"score":900,"problemsSolved":90,"rank":10,"accuracy":90.0,"streak":20,"user":{"displayName":"Student 10","id":10,"avatar":"https://example.com/avatar10.jpg","username":"User10"}},{"badges":[],"score":890,"problemsSolved":89,"rank":11,"accuracy":89.5,"streak":19,"user":{"displayName":"Student 11","id":11,"avatar":"https://example.com/avatar11.jpg","username":"User11"}},{"badges":[],"score":880,"problemsSolved":88,"rank":12,"accuracy":89.0,"streak":18,"user":{"displayName":"Student 12","id":12,"avatar":"https://example.com/avatar12.jpg","username":"User12"}},{"badges":[],"score":870,"problemsSolved":87,"rank":13,"accuracy":88.5,"streak":17,"user":{"displayName":"Student 13","id":13,"avatar":"https://example.com/avatar13.jpg","username":"User13"}},{"badges":[],"score":860,"problemsSolved":86,"rank":14,"accuracy":88.0,"streak":16,"user":{"displayName":"Student 14","id":14,"avatar":"https://example.com/avatar14.jpg","username":"User14"}},{"badges":[],"score":850,"problemsSolved":85,"rank":15,"accuracy":87.5,"streak":15,"user":{"displayName":"Student 15","id":15,"avatar":"https://example.com/avatar15.jpg","username":"User15"}},{"badges":[],"score":840,"problemsSolved":84,"rank":16,"accuracy":87.0,"streak":14,"user":{"displayName":"Student 16","id":16,"avatar":"https://example.com/avatar16.jpg","username":"User16"}},{"badges":[],"score":830,"problemsSolved":83,"rank":17,"accuracy":86.5,"streak":13,"user":{"displayName":"Student 17","id":17,"avatar":"https://example.com/avatar17.jpg","username":"User17"}},{"badges":[],"score":820,"problemsSolved":82,"rank":18,"accuracy":86.0,"streak":12,"user":{"displayName":"Student 18","id":18,"avatar":"https://example.com/avatar18.jpg","username":"User18"}},{"badges":[],"score":810,"problemsSolved":81,"rank":19,"accuracy":85.5,"streak":11,"user":{"displayName":"Student 19","id":19,"avatar":"https://example.com/avatar19.jpg","username":"User19"}},{"badges":[],"score":800,"problemsSolved":80,"rank":20,"accuracy":85.0,"streak":10,"user":{"displayName":"Student 20","id":20,"avatar":"https://example.com/avatar20.jpg","username":"User20"}}],"period":"WEEKLY","totalUsers":1000,"userRank":2}}
+
+## Get Subject Leaderboard
+GET /leaderboard/subject/2
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"leaderboard":[{"badges":["Top 10","Podium Finisher","Champion"],"score":990,"problemsSolved":99,"rank":1,"accuracy":94.5,"streak":29,"user":{"displayName":"Student 1","id":1,"avatar":"https://example.com/avatar1.jpg","username":"User1"}},{"badges":["Top 10","Podium Finisher"],"score":980,"problemsSolved":98,"rank":2,"accuracy":94.0,"streak":28,"user":{"displayName":"Student 2","id":2,"avatar":"https://example.com/avatar2.jpg","username":"User2"}},{"badges":["Top 10","Podium Finisher"],"score":970,"problemsSolved":97,"rank":3,"accuracy":93.5,"streak":27,"user":{"displayName":"Student 3","id":3,"avatar":"https://example.com/avatar3.jpg","username":"User3"}},{"badges":["Top 10"],"score":960,"problemsSolved":96,"rank":4,"accuracy":93.0,"streak":26,"user":{"displayName":"Student 4","id":4,"avatar":"https://example.com/avatar4.jpg","username":"User4"}},{"badges":["Top 10"],"score":950,"problemsSolved":95,"rank":5,"accuracy":92.5,"streak":25,"user":{"displayName":"Student 5","id":5,"avatar":"https://example.com/avatar5.jpg","username":"User5"}},{"badges":["Top 10"],"score":940,"problemsSolved":94,"rank":6,"accuracy":92.0,"streak":24,"user":{"displayName":"Student 6","id":6,"avatar":"https://example.com/avatar6.jpg","username":"User6"}},{"badges":["Top 10"],"score":930,"problemsSolved":93,"rank":7,"accuracy":91.5,"streak":23,"user":{"displayName":"Student 7","id":7,"avatar":"https://example.com/avatar7.jpg","username":"User7"}},{"badges":["Top 10"],"score":920,"problemsSolved":92,"rank":8,"accuracy":91.0,"streak":22,"user":{"displayName":"Student 8","id":8,"avatar":"https://example.com/avatar8.jpg","username":"User8"}},{"badges":["Top 10"],"score":910,"problemsSolved":91,"rank":9,"accuracy":90.5,"streak":21,"user":{"displayName":"Student 9","id":9,"avatar":"https://example.com/avatar9.jpg","username":"User9"}},{"badges":["Top 10"],"score":900,"problemsSolved":90,"rank":10,"accuracy":90.0,"streak":20,"user":{"displayName":"Student 10","id":10,"avatar":"https://example.com/avatar10.jpg","username":"User10"}},{"badges":[],"score":890,"problemsSolved":89,"rank":11,"accuracy":89.5,"streak":19,"user":{"displayName":"Student 11","id":11,"avatar":"https://example.com/avatar11.jpg","username":"User11"}},{"badges":[],"score":880,"problemsSolved":88,"rank":12,"accuracy":89.0,"streak":18,"user":{"displayName":"Student 12","id":12,"avatar":"https://example.com/avatar12.jpg","username":"User12"}},{"badges":[],"score":870,"problemsSolved":87,"rank":13,"accuracy":88.5,"streak":17,"user":{"displayName":"Student 13","id":13,"avatar":"https://example.com/avatar13.jpg","username":"User13"}},{"badges":[],"score":860,"problemsSolved":86,"rank":14,"accuracy":88.0,"streak":16,"user":{"displayName":"Student 14","id":14,"avatar":"https://example.com/avatar14.jpg","username":"User14"}},{"badges":[],"score":850,"problemsSolved":85,"rank":15,"accuracy":87.5,"streak":15,"user":{"displayName":"Student 15","id":15,"avatar":"https://example.com/avatar15.jpg","username":"User15"}},{"badges":[],"score":840,"problemsSolved":84,"rank":16,"accuracy":87.0,"streak":14,"user":{"displayName":"Student 16","id":16,"avatar":"https://example.com/avatar16.jpg","username":"User16"}},{"badges":[],"score":830,"problemsSolved":83,"rank":17,"accuracy":86.5,"streak":13,"user":{"displayName":"Student 17","id":17,"avatar":"https://example.com/avatar17.jpg","username":"User17"}},{"badges":[],"score":820,"problemsSolved":82,"rank":18,"accuracy":86.0,"streak":12,"user":{"displayName":"Student 18","id":18,"avatar":"https://example.com/avatar18.jpg","username":"User18"}},{"badges":[],"score":810,"problemsSolved":81,"rank":19,"accuracy":85.5,"streak":11,"user":{"displayName":"Student 19","id":19,"avatar":"https://example.com/avatar19.jpg","username":"User19"}},{"badges":[],"score":800,"problemsSolved":80,"rank":20,"accuracy":85.0,"streak":10,"user":{"displayName":"Student 20","id":20,"avatar":"https://example.com/avatar20.jpg","username":"User20"}}],"totalUsers":500,"subject":{"name":"Subject 2","id":2},"userRank":2}}
+
+## Get Class Leaderboard
+GET /leaderboard/class/CLASS_10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"leaderboard":[{"badges":["Top 10","Podium Finisher","Champion"],"score":990,"problemsSolved":99,"rank":1,"accuracy":94.5,"streak":29,"user":{"displayName":"Student 1","id":1,"avatar":"https://example.com/avatar1.jpg","username":"User1"}},{"badges":["Top 10","Podium Finisher"],"score":980,"problemsSolved":98,"rank":2,"accuracy":94.0,"streak":28,"user":{"displayName":"Student 2","id":2,"avatar":"https://example.com/avatar2.jpg","username":"User2"}},{"badges":["Top 10","Podium Finisher"],"score":970,"problemsSolved":97,"rank":3,"accuracy":93.5,"streak":27,"user":{"displayName":"Student 3","id":3,"avatar":"https://example.com/avatar3.jpg","username":"User3"}},{"badges":["Top 10"],"score":960,"problemsSolved":96,"rank":4,"accuracy":93.0,"streak":26,"user":{"displayName":"Student 4","id":4,"avatar":"https://example.com/avatar4.jpg","username":"User4"}},{"badges":["Top 10"],"score":950,"problemsSolved":95,"rank":5,"accuracy":92.5,"streak":25,"user":{"displayName":"Student 5","id":5,"avatar":"https://example.com/avatar5.jpg","username":"User5"}},{"badges":["Top 10"],"score":940,"problemsSolved":94,"rank":6,"accuracy":92.0,"streak":24,"user":{"displayName":"Student 6","id":6,"avatar":"https://example.com/avatar6.jpg","username":"User6"}},{"badges":["Top 10"],"score":930,"problemsSolved":93,"rank":7,"accuracy":91.5,"streak":23,"user":{"displayName":"Student 7","id":7,"avatar":"https://example.com/avatar7.jpg","username":"User7"}},{"badges":["Top 10"],"score":920,"problemsSolved":92,"rank":8,"accuracy":91.0,"streak":22,"user":{"displayName":"Student 8","id":8,"avatar":"https://example.com/avatar8.jpg","username":"User8"}},{"badges":["Top 10"],"score":910,"problemsSolved":91,"rank":9,"accuracy":90.5,"streak":21,"user":{"displayName":"Student 9","id":9,"avatar":"https://example.com/avatar9.jpg","username":"User9"}},{"badges":["Top 10"],"score":900,"problemsSolved":90,"rank":10,"accuracy":90.0,"streak":20,"user":{"displayName":"Student 10","id":10,"avatar":"https://example.com/avatar10.jpg","username":"User10"}},{"badges":[],"score":890,"problemsSolved":89,"rank":11,"accuracy":89.5,"streak":19,"user":{"displayName":"Student 11","id":11,"avatar":"https://example.com/avatar11.jpg","username":"User11"}},{"badges":[],"score":880,"problemsSolved":88,"rank":12,"accuracy":89.0,"streak":18,"user":{"displayName":"Student 12","id":12,"avatar":"https://example.com/avatar12.jpg","username":"User12"}},{"badges":[],"score":870,"problemsSolved":87,"rank":13,"accuracy":88.5,"streak":17,"user":{"displayName":"Student 13","id":13,"avatar":"https://example.com/avatar13.jpg","username":"User13"}},{"badges":[],"score":860,"problemsSolved":86,"rank":14,"accuracy":88.0,"streak":16,"user":{"displayName":"Student 14","id":14,"avatar":"https://example.com/avatar14.jpg","username":"User14"}},{"badges":[],"score":850,"problemsSolved":85,"rank":15,"accuracy":87.5,"streak":15,"user":{"displayName":"Student 15","id":15,"avatar":"https://example.com/avatar15.jpg","username":"User15"}},{"badges":[],"score":840,"problemsSolved":84,"rank":16,"accuracy":87.0,"streak":14,"user":{"displayName":"Student 16","id":16,"avatar":"https://example.com/avatar16.jpg","username":"User16"}},{"badges":[],"score":830,"problemsSolved":83,"rank":17,"accuracy":86.5,"streak":13,"user":{"displayName":"Student 17","id":17,"avatar":"https://example.com/avatar17.jpg","username":"User17"}},{"badges":[],"score":820,"problemsSolved":82,"rank":18,"accuracy":86.0,"streak":12,"user":{"displayName":"Student 18","id":18,"avatar":"https://example.com/avatar18.jpg","username":"User18"}},{"badges":[],"score":810,"problemsSolved":81,"rank":19,"accuracy":85.5,"streak":11,"user":{"displayName":"Student 19","id":19,"avatar":"https://example.com/avatar19.jpg","username":"User19"}},{"badges":[],"score":800,"problemsSolved":80,"rank":20,"accuracy":85.0,"streak":10,"user":{"displayName":"Student 20","id":20,"avatar":"https://example.com/avatar20.jpg","username":"User20"}}],"totalUsers":200,"userRank":2,"classLevel":"CLASS_10"}}
+
+## PERSONALIZED EXAMS
+
+## Get Personalized Exams
+GET /personalized-exams
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Get Personalized Exam Stats
+GET /personalized-exams/stats
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Completed Personalized Exams
+GET /personalized-exams?status=COMPLETED
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"content":[],"pageable":{"pageNumber":0,"pageSize":20,"sort":{"sorted":true,"empty":false,"unsorted":false},"offset":0,"paged":true,"unpaged":false},"totalElements":0,"totalPages":0,"last":true,"size":20,"number":0,"sort":{"sorted":true,"empty":false,"unsorted":false},"numberOfElements":0,"first":true,"empty":true}}
+
+## Create Personalized Exam
+POST /personalized-exams
+Headers: Authorization: Bearer <token>
+Request:
+{
+  "subjectId": 2,
+  "difficulty": "MEDIUM", 
+  "questionCount": 10,
+  "duration": 30,
+  "classLevel": "CLASS_10"
+}
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## Get Personalized Exam by ID
+GET /personalized-exams/1
+Headers: Authorization: Bearer <token>
+Response:
+
+
+## Start Personalized Exam
+POST /personalized-exams/1/start
+Headers: Authorization: Bearer <token>
+Response:
+{"success":false,"error":"Access denied: Access Denied"}
+
+## ADMIN ENDPOINTS
+
+## Get Admin Analytics
+GET /admin/analytics
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"examStats":{"totalExams":500,"activeExams":25,"completionRate":78.2,"averageScore":76.5},"engagementStats":{"questionsPerDay":15000,"avgSessionTime":25,"dailyActiveUsers":2500,"streakParticipation":65.8},"userStats":{"totalUsers":10000,"retentionRate":85.5,"activeUsers":8500,"newUsersThisWeek":150},"performanceStats":{"averageTime":42,"difficultyDistribution":{"medium":35,"expert":5,"hard":20,"easy":40},"overallAccuracy":74.8}}}
+
+## Get Monthly Admin Analytics
+GET /admin/analytics?period=MONTHLY
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"examStats":{"totalExams":500,"activeExams":25,"completionRate":78.2,"averageScore":76.5},"engagementStats":{"questionsPerDay":15000,"avgSessionTime":25,"dailyActiveUsers":2500,"streakParticipation":65.8},"userStats":{"totalUsers":10000,"retentionRate":85.5,"activeUsers":8500,"newUsersThisWeek":150},"performanceStats":{"averageTime":42,"difficultyDistribution":{"medium":35,"expert":5,"hard":20,"easy":40},"overallAccuracy":74.8}}}
+
+## Test Practice Problems (ADMIN)
+GET /admin/practice-problems-test
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"problems":[],"size":10,"currentPage":0,"totalPages":0,"totalElements":0},"message":"Practice problems retrieved successfully"}
+
+## Set Daily Questions (ADMIN)
+PUT /admin/daily-questions
+Headers: Authorization: Bearer <token>
+Request:
+{"date":"2025-07-24","questionIds":[1,2,3,4,5]}
+Response:
+{"success":false,"error":"An unexpected error occurred. Please try again later."}
+
+## Create Practice Problems from Random Questions
+POST /admin/create-practice-problems?subjectId=2&count=10
+Headers: Authorization: Bearer <token>
+Response:
+{"success":true,"data":{"total":1,"skipped":1,"created":0,"message":"Created 0 practice problems from 1 questions"},"message":"Practice problems created successfully"}
+
+## Create Practice Problems from Question IDs
+POST /admin/create-practice-problems-from-ids
+Headers: Authorization: Bearer <token>
+Request:
+[1,2,3,4,5]
+Response:
+{"success":true,"data":{"total":5,"skipped":5,"created":0,"message":"Created 0 practice problems from 5 question IDs"},"message":"Practice problems created successfully"}
+
+## HEALTH CHECK
+
+## Health Check
+GET /actuator/health
+Response:
+{"status":"UP","components":{"db":{"status":"UP","details":{"database":"PostgreSQL","validationQuery":"isValid()"}},"diskSpace":{"status":"UP","details":{"total":250375106560,"free":109240950784,"threshold":10485760,"path":"/home/pridesys/projects/408_backend/educonnect-auth-service/assessment-service/.","exists":true}},"ping":{"status":"UP"},"rabbit":{"status":"UP","details":{"version":"3.12.14"}},"redis":{"status":"UP","details":{"version":"7.4.5"}},"ssl":{"status":"UP","details":{"validChains":[],"invalidChains":[]}}}}
+

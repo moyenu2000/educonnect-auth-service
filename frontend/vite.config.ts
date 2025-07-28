@@ -1,0 +1,31 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import * as path from 'path'
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 3000,
+    proxy: {
+      '/api/auth': {
+        target: `http://${process.env.VM_IP || '35.188.75.223'}:8081`,
+        changeOrigin: true,
+      },
+      '/api/assessment': {
+        target: `http://${process.env.VM_IP || '35.188.75.223'}:8083`,
+        changeOrigin: true,
+      },
+      '/api/discussion': {
+        target: `http://${process.env.VM_IP || '35.188.75.223'}:8082`,
+        changeOrigin: true,
+      }
+    }
+  }
+})

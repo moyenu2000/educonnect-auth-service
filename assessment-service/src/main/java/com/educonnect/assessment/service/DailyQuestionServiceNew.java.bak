@@ -1,0 +1,449 @@
+package com.educonnect.assessment.service;
+
+import com.educonnect.assessment.dto.PagedResponse;
+import com.educonnect.assessment.entity.*;
+import com.educonnect.assessment.enums.ClassLevel;
+import com.educonnect.assessment.enums.Difficulty;
+import com.educonnect.assessment.exception.ResourceNotFoundException;
+import com.educonnect.assessment.repository.*;
+import com.educonnect.assessment.util.SecurityUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class DailyQuestionServiceNew {
+
+    @Autowired
+    private DailyQuestionRepository dailyQuestionRepository;
+
+    @Autowired
+    private DailyQuestionSubmissionRepository dailyQuestionSubmissionRepository;
+
+    @Autowired
+    private DailyAnalyticsRepository dailyAnalyticsRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private UserStreakRepository userStreakRepository;
+
+    public Map<String, Object> getDailyQuestions(LocalDate date, UUID subjectId, ClassLevel classLevel, Difficulty difficulty) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        List<DailyQuestion> dailyQuestions;
+        if (difficulty != null) {
+            dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestionsWithDifficulty(date, subjectId, classLevel, difficulty);
+        } else {
+            dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestions(date, subjectId, classLevel);
+        }
+
+        // Get current user ID if authenticated
+        Optional<Long> currentUserId = SecurityUtils.getCurrentUserId();
+        UUID userUuid = null;
+        if (currentUserId.isPresent()) {
+            userUuid = UUID.fromString(currentUserId.get().toString());
+        }
+
+        // Transform to the required format
+        List<Map<String, Object>> questionsList = new ArrayList<>();
+        for (DailyQuestion dq : dailyQuestions) {
+            Question question = dq.getQuestion();
+            if (question != null) {
+                Map<String, Object> questionData = new HashMap<>();
+                
+                // Question text
+                questionData.put("questionText", question.getText());
+                
+                // Attempt status
+                boolean attempted = false;
+                if (userUuid != null) {
+                    attempted = dailyQuestionSubmissionRepository.existsByUserIdAndDailyQuestionId(userUuid, dq.getId());
+                }
+                questionData.put("attempted", attempted);
+                
+                // Solve count (total submissions for this daily question)
+                long solveCount = dailyQuestionSubmissionRepository.findByDailyQuestionId(dq.getId()).size();
+                questionData.put("solveCount", solveCount);
+                
+                // Difficulty from daily question
+                questionData.put("difficulty", dq.getDifficulty());
+                
+                // Points
+                questionData.put("points", dq.getPoints());
+                
+                // Subject information
+                Subject subject = dq.getSubject();
+                if (subject != null) {
+                    Map<String, Object> subjectInfo = new HashMap<>();
+                    subjectInfo.put("id", subject.getId());
+                    subjectInfo.put("name", subject.getName());
+                    questionData.put("subject", subjectInfo);
+                }
+                
+                // Topic information
+                Topic topic = question.getTopic();
+                if (topic != null) {
+                    Map<String, Object> topicInfo = new HashMap<>();
+                    topicInfo.put("id", topic.getId());
+                    topicInfo.put("name", topic.getName());
+                    questionData.put("topic", topicInfo);
+                } else {
+                    questionData.put("topic", null);
+                }
+                
+                // Add daily question ID for submission
+                questionData.put("dailyQuestionId", dq.getId());
+                
+                questionsList.add(questionData);
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("questions", questionsList);
+        result.put("totalQuestions", questionsList.size());
+        result.put("date", date);
+
+        return result;
+    }
+
+    public Map<String, Object> getDailyQuestionDetails(LocalDate date, UUID subjectId, ClassLevel classLevel) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestions(date, subjectId, classLevel);
+        
+        UUID userId = UUID.fromString(SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated")).toString());
+
+        // Convert to detailed response with question content and submission status
+        List<Map<String, Object>> questionDetails = dailyQuestions.stream()
+                .map(dq -> {
+                    Map<String, Object> details = new HashMap<>();
+                    Question question = dq.getQuestion();
+                    
+                    if (question != null) {
+                        details.put("id", dq.getId());
+                        details.put("questionId", dq.getQuestionId());
+                        details.put("questionText", question.getText());
+                        details.put("options", question.getOptions());
+                        details.put("points", dq.getPoints());
+                        details.put("bonusPoints", dq.getBonusPoints());
+                        details.put("subjectId", dq.getSubjectId());
+                        details.put("date", dq.getDate());
+                        
+                        // Check if user has attempted this question
+                        Optional<DailyQuestionSubmission> submission = dailyQuestionSubmissionRepository
+                                .findByUserIdAndDailyQuestionId(userId, dq.getId());
+                        
+                        details.put("attempted", submission.isPresent());
+                        if (submission.isPresent()) {
+                            DailyQuestionSubmission sub = submission.get();
+                            details.put("correct", sub.getIsCorrect());
+                            details.put("userAnswer", sub.getAnswer());
+                            details.put("pointsEarned", sub.getPointsEarned());
+                            details.put("timeTaken", sub.getTimeTakenSeconds());
+                            details.put("submittedAt", sub.getSubmittedAt());
+                        }
+                    }
+                    
+                    return details;
+                })
+                .collect(Collectors.toList());
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("questions", questionDetails);
+        result.put("totalQuestions", questionDetails.size());
+        result.put("date", date);
+
+        // Add analytics
+        Map<String, Object> analytics = getUserDailyStats(userId, date, subjectId);
+        result.put("analytics", analytics);
+
+        return result;
+    }
+
+    public Map<String, Object> submitDailyQuestionAnswer(UUID dailyQuestionId, String answer, 
+                                                       Integer timeTakenSeconds, String explanation) {
+        UUID userId = UUID.fromString(SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new IllegalStateException("User must be authenticated")).toString());
+
+        // Check if already answered
+        if (dailyQuestionSubmissionRepository.existsByUserIdAndDailyQuestionId(userId, dailyQuestionId)) {
+            throw new IllegalArgumentException("You have already answered this daily question");
+        }
+
+        // Find the daily question
+        DailyQuestion dailyQuestion = dailyQuestionRepository.findById(dailyQuestionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Daily question not found"));
+
+        Question question = dailyQuestion.getQuestion();
+        if (question == null) {
+            throw new ResourceNotFoundException("Question not found");
+        }
+
+        // Check if it's today's question
+        if (!dailyQuestion.getDate().equals(LocalDate.now())) {
+            throw new IllegalArgumentException("This daily question is not available today");
+        }
+
+        // Evaluate answer
+        boolean isCorrect = evaluateAnswer(question, answer);
+        int pointsEarned = isCorrect ? dailyQuestion.getPoints() : 0;
+        
+        // Add bonus points if answered quickly (example: under 30 seconds)
+        if (isCorrect && timeTakenSeconds != null && timeTakenSeconds <= 30) {
+            pointsEarned += dailyQuestion.getBonusPoints();
+        }
+
+        // Create submission
+        DailyQuestionSubmission submission = new DailyQuestionSubmission();
+        submission.setUserId(userId);
+        submission.setDailyQuestionId(dailyQuestionId);
+        submission.setQuestionId(dailyQuestion.getQuestionId());
+        submission.setAnswer(answer);
+        submission.setIsCorrect(isCorrect);
+        submission.setPointsEarned(pointsEarned);
+        submission.setTimeTakenSeconds(timeTakenSeconds != null ? timeTakenSeconds : 0);
+
+        // Capture request metadata
+        try {
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            submission.setIpAddress(getClientIpAddress(request));
+            submission.setDeviceInfo(getDeviceInfo(request));
+        } catch (Exception e) {
+            // Log but don't fail the submission
+        }
+
+        dailyQuestionSubmissionRepository.save(submission);
+
+        // Update analytics
+        updateDailyAnalytics(userId, dailyQuestion.getSubjectId(), LocalDate.now());
+
+        // Update streak
+        updateUserStreak(userId, dailyQuestion.getSubjectId(), isCorrect);
+
+        // Prepare response
+        Map<String, Object> result = new HashMap<>();
+        result.put("correct", isCorrect);
+        result.put("pointsEarned", pointsEarned);
+        result.put("timeTaken", timeTakenSeconds);
+        
+        if (isCorrect || true) { // Show correct answer based on your policy
+            result.put("correctAnswer", question.getCorrectAnswer());
+            result.put("explanation", question.getExplanation());
+        }
+
+        // Add updated stats
+        Map<String, Object> updatedStats = getUserDailyStats(userId, LocalDate.now(), dailyQuestion.getSubjectId());
+        result.put("updatedStats", updatedStats);
+
+        return result;
+    }
+
+    public PagedResponse<DailyQuestionSubmission> getDailyQuestionHistory(UUID userId, int page, int size, 
+                                                                        UUID subjectId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("submittedAt").descending());
+        
+        Page<DailyQuestionSubmission> submissions;
+        if (subjectId != null) {
+            submissions = dailyQuestionSubmissionRepository.findByUserIdAndSubjectId(userId, subjectId, pageable);
+        } else {
+            submissions = dailyQuestionSubmissionRepository.findByUserIdOrderBySubmittedAtDesc(userId, pageable);
+        }
+
+        return new PagedResponse<>(
+                submissions.getContent(),
+                (int) submissions.getTotalElements(),
+                submissions.getTotalPages(),
+                submissions.getNumber(),
+                submissions.getSize()
+        );
+    }
+
+    public Map<String, Object> getUserDailyStats(UUID userId, LocalDate date, UUID subjectId) {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Get today's analytics
+        List<DailyAnalytics> analytics = dailyAnalyticsRepository.findByUserIdAndDate(userId, date);
+        
+        if (subjectId != null) {
+            analytics = analytics.stream()
+                    .filter(a -> subjectId.equals(a.getSubjectId()))
+                    .collect(Collectors.toList());
+        }
+
+        int totalAttempted = analytics.stream().mapToInt(DailyAnalytics::getQuestionsAttempted).sum();
+        int totalSolved = analytics.stream().mapToInt(DailyAnalytics::getQuestionsSolved).sum();
+        int totalPoints = analytics.stream().mapToInt(DailyAnalytics::getTotalPointsEarned).sum();
+        
+        stats.put("date", date);
+        stats.put("questionsAttempted", totalAttempted);
+        stats.put("questionsSolved", totalSolved);
+        stats.put("totalPoints", totalPoints);
+        stats.put("accuracy", totalAttempted > 0 ? (double) totalSolved / totalAttempted * 100 : 0);
+
+        // Get streak info
+        Long currentStreak = dailyAnalyticsRepository.getCurrentStreakCount(userId, subjectId);
+        stats.put("currentStreak", currentStreak != null ? currentStreak : 0);
+
+        return stats;
+    }
+
+    @Transactional
+    public void setDailyQuestions(LocalDate date, List<UUID> questionIds, Map<String, Object> config) {
+        // Remove existing questions for the date
+        List<DailyQuestion> existing = dailyQuestionRepository.findByDate(date);
+        dailyQuestionRepository.deleteAll(existing);
+
+        // Add new questions
+        for (UUID questionId : questionIds) {
+            // Convert UUID to Long for Question repository lookup (assuming Question still uses Long IDs)
+            Long questionIdLong = Long.valueOf(questionId.toString().hashCode()); // Temporary conversion
+            Question question = questionRepository.findById(questionIdLong)
+                    .orElseThrow(() -> new ResourceNotFoundException("Question not found: " + questionId));
+
+            DailyQuestion dailyQuestion = new DailyQuestion();
+            dailyQuestion.setQuestionId(questionId);
+            dailyQuestion.setDate(date);
+            // Convert Long to UUID for subject ID
+            dailyQuestion.setSubjectId(UUID.fromString(question.getSubjectId().toString()));
+            
+            // Set points from config or default
+            Integer points = (Integer) config.getOrDefault("points", 1);
+            Integer bonusPoints = (Integer) config.getOrDefault("bonusPoints", 0);
+            String difficultyStr = (String) config.getOrDefault("difficulty", "MEDIUM");
+            
+            dailyQuestion.setPoints(points);
+            dailyQuestion.setBonusPoints(bonusPoints);
+            
+            // Set difficulty from config or default to MEDIUM
+            try {
+                Difficulty difficulty = Difficulty.valueOf(difficultyStr.toUpperCase());
+                dailyQuestion.setDifficulty(difficulty);
+            } catch (IllegalArgumentException e) {
+                dailyQuestion.setDifficulty(Difficulty.MEDIUM);
+            }
+
+            dailyQuestionRepository.save(dailyQuestion);
+        }
+    }
+
+    private boolean evaluateAnswer(Question question, String answer) {
+        if (question.getCorrectAnswer() == null || answer == null) {
+            return false;
+        }
+        return question.getCorrectAnswer().trim().equalsIgnoreCase(answer.trim());
+    }
+
+    private void updateDailyAnalytics(UUID userId, UUID subjectId, LocalDate date) {
+        // Get or create analytics entry
+        Optional<DailyAnalytics> existing = dailyAnalyticsRepository
+                .findByUserIdAndDateAndSubjectId(userId, date, subjectId);
+        
+        DailyAnalytics analytics = existing.orElse(new DailyAnalytics(userId, subjectId, date));
+
+        // Get submissions for this date and subject
+        List<DailyQuestionSubmission> submissions = dailyQuestionSubmissionRepository
+                .findForAnalytics(userId, date, subjectId);
+
+        if (!submissions.isEmpty()) {
+            int attempted = submissions.size();
+            int correct = (int) submissions.stream().filter(DailyQuestionSubmission::getIsCorrect).count();
+            int totalPoints = submissions.stream().mapToInt(DailyQuestionSubmission::getPointsEarned).sum();
+            int totalTime = submissions.stream().mapToInt(DailyQuestionSubmission::getTimeTakenSeconds).sum();
+
+            analytics.updateStats(attempted, correct, totalPoints, totalTime);
+        }
+
+        dailyAnalyticsRepository.save(analytics);
+    }
+
+    private void updateUserStreak(UUID userId, UUID subjectId, boolean isCorrect) {
+        // Convert UUID to Long for compatibility with existing UserStreak entity
+        // Note: You might want to update UserStreak to use UUID as well
+        Long userIdLong = userId.getMostSignificantBits(); // Temporary conversion
+        Long subjectIdLong = subjectId.getMostSignificantBits(); // Temporary conversion
+
+        Optional<UserStreak> existingStreak = userStreakRepository.findByUserIdAndSubjectId(userIdLong, subjectIdLong);
+        
+        UserStreak streak = existingStreak.orElse(new UserStreak());
+        if (!existingStreak.isPresent()) {
+            streak.setUserId(userIdLong);
+            streak.setSubjectId(subjectIdLong);
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate lastActivity = streak.getLastActivity();
+
+        if (isCorrect) {
+            if (lastActivity != null && lastActivity.equals(today.minusDays(1))) {
+                streak.setCurrentStreak(streak.getCurrentStreak() + 1);
+            } else if (lastActivity == null || !lastActivity.equals(today)) {
+                streak.setCurrentStreak(1);
+            }
+            
+            if (streak.getCurrentStreak() > streak.getLongestStreak()) {
+                streak.setLongestStreak(streak.getCurrentStreak());
+            }
+        } else {
+            streak.setCurrentStreak(0);
+        }
+
+        streak.setLastActivity(today);
+        streak.setIsActive(isCorrect);
+        userStreakRepository.save(streak);
+    }
+
+    private String getClientIpAddress(HttpServletRequest request) {
+        String[] headers = {
+            "X-Forwarded-For",
+            "X-Real-IP", 
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP",
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_FORWARDED",
+            "HTTP_X_CLUSTER_CLIENT_IP",
+            "HTTP_CLIENT_IP",
+            "HTTP_FORWARDED_FOR",
+            "HTTP_FORWARDED",
+            "HTTP_VIA",
+            "REMOTE_ADDR"
+        };
+
+        for (String header : headers) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                return ip.split(",")[0].trim();
+            }
+        }
+        
+        return request.getRemoteAddr();
+    }
+
+    private Map<String, Object> getDeviceInfo(HttpServletRequest request) {
+        Map<String, Object> deviceInfo = new HashMap<>();
+        deviceInfo.put("userAgent", request.getHeader("User-Agent"));
+        deviceInfo.put("acceptLanguage", request.getHeader("Accept-Language"));
+        deviceInfo.put("acceptEncoding", request.getHeader("Accept-Encoding"));
+        return deviceInfo;
+    }
+}
