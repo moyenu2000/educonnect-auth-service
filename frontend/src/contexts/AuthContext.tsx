@@ -35,14 +35,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const userData = await authService.getCurrentUser();
         setUser(userData);
+        // Store user data in localStorage for messaging components
+        localStorage.setItem('user', JSON.stringify(userData));
       } catch (error) {
         // Token is invalid or expired, clear it
         authService.clearAuth();
         setUser(null);
+        localStorage.removeItem('user');
         console.log('Auth token invalid, cleared from storage');
       }
     } else {
       setUser(null);
+      localStorage.removeItem('user');
     }
     setIsLoading(false);
   };
@@ -56,6 +60,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     if (response.success && response.user && !response.requiresTwoFactor) {
       setUser(response.user);
+      // Store user data in localStorage for messaging components
+      localStorage.setItem('user', JSON.stringify(response.user));
     }
     
     return {
@@ -73,11 +79,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
+      localStorage.removeItem('user');
     }
   };
 
   const updateUser = (userData: User) => {
     setUser(userData);
+    // Update user data in localStorage for messaging components
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const value: AuthContextType = {

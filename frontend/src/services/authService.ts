@@ -74,6 +74,10 @@ class AuthService {
     if (result.accessToken) {
       localStorage.setItem('accessToken', result.accessToken);
       localStorage.setItem('refreshToken', result.refreshToken);
+      // Store user data if returned
+      if (result.user) {
+        localStorage.setItem('user', JSON.stringify(result.user));
+      }
     }
     
     return result;
@@ -108,6 +112,10 @@ class AuthService {
     if (result.accessToken) {
       localStorage.setItem('accessToken', result.accessToken);
       localStorage.setItem('refreshToken', result.refreshToken);
+      // Store user data if returned
+      if (result.user) {
+        localStorage.setItem('user', JSON.stringify(result.user));
+      }
     }
     
     return result;
@@ -124,6 +132,10 @@ class AuthService {
     if (result.accessToken) {
       localStorage.setItem('accessToken', result.accessToken);
       localStorage.setItem('refreshToken', result.refreshToken);
+      // Store user data if returned
+      if (result.user) {
+        localStorage.setItem('user', JSON.stringify(result.user));
+      }
     }
     
     return result;
@@ -286,6 +298,7 @@ class AuthService {
   clearAuth(): void {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
   }
 }
 
