@@ -12,18 +12,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 80,
     proxy: {
       '/api/auth': {
-        target: `http://${process.env.VM_IP || 'localhost'}:8081`,
+        target: process.env.VITE_AUTH_URL || 'http://localhost:8081',
         changeOrigin: true,
       },
       '/api/assessment': {
-        target: `http://${process.env.VM_IP || 'localhost'}:8083`,
+        target: process.env.VITE_ASSESSMENT_URL || 'http://localhost:8083',
         changeOrigin: true,
       },
       '/api/discussion': {
-        target: `http://${process.env.VM_IP || 'localhost'}:8082`,
+        target: process.env.VITE_DISCUSSION_URL || 'http://localhost:8082',
         changeOrigin: true,
       }
     }

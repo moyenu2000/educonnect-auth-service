@@ -8,17 +8,15 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
+      - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=educonnect
-      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+      - POSTGRES_DB=${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./educonnect-init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d educonnect"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -70,22 +68,24 @@ services:
     image: ${DOCKER_HUB_USERNAME}/auth-service:latest
     container_name: educonnect-auth-service
     ports:
-      - "8081:8081"
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - DB_USER=${DB_USER}
+      - DB_NAME=${DB_NAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - APP_BASE_URL=${APP_BASE_URL}
       - FRONTEND_URL=${FRONTEND_URL}
-      - SERVER_SERVLET_CONTEXT_PATH=/api/v1
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
+      - SERVER_CONTEXT_PATH=${SERVER_CONTEXT_PATH}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - SPRING_RABBITMQ_HOST=${SPRING_RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${SPRING_RABBITMQ_PORT}
+      - SPRING_RABBITMQ_USERNAME=${SPRING_RABBITMQ_USERNAME}
+      - SPRING_RABBITMQ_PASSWORD=${SPRING_RABBITMQ_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,7 +96,7 @@ services:
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -108,16 +108,24 @@ services:
     image: ${DOCKER_HUB_USERNAME}/discussion-service:latest
     container_name: educonnect-discussion-service
     ports:
-      - "8082:8082"
+      - "${DISCUSSION_SERVICE_PORT}:${DISCUSSION_SERVICE_PORT}"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - FRONTEND_URL=${FRONTEND_URL}
       - JWT_SECRET=${JWT_SECRET}
-      - SERVER_SERVLET_CONTEXT_PATH=/api/v1
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
+      - AUTH_URL=${AUTH_URL}
+      - ASSESSMENT_URL=${ASSESSMENT_URL}
+      - DISCUSSION_SERVICE_PORT=${DISCUSSION_SERVICE_PORT}
+      - SERVER_CONTEXT_PATH=${SERVER_CONTEXT_PATH}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - SPRING_RABBITMQ_HOST=${SPRING_RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${SPRING_RABBITMQ_PORT}
+      - SPRING_RABBITMQ_USERNAME=${SPRING_RABBITMQ_USERNAME}
+      - SPRING_RABBITMQ_PASSWORD=${SPRING_RABBITMQ_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,7 +136,7 @@ services:
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/api/v1/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8082/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -140,17 +148,24 @@ services:
     image: ${DOCKER_HUB_USERNAME}/assessment-service:latest
     container_name: educonnect-assessment-service
     ports:
-      - "8083:8083"
+      - "${ASSESSMENT_SERVICE_PORT}:${ASSESSMENT_SERVICE_PORT}"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - DB_USER=${DB_USER:-postgres}
+      - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
       - JWT_SECRET=${JWT_SECRET}
-      - SERVER_SERVLET_CONTEXT_PATH=/api/v1
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - AUTH_URL=${AUTH_URL}
+      - DISCUSSION_URL=${DISCUSSION_URL}
+      - ASSESSMENT_SERVICE_PORT=${ASSESSMENT_SERVICE_PORT}
+      - SERVER_CONTEXT_PATH=${SERVER_CONTEXT_PATH}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - SPRING_RABBITMQ_HOST=${SPRING_RABBITMQ_HOST}
+      - SPRING_RABBITMQ_PORT=${SPRING_RABBITMQ_PORT}
+      - SPRING_RABBITMQ_USERNAME=${SPRING_RABBITMQ_USERNAME}
+      - SPRING_RABBITMQ_PASSWORD=${SPRING_RABBITMQ_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
@@ -161,7 +176,7 @@ services:
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8083/api/v1/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8083/api/v1/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -173,13 +188,11 @@ services:
     image: ${DOCKER_HUB_USERNAME}/educonnect-frontend:latest
     container_name: educonnect-frontend
     ports:
-      - "3000:80"
-    volumes:
-      - ./nginx-fixed.conf:/etc/nginx/nginx.conf:ro
+      - "80:80"
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s
       timeout: 10s
       retries: 3

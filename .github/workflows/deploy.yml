@@ -144,9 +144,9 @@ jobs:
         run: |
           cd frontend
           cat > .env << EOF
-          VM_IP=${{ secrets.VM_IP || '35.188.75.223' }}
-          VITE_VM_IP=${{ secrets.VM_IP || '35.188.75.223' }}
-          VITE_API_BASE_URL=http://${{ secrets.VM_IP || '35.188.75.223' }}
+          VM_IP=${{ secrets.VM_IP }}
+          VITE_VM_IP=${{ secrets.VM_IP }}
+          VITE_API_BASE_URL=http://${{ secrets.VM_IP }}
           EOF
           
       - name: Build frontend
@@ -182,7 +182,6 @@ jobs:
           gcloud compute scp docker-compose.prod.yml auth-service-vm:~/ --zone=us-central1-a
           gcloud compute scp scripts/cleanup.sh auth-service-vm:~/ --zone=us-central1-a
           gcloud compute scp educonnect-init-db.sql auth-service-vm:~/ --zone=us-central1-a
-          gcloud compute scp nginx-fixed.conf auth-service-vm:~/ --zone=us-central1-a
           
           gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
             # Clean up disk space
@@ -191,23 +190,35 @@ jobs:
             sudo apt-get autoclean
             
             # Create .env file with VM IP configuration
-            VM_IP="${{ secrets.VM_IP || '35.188.75.223' }}"
+            VM_IP="${{ secrets.VM_IP }}"
             cat > .env << EOF
-          VM_IP=$VM_IP
           DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
+          DB_USER=${{ secrets.DB_USER }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_USER=${{ secrets.DB_USER || 'postgres' }}
+          DB_NAME=${{ secrets.DB_NAME }}
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
-          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-          APP_BASE_URL=http://$VM_IP:8081
-          FRONTEND_URL=http://$VM_IP:3000
-          FILE_BASE_URL=http://$VM_IP:8082/api/v1/files
-          RABBITMQ_USER=${{ secrets.RABBITMQ_USER || 'educonnect' }}
-          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD || 'educonnect123' }}
-          GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          AUTH_URL=${{ secrets.AUTH_URL }}
+          ASSESSMENT_URL=${{ secrets.ASSESSMENT_URL }}
+          DISCUSSION_URL=${{ secrets.DISCUSSION_URL }}
+          FILE_BASE_URL=${{ secrets.FILE_BASE_URL }}
+          AUTH_SERVICE_PORT=${{ secrets.AUTH_SERVICE_PORT }}
+          DISCUSSION_SERVICE_PORT=${{ secrets.DISCUSSION_SERVICE_PORT }}
+          ASSESSMENT_SERVICE_PORT=${{ secrets.ASSESSMENT_SERVICE_PORT }}
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          REDIS_PORT=${{ secrets.REDIS_PORT }}
+          SERVER_CONTEXT_PATH=${{ secrets.SERVER_CONTEXT_PATH }}
+          SPRING_RABBITMQ_HOST=${{ secrets.SPRING_RABBITMQ_HOST }}
+          SPRING_RABBITMQ_PORT=${{ secrets.SPRING_RABBITMQ_PORT }}
+          SPRING_RABBITMQ_USERNAME=${{ secrets.SPRING_RABBITMQ_USERNAME }}
+          SPRING_RABBITMQ_PASSWORD=${{ secrets.SPRING_RABBITMQ_PASSWORD }}
+          VITE_AUTH_URL=${{ secrets.AUTH_URL }}
+          VITE_ASSESSMENT_URL=${{ secrets.ASSESSMENT_URL }}
+          VITE_DISCUSSION_URL=${{ secrets.DISCUSSION_URL }}
           EOF
             
             # Make cleanup script executable
@@ -224,7 +235,7 @@ jobs:
             echo "Waiting for database to be ready..."
             timeout=300
             while [ $timeout -gt 0 ]; do
-              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres pg_isready -U postgres -d educonnect; then
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME }}; then
                 echo "Database is ready!"
                 break
               fi
@@ -282,7 +293,7 @@ jobs:
             # Wait for auth-service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
+              if curl -f http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Auth service is ready!"
                 exit 0
               fi
@@ -312,7 +323,7 @@ jobs:
             # Wait for discussion-service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
+              if curl -f http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Discussion service is ready!"
                 exit 0
               fi
@@ -342,7 +353,7 @@ jobs:
             # Wait for assessment-service to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
+              if curl -f http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
                 echo "Assessment service is ready!"
                 exit 0
               fi
@@ -372,7 +383,7 @@ jobs:
             # Wait for frontend to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if wget --no-verbose --tries=1 --spider http://localhost:3000 >/dev/null 2>&1; then
+              if curl -f http://localhost:80 >/dev/null 2>&1; then
                 echo "Frontend is ready!"
                 exit 0
               fi
@@ -403,7 +414,7 @@ jobs:
               "auth-service:8081:/api/v1/actuator/health"
               "discussion-service:8082:/api/v1/actuator/health"
               "assessment-service:8083:/api/v1/actuator/health"
-              "frontend:3000:/"
+              "frontend:80:/"
             )
             
             all_healthy=true
@@ -411,7 +422,7 @@ jobs:
               IFS=: read -r service_name port health_path <<< "$service_info"
               echo "🔍 Checking $service_name on port $port..."
               
-              if wget --no-verbose --tries=1 --spider "http://localhost:$port$health_path" >/dev/null 2>&1; then
+              if curl -f "http://localhost:$port$health_path" >/dev/null 2>&1; then
                 echo "✅ $service_name is healthy"
               else
                 echo "❌ $service_name is not responding"

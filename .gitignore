@@ -21,3 +21,5 @@ Thumbs.db
 # Application-specific
 uploads/
 temp/
+
+.env
