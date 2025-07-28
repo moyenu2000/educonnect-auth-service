@@ -7,6 +7,7 @@ import com.educonnect.discussion.enums.DiscussionType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -46,8 +47,16 @@ public class DiscussionDto {
         this.subjectId = discussion.getSubjectId();
         this.topicId = discussion.getTopicId();
         this.classLevel = discussion.getClassLevel();
-        this.tags = discussion.getTags();
-        this.attachments = discussion.getAttachments();
+        try {
+            this.tags = discussion.getTags();
+        } catch (Exception e) {
+            this.tags = new ArrayList<>();
+        }
+        try {
+            this.attachments = discussion.getAttachments();
+        } catch (Exception e) {
+            this.attachments = new ArrayList<>();
+        }
         this.isAnonymous = discussion.getIsAnonymous();
         this.upvotesCount = discussion.getUpvotesCount();
         this.downvotesCount = discussion.getDownvotesCount();

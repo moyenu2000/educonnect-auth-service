@@ -17,7 +17,8 @@ import {
   ArrowLeft,
   Calendar,
   User,
-  Filter
+  Filter,
+  X
 } from 'lucide-react';
 
 interface Discussion {
@@ -65,6 +66,17 @@ const GroupDiscussions: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [sortBy, setSortBy] = useState('NEWEST');
+  
+  // Modal state for creating discussion
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    type: 'GENERAL' as 'QUESTION' | 'HELP' | 'GENERAL' | 'ANNOUNCEMENT',
+    tags: '',
+    isAnonymous: false
+  });
 
   const fetchGroupDetails = useCallback(async () => {
     if (!groupId) return;
@@ -122,6 +134,43 @@ const GroupDiscussions: React.FC = () => {
     e.preventDefault();
     setCurrentPage(0);
     loadDiscussions(0);
+  };
+
+  const handleCreateDiscussion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!groupId || !formData.title.trim() || !formData.content.trim()) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    try {
+      setCreateLoading(true);
+      const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      
+      await discussionService.createGroupDiscussion(parseInt(groupId), {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        type: formData.type,
+        tags: tagsArray,
+        isAnonymous: formData.isAnonymous
+      });
+
+      setShowCreateModal(false);
+      setFormData({
+        title: '',
+        content: '',
+        type: 'GENERAL',
+        tags: '',
+        isAnonymous: false
+      });
+      showToast('Discussion created successfully!', 'success');
+      loadDiscussions(0); // Reload discussions
+    } catch (error: any) {
+      console.error('Error creating discussion:', error);
+      showToast(error.response?.data?.error || 'Failed to create discussion', 'error');
+    } finally {
+      setCreateLoading(false);
+    }
   };
 
   const getTypeColor = (type: string) => {
@@ -197,7 +246,7 @@ const GroupDiscussions: React.FC = () => {
           </div>
         </div>
         
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => setShowCreateModal(true)}>
           <Plus className="w-4 h-4" />
           New Discussion
         </Button>
@@ -259,7 +308,7 @@ const GroupDiscussions: React.FC = () => {
             <p className="text-gray-500 text-center mb-4">
               {searchQuery ? 'No discussions match your search.' : 'Start the conversation by creating the first discussion!'}
             </p>
-            <Button>
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Create Discussion
             </Button>
@@ -355,6 +404,112 @@ const GroupDiscussions: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Create Discussion Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Create New Discussion</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateModal(false)}
+                disabled={createLoading}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleCreateDiscussion} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title *
+                </label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Enter discussion title..."
+                  required
+                  disabled={createLoading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Content *
+                </label>
+                <textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder="Share your thoughts..."
+                  required
+                  disabled={createLoading}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type
+                </label>
+                <select
+                  value={formData.type}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                  disabled={createLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="GENERAL">General</option>
+                  <option value="QUESTION">Question</option>
+                  <option value="HELP">Help</option>
+                  <option value="ANNOUNCEMENT">Announcement</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags (comma-separated)
+                </label>
+                <Input
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="e.g. math, homework, study-group"
+                  disabled={createLoading}
+                />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="anonymous"
+                  checked={formData.isAnonymous}
+                  onChange={(e) => setFormData({ ...formData, isAnonymous: e.target.checked })}
+                  disabled={createLoading}
+                  className="mr-2"
+                />
+                <label htmlFor="anonymous" className="text-sm text-gray-700">
+                  Post anonymously
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={createLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createLoading}>
+                  {createLoading ? 'Creating...' : 'Create Discussion'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

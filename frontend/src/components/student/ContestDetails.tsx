@@ -94,11 +94,27 @@ const ContestDetails: React.FC = () => {
       console.log('Joining contest:', contest.id)
       const joinResponse = await assessmentService.joinContest(contest.id)
       console.log('Join contest response:', joinResponse)
+      
+      const result = joinResponse.data?.data || joinResponse.data
+      
+      if (result.alreadyJoined) {
+        if (result.hasCompleted) {
+          alert('You have already completed this contest. You cannot participate again.')
+          return
+        } else {
+          // User is already registered but hasn't completed - allow them to continue
+          alert('You are already registered for this contest. Continuing to contest page.')
+        }
+      } else {
+        alert('Successfully joined the contest!')
+      }
+      
       // Navigate to contest taking page
       navigate(`/student/contest/${contest.id}`)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to join contest:', error)
-      alert('Failed to join contest. Please try again.')
+      const errorMessage = error.response?.data?.error || 'Failed to join contest. Please try again.'
+      alert(errorMessage)
     }
   }
 

@@ -24,7 +24,7 @@ public interface ContestService {
     // Contest participation
     List<Question> getContestQuestions(Long contestId);
     Map<String, Object> submitContestAnswer(Long contestId, Long questionId, Long userId, String answer, Integer timeTaken, String explanation);
-    void joinContest(Long contestId, Long userId);
+    Map<String, Object> joinContest(Long contestId, Long userId);
     Map<String, Object> endContestParticipation(Long contestId, Long userId);
     
     // Contest results and leaderboard

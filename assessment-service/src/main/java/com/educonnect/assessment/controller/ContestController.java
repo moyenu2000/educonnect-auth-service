@@ -114,10 +114,11 @@ public class ContestController {
     // Join/Register for contest
     @PostMapping("/{contestId}/join")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<String>> joinContest(@PathVariable Long contestId) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> joinContest(@PathVariable Long contestId) {
         Long userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
-        contestService.joinContest(contestId, userId);
-        return ResponseEntity.ok(ApiResponse.success("Successfully joined the contest"));
+        Map<String, Object> result = contestService.joinContest(contestId, userId);
+        String message = (String) result.get("message");
+        return ResponseEntity.ok(ApiResponse.success(result, message));
     }
 
     // End contest participation (student submits their final answers)

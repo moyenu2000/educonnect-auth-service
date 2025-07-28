@@ -191,7 +191,7 @@ public class ContestServiceImpl implements ContestService {
     }
 
     @Override
-    public void joinContest(Long contestId, Long userId) {
+    public Map<String, Object> joinContest(Long contestId, Long userId) {
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
 
@@ -203,6 +203,8 @@ public class ContestServiceImpl implements ContestService {
         Optional<ContestParticipation> existingParticipation = 
             contestParticipationRepository.findByUserIdAndContestId(userId, contestId);
         
+        Map<String, Object> result = new HashMap<>();
+        
         if (existingParticipation.isEmpty()) {
             // Create new participation record
             ContestParticipation participation = new ContestParticipation();
@@ -213,7 +215,25 @@ public class ContestServiceImpl implements ContestService {
             // Increment participant count
             contest.setParticipants(contest.getParticipants() + 1);
             contestRepository.save(contest);
+            
+            result.put("alreadyJoined", false);
+            result.put("message", "Successfully joined the contest");
+        } else {
+            ContestParticipation participation = existingParticipation.get();
+            result.put("alreadyJoined", true);
+            result.put("hasCompleted", participation.getHasCompleted());
+            result.put("joinedAt", participation.getJoinedAt());
+            result.put("completedAt", participation.getCompletedAt());
+            
+            if (participation.getHasCompleted()) {
+                result.put("message", "You have already completed this contest");
+            } else {
+                result.put("message", "You are already registered for this contest");
+            }
         }
+        
+        result.put("contestStatus", contest.getStatus());
+        return result;
     }
 
     @Override

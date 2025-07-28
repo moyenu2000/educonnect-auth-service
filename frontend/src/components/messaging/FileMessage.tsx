@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { discussionService } from '@/services/discussionService'
 import { 
   Download, 
   File, 
@@ -19,6 +20,7 @@ interface FileMessageProps {
 const FileMessage: React.FC<FileMessageProps> = ({ fileUrl, isOwn }) => {
   const [imageError, setImageError] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   // Extract file information from URL
   const getFileInfo = (url: string) => {
@@ -72,13 +74,35 @@ const FileMessage: React.FC<FileMessageProps> = ({ fileUrl, isOwn }) => {
     return ['mp4', 'webm', 'ogg'].includes(extension)
   }
 
-  const handleDownload = () => {
-    const link = document.createElement('a')
-    link.href = fileUrl
-    link.download = fileInfo.filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+  const handleDownload = async () => {
+    if (isDownloading) return;
+    
+    try {
+      setIsDownloading(true);
+      
+      // Use the authenticated download method from discussionService
+      if (fileUrl.startsWith('/files/')) {
+        // If it's a relative path, extract just the filename
+        const filename = fileUrl.split('/').pop();
+        if (filename) {
+          await discussionService.downloadFile(filename);
+        }
+      } else {
+        // If it's an absolute URL or attachment URL, use downloadAttachment
+        await discussionService.downloadAttachment(fileUrl, fileInfo.filename);
+      }
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback to traditional download if the authenticated method fails
+      const link = document.createElement('a');
+      link.href = fileUrl;
+      link.download = fileInfo.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } finally {
+      setIsDownloading(false);
+    }
   }
 
   const handlePreview = () => {
@@ -158,9 +182,11 @@ const FileMessage: React.FC<FileMessageProps> = ({ fileUrl, isOwn }) => {
               variant="ghost"
               size="sm"
               onClick={handleDownload}
+              disabled={isDownloading}
               className="h-8 w-8 p-0"
+              title={isDownloading ? "Downloading..." : "Download file"}
             >
-              <Download className="w-4 h-4" />
+              <Download className={`w-4 h-4 ${isDownloading ? 'animate-pulse' : ''}`} />
             </Button>
           </div>
         </div>

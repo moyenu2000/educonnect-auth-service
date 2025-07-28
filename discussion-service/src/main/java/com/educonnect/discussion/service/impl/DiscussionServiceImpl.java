@@ -24,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -99,6 +100,7 @@ public class DiscussionServiceImpl implements DiscussionService {
     }
 
     @Override
+    @Transactional
     public DiscussionDto createDiscussion(DiscussionRequest request, Long authorId) {
         User author = userSyncService.getOrCreateUser(authorId);
         
@@ -110,12 +112,12 @@ public class DiscussionServiceImpl implements DiscussionService {
         discussion.setSubjectId(request.getSubjectId());
         discussion.setTopicId(request.getTopicId());
         discussion.setClassLevel(request.getClassLevel());
-        discussion.setTags(request.getTags());
-        discussion.setAttachments(request.getAttachments());
+        discussion.setTags(request.getTags() != null ? request.getTags() : new ArrayList<>());
+        discussion.setAttachments(request.getAttachments() != null ? request.getAttachments() : new ArrayList<>());
         discussion.setIsAnonymous(request.getIsAnonymous() != null ? request.getIsAnonymous() : false);
         
         Discussion savedDiscussion = discussionRepository.save(discussion);
-        return DiscussionDto.fromEntity(savedDiscussion);
+        return enrichDiscussionDto(savedDiscussion, authorId);
     }
 
     @Override
@@ -129,8 +131,8 @@ public class DiscussionServiceImpl implements DiscussionService {
         
         discussion.setTitle(request.getTitle());
         discussion.setContent(request.getContent());
-        discussion.setTags(request.getTags());
-        discussion.setAttachments(request.getAttachments());
+        discussion.setTags(request.getTags() != null ? request.getTags() : new ArrayList<>());
+        discussion.setAttachments(request.getAttachments() != null ? request.getAttachments() : new ArrayList<>());
         
         Discussion savedDiscussion = discussionRepository.save(discussion);
         return enrichDiscussionDto(savedDiscussion, currentUserId);
@@ -310,6 +312,7 @@ public class DiscussionServiceImpl implements DiscussionService {
     }
 
     @Override
+    @Transactional
     public DiscussionDto createGroupDiscussion(Long groupId, DiscussionRequest request, Long authorId) {
         if (!groupMemberRepository.existsByGroupIdAndUserId(groupId, authorId)) {
             throw new UnauthorizedException("You must be a member of this group to create discussions");
@@ -323,12 +326,12 @@ public class DiscussionServiceImpl implements DiscussionService {
         discussion.setType(DiscussionType.GENERAL); // Group discussions are general type
         discussion.setAuthor(author);
         discussion.setGroupId(groupId);
-        discussion.setTags(request.getTags());
-        discussion.setAttachments(request.getAttachments());
+        discussion.setTags(request.getTags() != null ? request.getTags() : new ArrayList<>());
+        discussion.setAttachments(request.getAttachments() != null ? request.getAttachments() : new ArrayList<>());
         discussion.setIsAnonymous(request.getIsAnonymous() != null ? request.getIsAnonymous() : false);
         
         Discussion savedDiscussion = discussionRepository.save(discussion);
-        return DiscussionDto.fromEntity(savedDiscussion);
+        return enrichDiscussionDto(savedDiscussion, authorId);
     }
 
     private DiscussionDto enrichDiscussionDto(Discussion discussion, Long currentUserId) {

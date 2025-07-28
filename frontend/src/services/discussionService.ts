@@ -372,7 +372,92 @@ export const discussionService = {
     })
   },
   
-  downloadFile: (fileName: string) => discussionApi.get(`/files/${fileName}`),
+  downloadFile: async (fileName: string) => {
+    const response = await discussionApi.get(`/files/${fileName}`, {
+      responseType: 'blob', // Important for file downloads
+      headers: {
+        'Accept': '*/*' // Accept any content type
+      }
+    });
+    
+    // Create a blob URL and trigger download
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Extract filename from response headers or use provided fileName
+    const contentDisposition = response.headers['content-disposition'];
+    let downloadFileName = fileName;
+    if (contentDisposition) {
+      const matches = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (matches != null && matches[1]) {
+        downloadFileName = matches[1].replace(/['"]/g, '');
+      }
+    }
+    
+    link.setAttribute('download', downloadFileName);
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    return response;
+  },
+
+  downloadFileById: async (fileId: number) => {
+    // First get file details to get the filename
+    const detailsResponse = await discussionApi.get(`/files/details/${fileId}`);
+    const fileDetails = detailsResponse.data.data;
+    
+    // Then download using the filename
+    return discussionService.downloadFile(fileDetails.fileName);
+  },
+
+  // Helper method to download any attachment URL with authentication
+  downloadAttachment: async (attachmentUrl: string, filename?: string) => {
+    // Extract filename from URL if not provided
+    if (!filename) {
+      const urlParts = attachmentUrl.split('/');
+      filename = urlParts[urlParts.length - 1];
+    }
+    
+    // Use the API with authentication
+    const response = await discussionApi.get(attachmentUrl, {
+      responseType: 'blob',
+      headers: {
+        'Accept': '*/*'
+      }
+    });
+    
+    // Create download
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Extract filename from response headers if available
+    const contentDisposition = response.headers['content-disposition'];
+    let downloadFileName = filename;
+    if (contentDisposition) {
+      const matches = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (matches != null && matches[1]) {
+        downloadFileName = matches[1].replace(/['"]/g, '');
+      }
+    }
+    
+    link.setAttribute('download', downloadFileName);
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    return response;
+  },
   
   getUserFiles: (params?: {
     page?: number
