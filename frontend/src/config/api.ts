@@ -1,7 +1,14 @@
 // Central API Configuration - Use environment variables
-const AUTH_URL = import.meta.env.VITE_AUTH_URL || 'http://35.188.75.223:8081';
-const ASSESSMENT_URL = import.meta.env.VITE_ASSESSMENT_URL || 'http://35.188.75.223:8083';
-const DISCUSSION_URL = import.meta.env.VITE_DISCUSSION_URL || 'http://35.188.75.223:8082';
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}`;
+  }
+  return 'http://localhost';
+};
+
+const AUTH_URL = import.meta.env.VITE_AUTH_URL || `${getBaseUrl()}:8081`;
+const ASSESSMENT_URL = import.meta.env.VITE_ASSESSMENT_URL || `${getBaseUrl()}:8083`;
+const DISCUSSION_URL = import.meta.env.VITE_DISCUSSION_URL || `${getBaseUrl()}:8082`;
 
 export const API_ENDPOINTS = {
   AUTH_SERVICE: `${AUTH_URL}/api/v1`,
