@@ -46,7 +46,9 @@ public class UserEventListener {
         } catch (Exception e) {
             log.error("Error processing user event: {} for user ID: {}", event.getEventType(), event.getUserId(), e);
             // Don't rethrow constraint violations - they're handled gracefully above
-            if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+            if (e.getMessage() != null && (e.getMessage().contains("duplicate key") || 
+                e.getMessage().contains("unique constraint") ||
+                e.getMessage().contains("null value in column \"email\""))) {
                 log.warn("Constraint violation handled gracefully for user event: {} for user ID: {}", 
                     event.getEventType(), event.getUserId());
                 return;
@@ -69,6 +71,19 @@ public class UserEventListener {
             return;
         }
         
+        // Validate required fields before creating user
+        if (event.getEmail() == null || event.getEmail().trim().isEmpty()) {
+            log.error("Cannot create user {} (ID: {}) - email is required but missing from event", 
+                event.getUsername(), event.getUserId());
+            return;
+        }
+        
+        if (event.getUsername() == null || event.getUsername().trim().isEmpty()) {
+            log.error("Cannot create user with ID {} - username is required but missing from event", 
+                event.getUserId());
+            return;
+        }
+        
         User user = new User();
         user.setId(event.getUserId());
         user.setUsername(event.getUsername());
@@ -86,9 +101,16 @@ public class UserEventListener {
             log.info("Created user in Assessment Service: {} (ID: {})", user.getUsername(), user.getId());
         } catch (Exception e) {
             // Handle constraint violations gracefully
-            if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+            if (e.getMessage() != null && (e.getMessage().contains("duplicate key") || 
+                e.getMessage().contains("unique constraint"))) {
                 log.warn("Duplicate key constraint violation for user {} (ID: {}), likely a race condition. Skipping creation.", 
                     event.getUsername(), event.getUserId());
+                return;
+            }
+            // Handle null constraint violations for email
+            if (e.getMessage() != null && e.getMessage().contains("null value in column \"email\"")) {
+                log.error("Cannot create user {} (ID: {}) - email constraint violation. Event data: email='{}', username='{}'", 
+                    event.getUsername(), event.getUserId(), event.getEmail(), event.getUsername());
                 return;
             }
             log.error("Failed to create user {} (ID: {})", event.getUsername(), event.getUserId(), e);
@@ -121,9 +143,16 @@ public class UserEventListener {
                         log.info("Updated user in Assessment Service: {} (ID: {})", user.getUsername(), user.getId());
                     } catch (Exception e) {
                         // Handle constraint violations gracefully
-                        if (e.getMessage() != null && e.getMessage().contains("duplicate key")) {
+                        if (e.getMessage() != null && (e.getMessage().contains("duplicate key") || 
+                            e.getMessage().contains("unique constraint"))) {
                             log.warn("Duplicate key constraint violation during update for user {} (ID: {}), skipping update.", 
                                 user.getUsername(), user.getId());
+                            return;
+                        }
+                        // Handle null constraint violations for email
+                        if (e.getMessage() != null && e.getMessage().contains("null value in column \"email\"")) {
+                            log.error("Cannot update user {} (ID: {}) - email constraint violation. Event data: email='{}', username='{}'", 
+                                user.getUsername(), user.getId(), event.getEmail(), event.getUsername());
                             return;
                         }
                         log.error("Failed to update user {} (ID: {})", user.getUsername(), user.getId(), e);
@@ -131,6 +160,15 @@ public class UserEventListener {
                     }
                 },
                 () -> {
+                    // Check if we have enough data to create a new user
+                    if (event.getEmail() == null || event.getEmail().trim().isEmpty() ||
+                        event.getUsername() == null || event.getUsername().trim().isEmpty()) {
+                        log.warn("User with ID {} not found for update, but insufficient data to create new user. " +
+                                "Missing email ({}) or username ({}). Update event will be ignored.", 
+                                event.getUserId(), event.getEmail(), event.getUsername());
+                        return;
+                    }
+                    
                     log.warn("User with ID {} not found for update, creating new user", event.getUserId());
                     handleUserCreated(event);
                 }
@@ -166,6 +204,15 @@ public class UserEventListener {
                             user.getUsername(), user.getId(), oldRole, event.getRole());
                 },
                 () -> {
+                    // Check if we have enough data to create a new user
+                    if (event.getEmail() == null || event.getEmail().trim().isEmpty() ||
+                        event.getUsername() == null || event.getUsername().trim().isEmpty()) {
+                        log.warn("User with ID {} not found for role change, but insufficient data to create new user. " +
+                                "Missing email ({}) or username ({}). Role change event will be ignored.", 
+                                event.getUserId(), event.getEmail(), event.getUsername());
+                        return;
+                    }
+                    
                     log.warn("User with ID {} not found for role change, creating new user", event.getUserId());
                     handleUserCreated(event);
                 }

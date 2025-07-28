@@ -53,12 +53,12 @@ public class Discussion {
     @Column(name = "class_level")
     private ClassLevel classLevel;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "discussion_tags", joinColumns = @JoinColumn(name = "discussion_id"))
     @Column(name = "tag")
     private List<String> tags = new ArrayList<>();
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "discussion_attachments", joinColumns = @JoinColumn(name = "discussion_id"))
     @Column(name = "attachment_url")
     private List<String> attachments = new ArrayList<>();

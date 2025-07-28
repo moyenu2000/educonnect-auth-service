@@ -60,7 +60,8 @@ public class UserEventListener {
         User user = new User();
         user.setId(event.getUserId());
         user.setUsername(event.getUsername());
-        user.setEmail(event.getEmail());
+        // Handle null email by providing a default
+        user.setEmail(event.getEmail() != null ? event.getEmail() : event.getUsername() + "@placeholder.local");
         user.setFullName(event.getFullName());
         user.setBio(event.getBio());
         user.setAvatarUrl(event.getAvatarUrl());
@@ -76,7 +77,12 @@ public class UserEventListener {
                 user -> {
                     // Update user information
                     user.setUsername(event.getUsername());
-                    user.setEmail(event.getEmail());
+                    // Handle null email by keeping existing or providing default
+                    if (event.getEmail() != null) {
+                        user.setEmail(event.getEmail());
+                    } else if (user.getEmail() == null) {
+                        user.setEmail(event.getUsername() + "@placeholder.local");
+                    }
                     user.setFullName(event.getFullName());
                     user.setBio(event.getBio());
                     user.setAvatarUrl(event.getAvatarUrl());
