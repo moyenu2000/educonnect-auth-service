@@ -47,7 +47,7 @@ class EmailServiceTest {
 
         ReflectionTestUtils.setField(emailService, "fromEmail", "noreply@learningplatform.com");
         ReflectionTestUtils.setField(emailService, "baseUrl", "http://localhost:8080/api");
-        ReflectionTestUtils.setField(emailService, "frontendUrl", "http://localhost:3000");
+        ReflectionTestUtils.setField(emailService, "frontendUrl", "http://localhost:8080");
     }
 
     @Test

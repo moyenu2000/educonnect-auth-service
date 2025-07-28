@@ -64,7 +64,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-educonnect}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-educonnect123}
       - AUTH_URL=http://auth-service:8081
-      - FRONTEND_URL=${FRONTEND_URL:-http://${VM_IP:-localhost}:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://${VM_IP:-localhost}:8080}
       - MAIL_USERNAME=${MAIL_USERNAME}
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}

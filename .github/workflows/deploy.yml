@@ -219,6 +219,8 @@ jobs:
           VITE_AUTH_URL=${{ secrets.AUTH_URL }}
           VITE_ASSESSMENT_URL=${{ secrets.ASSESSMENT_URL }}
           VITE_DISCUSSION_URL=${{ secrets.DISCUSSION_URL }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           EOF
             
             # Make cleanup script executable
@@ -383,7 +385,7 @@ jobs:
             # Wait for frontend to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:80 >/dev/null 2>&1; then
+              if curl -f http://localhost:8080 >/dev/null 2>&1; then
                 echo "Frontend is ready!"
                 exit 0
               fi
@@ -414,7 +416,7 @@ jobs:
               "auth-service:8081:/api/v1/actuator/health"
               "discussion-service:8082:/api/v1/actuator/health"
               "assessment-service:8083:/api/v1/actuator/health"
-              "frontend:80:/"
+              "frontend:8080:/"
             )
             
             all_healthy=true
