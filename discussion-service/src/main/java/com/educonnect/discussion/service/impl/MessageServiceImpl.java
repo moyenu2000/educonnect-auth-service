@@ -40,6 +40,7 @@ public class MessageServiceImpl implements MessageService {
     private UserRepository userRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public PagedResponse<ConversationDto> getUserConversations(Long userId, Pageable pageable) {
         Page<Conversation> conversationsPage = conversationRepository.findByParticipantsId(userId, pageable);
         List<ConversationDto> conversationDtos = conversationsPage.getContent().stream()
@@ -59,6 +60,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PagedResponse<MessageDto> getConversationMessages(Long conversationId, LocalDateTime before, Pageable pageable, Long currentUserId) {
         Conversation conversation = conversationRepository.findById(conversationId)
             .orElseThrow(() -> new ResourceNotFoundException("Conversation not found with id: " + conversationId));

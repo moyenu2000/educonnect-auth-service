@@ -43,7 +43,7 @@ public class Message {
     @JoinColumn(name = "conversation_id", nullable = false)
     private Conversation conversation;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "message_attachments", joinColumns = @JoinColumn(name = "message_id"))
     @Column(name = "attachment_url")
     private List<String> attachments = new ArrayList<>();

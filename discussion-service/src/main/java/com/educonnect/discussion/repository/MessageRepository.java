@@ -14,9 +14,10 @@ import java.time.LocalDateTime;
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
     
-    Page<Message> findByConversationId(Long conversationId, Pageable pageable);
+    @Query("SELECT DISTINCT m FROM Message m LEFT JOIN FETCH m.attachments WHERE m.conversation.id = :conversationId ORDER BY m.createdAt DESC")
+    Page<Message> findByConversationId(@Param("conversationId") Long conversationId, Pageable pageable);
     
-    @Query("SELECT m FROM Message m WHERE m.conversation.id = :conversationId AND " +
+    @Query("SELECT DISTINCT m FROM Message m LEFT JOIN FETCH m.attachments WHERE m.conversation.id = :conversationId AND " +
            "(:before IS NULL OR m.createdAt < :before) ORDER BY m.createdAt DESC")
     Page<Message> findByConversationIdAndCreatedAtBefore(
         @Param("conversationId") Long conversationId,

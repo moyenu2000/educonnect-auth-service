@@ -5,6 +5,7 @@ import com.educonnect.discussion.enums.MessageType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -30,7 +31,7 @@ public class MessageDto {
         this.sender = message.getSender() != null ? new UserDto(message.getSender()) : null;
         this.recipient = message.getRecipient() != null ? new UserDto(message.getRecipient()) : null;
         this.conversationId = message.getConversation() != null ? message.getConversation().getId() : null;
-        this.attachments = message.getAttachments();
+        this.attachments = message.getAttachments() != null ? message.getAttachments() : new ArrayList<>();
         this.isRead = message.getIsRead();
         this.isEdited = message.getIsEdited();
         this.createdAt = message.getCreatedAt();
