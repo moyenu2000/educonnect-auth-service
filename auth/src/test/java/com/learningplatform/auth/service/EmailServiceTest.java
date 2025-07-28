@@ -49,6 +49,7 @@ class EmailServiceTest {
         ReflectionTestUtils.setField(emailService, "baseUrl", "http://localhost:3000/api");
         ReflectionTestUtils.setField(emailService, "frontendUrl", "http://localhost:3000");
     }
+    
 
     @Test
     void sendVerificationEmail_ShouldSendEmail_WhenValidUser() throws MessagingException {
