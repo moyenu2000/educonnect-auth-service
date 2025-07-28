@@ -1,0 +1,443 @@
+name: Deploy EduConnect Services
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Environment Variables
+        run: |
+          if [ -z "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
+            echo "Error: DOCKER_HUB_USERNAME secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.DB_PASSWORD }}" ]; then
+            echo "Error: DB_PASSWORD secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.JWT_SECRET }}" ]; then
+            echo "Error: JWT_SECRET secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "Error: GCP_SA_KEY secret is not set"
+            exit 1
+          fi
+          echo "All required environment variables are set"
+
+  build-auth:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Build and push Auth Service
+        run: |
+          echo "Building auth service..."
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/auth-service:latest ./auth
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/auth-service:latest
+
+  build-discussion:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Build and push Discussion Service
+        run: |
+          echo "Building discussion service..."
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/discussion-service:latest ./discussion-service
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/discussion-service:latest
+
+  build-assessment:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Maven dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Build and push Assessment Service
+        run: |
+          echo "Building assessment service..."
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/assessment-service:latest ./assessment-service
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/assessment-service:latest
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+          
+      - name: Create frontend environment file
+        run: |
+          cd frontend
+          cat > .env << EOF
+          VM_IP=${{ secrets.VM_IP }}
+          VITE_VM_IP=${{ secrets.VM_IP }}
+          VITE_API_BASE_URL=http://${{ secrets.VM_IP }}
+          EOF
+          
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build:production
+          
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+          
+      - name: Build and push Frontend
+        run: |
+          cd frontend
+          docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/educonnect-frontend:latest .
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/educonnect-frontend:latest
+
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    needs: [build-auth, build-discussion, build-assessment, build-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Deploy Infrastructure
+        run: |
+          gcloud compute scp docker-compose.prod.yml auth-service-vm:~/ --zone=us-central1-a
+          gcloud compute scp scripts/cleanup.sh auth-service-vm:~/ --zone=us-central1-a
+          gcloud compute scp educonnect-init-db.sql auth-service-vm:~/ --zone=us-central1-a
+          
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            # Clean up disk space
+            sudo docker system prune -af --volumes
+            sudo apt-get autoremove -y
+            sudo apt-get autoclean
+            
+            # Create .env file with VM IP configuration
+            VM_IP="${{ secrets.VM_IP }}"
+            cat > .env << EOF
+          DOCKER_HUB_USERNAME=${{ secrets.DOCKER_HUB_USERNAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}
+          RABBITMQ_PASSWORD=${{ secrets.RABBITMQ_PASSWORD }}
+          FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+          AUTH_URL=${{ secrets.AUTH_URL }}
+          ASSESSMENT_URL=${{ secrets.ASSESSMENT_URL }}
+          DISCUSSION_URL=${{ secrets.DISCUSSION_URL }}
+          FILE_BASE_URL=${{ secrets.FILE_BASE_URL }}
+          AUTH_SERVICE_PORT=${{ secrets.AUTH_SERVICE_PORT }}
+          DISCUSSION_SERVICE_PORT=${{ secrets.DISCUSSION_SERVICE_PORT }}
+          ASSESSMENT_SERVICE_PORT=${{ secrets.ASSESSMENT_SERVICE_PORT }}
+          REDIS_HOST=${{ secrets.REDIS_HOST }}
+          REDIS_PORT=${{ secrets.REDIS_PORT }}
+          SERVER_CONTEXT_PATH=${{ secrets.SERVER_CONTEXT_PATH }}
+          SPRING_RABBITMQ_HOST=${{ secrets.SPRING_RABBITMQ_HOST }}
+          SPRING_RABBITMQ_PORT=${{ secrets.SPRING_RABBITMQ_PORT }}
+          SPRING_RABBITMQ_USERNAME=${{ secrets.SPRING_RABBITMQ_USERNAME }}
+          SPRING_RABBITMQ_PASSWORD=${{ secrets.SPRING_RABBITMQ_PASSWORD }}
+          VITE_AUTH_URL=${{ secrets.AUTH_URL }}
+          VITE_ASSESSMENT_URL=${{ secrets.ASSESSMENT_URL }}
+          VITE_DISCUSSION_URL=${{ secrets.DISCUSSION_URL }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          EOF
+            
+            # Make cleanup script executable
+            chmod +x cleanup.sh
+            
+            # Run cleanup script
+            ./cleanup.sh
+            
+            # Start infrastructure services
+            echo "Starting infrastructure services..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d postgres redis rabbitmq
+            
+            # Wait for database to be ready
+            echo "Waiting for database to be ready..."
+            timeout=300
+            while [ $timeout -gt 0 ]; do
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T postgres pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME }}; then
+                echo "Database is ready!"
+                break
+              fi
+              echo "Database not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            
+            if [ $timeout -le 0 ]; then
+              echo "Database failed to start within timeout"
+              exit 1
+            fi
+            
+            # Wait for Redis to be ready
+            timeout=60
+            while [ $timeout -gt 0 ]; do
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T redis redis-cli ping | grep PONG; then
+                echo "Redis is ready!"
+                break
+              fi
+              sleep 2
+              timeout=$((timeout - 2))
+            done
+            
+            # Wait for RabbitMQ to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if sudo docker-compose -f docker-compose.prod.yml --env-file .env exec -T rabbitmq rabbitmq-diagnostics ping; then
+                echo "RabbitMQ is ready!"
+                break
+              fi
+              echo "RabbitMQ not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            
+            echo "Infrastructure ready!"
+          '
+
+  deploy-auth:
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Deploy Auth Service
+        run: |
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            echo "Starting auth-service..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d auth-service
+            
+            # Wait for auth-service to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if curl -f http://localhost:8081/api/v1/actuator/health >/dev/null 2>&1; then
+                echo "Auth service is ready!"
+                exit 0
+              fi
+              echo "Auth service not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            echo "Auth service failed to start"
+            exit 1
+          '
+
+  deploy-discussion:
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Deploy Discussion Service
+        run: |
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            echo "Starting discussion-service..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d discussion-service
+            
+            # Wait for discussion-service to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if curl -f http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
+                echo "Discussion service is ready!"
+                exit 0
+              fi
+              echo "Discussion service not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            echo "Discussion service failed to start"
+            exit 1
+          '
+
+  deploy-assessment:
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Deploy Assessment Service
+        run: |
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            echo "Starting assessment-service..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d assessment-service
+            
+            # Wait for assessment-service to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if curl -f http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
+                echo "Assessment service is ready!"
+                exit 0
+              fi
+              echo "Assessment service not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            echo "Assessment service failed to start"
+            exit 1
+          '
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Deploy Frontend
+        run: |
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            echo "Starting frontend..."
+            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d frontend
+            
+            # Wait for frontend to be ready
+            timeout=120
+            while [ $timeout -gt 0 ]; do
+              if curl -f http://localhost:3000 >/dev/null 2>&1; then
+                echo "Frontend is ready!"
+                exit 0
+              fi
+              echo "Frontend not ready yet, waiting..."
+              sleep 5
+              timeout=$((timeout - 5))
+            done
+            echo "Frontend failed to start"
+            exit 1
+          '
+
+  verify-deployment:
+    runs-on: ubuntu-latest
+    needs: [deploy-auth, deploy-discussion, deploy-assessment, deploy-frontend]
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Verify All Services
+        run: |
+          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+            echo "🔍 Verifying all services are running..."
+            
+            # Check all services
+            services=(
+              "auth-service:8081:/api/v1/actuator/health"
+              "discussion-service:8082:/api/v1/actuator/health"
+              "assessment-service:8083:/api/v1/actuator/health"
+              "frontend:3000:/"
+            )
+            
+            all_healthy=true
+            for service_info in "${services[@]}"; do
+              IFS=: read -r service_name port health_path <<< "$service_info"
+              echo "🔍 Checking $service_name on port $port..."
+              
+              if curl -f "http://localhost:$port$health_path" >/dev/null 2>&1; then
+                echo "✅ $service_name is healthy"
+              else
+                echo "❌ $service_name is not responding"
+                all_healthy=false
+              fi
+            done
+            
+            if [ "$all_healthy" = true ]; then
+              echo "🎉 All services are running successfully!"
+              echo "📊 Final service status:"
+              sudo docker-compose -f docker-compose.prod.yml --env-file .env ps
+            else
+              echo "❌ Some services are not healthy"
+              exit 1
+            fi
+          '

@@ -223,7 +223,7 @@ const QuestionManagement: React.FC = () => {
   const handleEditQuestion = (questionId: number) => {
     const editPath = window.location.pathname.includes('/admin/') 
       ? `/admin/questions/create?edit=${questionId}`
-      : `/question-setter/create?edit=${questionId}`
+      : `/question-setter/questions/create?edit=${questionId}`
     navigate(editPath)
   }
 
@@ -397,7 +397,7 @@ const QuestionManagement: React.FC = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Question Filters & Actions</CardTitle>
-            <Link to={window.location.pathname.includes('/admin/') ? '/admin/questions/create' : '/question-setter/create'}>
+            <Link to={window.location.pathname.includes('/admin/') ? '/admin/questions/create' : '/question-setter/questions/create'}>
               <Button variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
                 Create Question

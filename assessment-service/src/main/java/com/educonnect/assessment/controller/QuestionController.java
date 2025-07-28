@@ -40,23 +40,6 @@ public class QuestionController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    @GetMapping("/random")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
-    public ResponseEntity<ApiResponse<List<QuestionResponse>>> getRandomQuestions(
-            @RequestParam(required = false) Long subjectId,
-            @RequestParam(required = false) Difficulty difficulty,
-            @RequestParam(defaultValue = "10") int count) {
-        
-        List<QuestionResponse> randomQuestions = questionService.getRandomQuestionResponses(subjectId, difficulty, count);
-        return ResponseEntity.ok(ApiResponse.success(randomQuestions));
-    }
-
-    @GetMapping("/public/daily")
-    public ResponseEntity<ApiResponse<List<QuestionResponse>>> getPublicDailyQuestions() {
-        // Get today's daily questions that are public
-        List<QuestionResponse> dailyQuestions = questionService.getPublicDailyQuestionResponses();
-        return ResponseEntity.ok(ApiResponse.success(dailyQuestions));
-    }
 
     @GetMapping("/{questionId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
@@ -65,13 +48,6 @@ public class QuestionController {
         return ResponseEntity.ok(ApiResponse.success(question));
     }
 
-    @GetMapping("/public/{questionId}")
-    public ResponseEntity<ApiResponse<QuestionResponse>> getPublicQuestionById(@PathVariable Long questionId) {
-        // Secure endpoint that only allows access to questions that are publicly available
-        // (daily questions, practice problems, or active contests)
-        QuestionResponse question = questionService.getPublicQuestionResponseById(questionId);
-        return ResponseEntity.ok(ApiResponse.success(question));
-    }
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
