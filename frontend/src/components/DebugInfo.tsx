@@ -1,19 +1,8 @@
 import React from 'react';
+import { API_ENDPOINTS, API_HOST } from '../config/api';
 
 // Debug component to show current API configuration
 export const DebugInfo: React.FC = () => {
-  const getApiBaseUrl = () => {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return 'localhost';
-      }
-      return hostname;
-    }
-    return import.meta.env.VITE_VM_IP || '35.188.75.223';
-  };
-
-  const apiHost = getApiBaseUrl();
   const currentUrl = typeof window !== 'undefined' ? window.location.href : 'N/A';
   const hostname = typeof window !== 'undefined' ? window.location.hostname : 'N/A';
 
@@ -33,12 +22,11 @@ export const DebugInfo: React.FC = () => {
     }}>
       <div><strong>🔧 API Debug Info</strong></div>
       <div>Current URL: {currentUrl}</div>
-      <div>Hostname: {hostname}</div>
-      <div>API Host: {apiHost}</div>
-      <div>Auth API: http://{apiHost}:8081/api/v1</div>
-      <div>Discussion API: http://{apiHost}:8082/api/v1</div>
-      <div>Assessment API: http://{apiHost}:8083/api/v1</div>
-      <div>Env VITE_VM_IP: {import.meta.env.VITE_VM_IP || 'not set'}</div>
+      <div>Browser Hostname: {hostname}</div>
+      <div>Configured API Host: {API_HOST}</div>
+      <div>Auth API: {API_ENDPOINTS.AUTH_SERVICE}</div>
+      <div>Discussion API: {API_ENDPOINTS.DISCUSSION_SERVICE}</div>
+      <div>Assessment API: {API_ENDPOINTS.ASSESSMENT_SERVICE}</div>
     </div>
   );
 };

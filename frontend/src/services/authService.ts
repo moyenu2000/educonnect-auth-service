@@ -9,6 +9,7 @@ import type {
   TwoFactorSetupResponse,
   UsersPageResponse
 } from '../types/auth';
+import { API_ENDPOINTS } from '../config/api';
 
 // Re-export types for convenience
 export type {
@@ -23,23 +24,8 @@ export type {
   UsersPageResponse
 };
 
-// Dynamic API URL detection
-const getApiBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // If running on localhost (development), use localhost
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'localhost';
-    }
-    // If running on VM or any other host, use that hostname
-    return hostname;
-  }
-  // Fallback to environment variable or default
-  return import.meta.env.VITE_VM_IP || '35.188.75.223';
-};
-
-const API_BASE_HOST = getApiBaseUrl();
-const BASE_URL = `http://${API_BASE_HOST}:8081/api/v1`;
+// Use centralized API configuration
+const BASE_URL = API_ENDPOINTS.AUTH_SERVICE;
 
 // Force module refresh
 export const CACHE_BUSTER = Date.now();
