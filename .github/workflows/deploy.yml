@@ -385,7 +385,7 @@ jobs:
             # Wait for frontend to be ready
             timeout=120
             while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8080 >/dev/null 2>&1; then
+              if curl -f http://localhost:3000 >/dev/null 2>&1; then
                 echo "Frontend is ready!"
                 exit 0
               fi
@@ -416,7 +416,7 @@ jobs:
               "auth-service:8081:/api/v1/actuator/health"
               "discussion-service:8082:/api/v1/actuator/health"
               "assessment-service:8083:/api/v1/actuator/health"
-              "frontend:8080:/"
+              "frontend:3000:/"
             )
             
             all_healthy=true

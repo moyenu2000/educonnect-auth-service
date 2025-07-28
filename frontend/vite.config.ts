@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 8080,
+    port: 3000,
     proxy: {
       '/api/auth': {
         target: process.env.VITE_AUTH_URL || 'http://localhost:8081',
