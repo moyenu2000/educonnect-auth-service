@@ -1,6 +1,6 @@
-// Central API Configuration - Hardcoded VM IP
-export const VM_IP = '35.188.75.223';
-// export const VM_IP =  'localhost';
+// Central API Configuration - Use localhost for local development
+// export const VM_IP = '35.188.75.223';
+export const VM_IP = 'localhost';
 
 export const API_ENDPOINTS = {
   AUTH_SERVICE: `http://${VM_IP}:8081/api/v1`,

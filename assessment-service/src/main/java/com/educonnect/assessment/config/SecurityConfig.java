@@ -54,9 +54,11 @@ public class SecurityConfig {
                         // WebSocket endpoints
                         .requestMatchers("/ws/**").permitAll()
                         
-                        // Admin only endpoints - temporarily allow daily-questions for testing
-                        .requestMatchers("/admin/daily-questions").permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // User management - Admin only
+                        .requestMatchers("/admin/users/**").hasRole("ADMIN")
+                        
+                        // Admin and Question Setter endpoints
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "QUESTION_SETTER")
                         
                         // Daily question submission endpoints - temporarily allow all for testing
                         .requestMatchers("/daily-questions/*/submit").permitAll()

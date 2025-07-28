@@ -1,6 +1,7 @@
 package com.educonnect.discussion.service;
 
 import com.educonnect.discussion.dto.GroupRequest;
+import com.educonnect.discussion.dto.UpdateGroupRequest;
 import com.educonnect.discussion.dto.PagedResponse;
 import com.educonnect.discussion.entity.Group;
 import com.educonnect.discussion.entity.GroupMember;
@@ -16,7 +17,7 @@ public interface GroupService {
     
     Group createGroup(GroupRequest request, Long creatorId);
     
-    Group updateGroup(Long id, GroupRequest request, Long currentUserId);
+    Group updateGroup(Long id, UpdateGroupRequest request, Long currentUserId);
     
     void joinGroup(Long groupId, Long userId);
     

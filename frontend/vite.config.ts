@@ -15,15 +15,15 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api/auth': {
-        target: `http://${process.env.VM_IP || '35.188.75.223'}:8081`,
+        target: `http://${process.env.VM_IP || 'localhost'}:8081`,
         changeOrigin: true,
       },
       '/api/assessment': {
-        target: `http://${process.env.VM_IP || '35.188.75.223'}:8083`,
+        target: `http://${process.env.VM_IP || 'localhost'}:8083`,
         changeOrigin: true,
       },
       '/api/discussion': {
-        target: `http://${process.env.VM_IP || '35.188.75.223'}:8082`,
+        target: `http://${process.env.VM_IP || 'localhost'}:8082`,
         changeOrigin: true,
       }
     }

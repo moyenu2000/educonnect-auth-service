@@ -336,15 +336,7 @@ const DailyQuestionManagement: React.FC = () => {
     );
   }
 
-  // Debug information (remove in production)
-  console.log('Debug Info:', {
-    dailyQuestions: dailyQuestions,
-    dailyQuestionsType: Array.isArray(dailyQuestions) ? 'array' : typeof dailyQuestions,
-    subjects: subjects,
-    subjectsType: Array.isArray(subjects) ? 'array' : typeof subjects,
-    filteredQuestions: filteredQuestions,
-    filteredQuestionsType: Array.isArray(filteredQuestions) ? 'array' : typeof filteredQuestions
-  });
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

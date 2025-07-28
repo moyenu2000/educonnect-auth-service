@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
 import { Users, BookOpen, FileQuestion, Trophy, TrendingUp, Activity, Settings, Calendar } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AdminAnalytics {
   userStats: {
@@ -35,6 +36,7 @@ interface AdminAnalytics {
 const AdminDashboard: React.FC = () => {
   const [analytics, setAnalytics] = useState<AdminAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     loadAnalytics()
@@ -71,7 +73,9 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {user?.role === 'ADMIN' ? 'Admin Dashboard' : 'Question Setter Dashboard'}
+          </h1>
           <p className="text-muted-foreground">
             Manage and monitor the EduConnect platform
           </p>
@@ -181,21 +185,23 @@ const AdminDashboard: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
-              <Users className="mr-2 h-4 w-4" />
-              Manage Users
-            </Button>
+            {user?.role === 'ADMIN' && (
+              <Button className="w-full justify-start" variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Manage Users
+              </Button>
+            )}
             <Button className="w-full justify-start" variant="outline">
               <BookOpen className="mr-2 h-4 w-4" />
               Add Subject
             </Button>
-            <Link to="/admin/questions">
+            <Link to={user?.role === 'ADMIN' ? '/admin/questions' : '/question-setter/questions'}>
               <Button className="w-full justify-start" variant="outline">
                 <FileQuestion className="mr-2 h-4 w-4" />
                 Manage Questions
               </Button>
             </Link>
-            <Link to="/admin/daily-questions">
+            <Link to={user?.role === 'ADMIN' ? '/admin/daily-questions' : '/question-setter/daily-questions'}>
               <Button className="w-full justify-start" variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
                 Manage Daily Questions

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Plus, Trash2, Calendar, Clock, Trophy, FileText, Tag, X } from 'lucide-react';
+import { Save, Plus, Trash2, Calendar, Trophy, FileText, X } from 'lucide-react';
 import { assessmentService } from '../../services/assessmentService';
 import { formatDateTimeForInput, convertToApiDateTime } from '../../lib/utils';
 
@@ -345,15 +345,7 @@ const ContestEditor: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
-    // Redirect back to contest management (detect user type)
-    const path = window.location.pathname;
-    if (path.includes('/question-setter/')) {
-      window.location.href = '/question-setter/contests';
-    } else {
-      window.location.href = '/admin/contests';
-    }
-  };
+
 
   if (loading) {
     return (
@@ -369,37 +361,7 @@ const ContestEditor: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <button
-                onClick={handleBack}
-                className="mr-4 p-2 text-gray-600 hover:text-gray-900 rounded-md hover:bg-gray-100"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                  <Trophy className="mr-3 text-indigo-600" />
-                  {isEdit ? 'Edit Contest' : 'Create Contest'}
-                </h1>
-                <p className="mt-2 text-gray-600">
-                  {isEdit ? 'Modify contest details and settings' : 'Set up a new programming contest'}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center disabled:opacity-50"
-            >
-              <Save className="mr-2" size={20} />
-              {saving ? 'Saving...' : 'Save Contest'}
-            </button>
-          </div>
-        </div>
-
+  
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <div className="flex">
@@ -410,21 +372,6 @@ const ContestEditor: React.FC = () => {
               >
                 ×
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Debug Information (only in development) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-gray-100 rounded-lg p-4 mb-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">Debug Info</h3>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div>Contest ID: {contestId}</div>
-              <div>Is Edit Mode: {isEdit ? 'Yes' : 'No'}</div>
-              <div>Problem IDs in form: [{form.problemIds.join(', ')}]</div>
-              <div>Selected Questions Count: {selectedQuestions.length}</div>
-              <div>All Questions Count: {allQuestions.length}</div>
-              <div>Loading: {loading ? 'Yes' : 'No'}</div>
             </div>
           </div>
         )}
@@ -696,6 +643,20 @@ const ContestEditor: React.FC = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             placeholder="Enter contest rules and guidelines..."
           />
+        </div>
+
+        {/* Save Button */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="flex justify-center">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center disabled:opacity-50"
+            >
+              <Save className="mr-2" size={20} />
+              {saving ? 'Saving...' : 'Save Contest'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

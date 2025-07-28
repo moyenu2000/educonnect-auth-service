@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, Edit, Trash2, Plus, Calendar, Clock, Users, Trophy, Filter, AlertCircle, CheckCircle } from 'lucide-react';
+import { Edit, Trash2, Plus, Calendar, Clock, Users, Trophy, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import { assessmentService } from '../../services/assessmentService';
 import Pagination from '../ui/pagination';
 

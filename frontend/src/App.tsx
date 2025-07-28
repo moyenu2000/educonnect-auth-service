@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { ToastProvider } from './contexts/ToastContext'
+import Toast from './components/ui/toast'
 import { LoginForm } from './components/LoginForm'
 import { RegisterForm } from './components/RegisterForm'
 import { ForgotPasswordForm } from './components/ForgotPasswordForm'
@@ -8,7 +10,6 @@ import { ProfileManagement } from './components/ProfileManagement'
 import { TwoFactorSetup } from './components/TwoFactorSetup'
 import { AdminUserManagement } from './components/AdminUserManagement'
 import { HealthCheck } from './components/HealthCheck'
-import DebugInfo from './components/DebugInfo'
 
 // Layout Components
 import Layout from './components/layout/Layout'
@@ -36,6 +37,14 @@ import LiveExams from './components/student/LiveExams'
 import AIAssistant from './components/student/AIAssistant'
 import Messages from './components/Messages'
 import MessagingDemo from './components/MessagingDemo'
+
+// Group Components
+import GroupList from './components/student/GroupList'
+import GroupDetails from './components/student/GroupDetails'
+import CreateGroup from './components/student/CreateGroup'
+import EditGroup from './components/student/EditGroup'
+import GroupMembers from './components/student/GroupMembers'
+import GroupDiscussions from './components/student/GroupDiscussions'
 
 // Admin Components  
 import SubjectManagement from './components/admin/SubjectManagement'
@@ -73,13 +82,15 @@ const AuthSection: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto py-8">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">EduConnect</h1>
-          <p className="text-gray-600 mt-2">Your Learning Management Platform</p>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">EduConnect</h1>
+          <p className="text-gray-600 mt-2 text-base sm:text-lg">Your Learning Management Platform</p>
         </div>
-        {renderAuthView()}
+        <div className="flex justify-center">
+          {renderAuthView()}
+        </div>
       </div>
     </div>
   )
@@ -255,32 +266,37 @@ const AppContent: React.FC = () => {
 
       <Route path="/question-setter" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
-          <Layout><QuestionSetterDashboard /></Layout>
+          <Layout><AdminDashboard /></Layout>
         </ProtectedRoute>
       } />
-      <Route path="/question-setter/profile" element={
+      <Route path="/question-setter/subjects" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
-          <Layout><ProfileManagement /></Layout>
+          <Layout><SubjectManagement /></Layout>
         </ProtectedRoute>
       } />
-      <Route path="/question-setter/settings" element={
-        <ProtectedRoute requiredRole="QUESTION_SETTER">
-          <Layout><TwoFactorSetup /></Layout>
-        </ProtectedRoute>
-      } />
-      <Route path="/question-setter/manage" element={
+      <Route path="/question-setter/questions" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
           <Layout><QuestionManagement /></Layout>
         </ProtectedRoute>
       } />
-      <Route path="/question-setter/create" element={
+      <Route path="/question-setter/questions/create" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
           <Layout><CreateQuestion /></Layout>
         </ProtectedRoute>
       } />
-      <Route path="/question-setter/daily-config" element={
+      <Route path="/question-setter/questions/daily-config" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
           <Layout><DailyQuestionConfig /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/daily-questions" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><DailyQuestionManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/practice-problems" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><PracticeProblemManagement /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/question-setter/contests" element={
@@ -298,9 +314,14 @@ const AppContent: React.FC = () => {
           <Layout><ContestEditor /></Layout>
         </ProtectedRoute>
       } />
-      <Route path="/question-setter/messages" element={
+      <Route path="/question-setter/profile" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
-          <Layout><Messages /></Layout>
+          <Layout><ProfileManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/settings" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><TwoFactorSetup /></Layout>
         </ProtectedRoute>
       } />
 
@@ -374,6 +395,39 @@ const AppContent: React.FC = () => {
           <Layout><AIAssistant /></Layout>
         </ProtectedRoute>
       } />
+      
+      {/* Group Routes */}
+      <Route path="/student/groups" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><GroupList /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/groups/create" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><CreateGroup /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/groups/:groupId" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><GroupDetails /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/groups/:groupId/edit" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><EditGroup /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/groups/:groupId/members" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><GroupMembers /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/groups/:groupId/discussions" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><GroupDiscussions /></Layout>
+        </ProtectedRoute>
+      } />
+      
       <Route path="/student/profile" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><ProfileManagement /></Layout>
@@ -401,9 +455,10 @@ const App: React.FC = () => {
   return (
     <Router>
       <AuthProvider>
-        <AppContent />
-        {/* Debug info - remove in production */}
-        {import.meta.env.DEV && <DebugInfo />}
+        <ToastProvider>
+          <AppContent />
+          <Toast />
+        </ToastProvider>
       </AuthProvider>
     </Router>
   )

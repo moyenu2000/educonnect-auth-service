@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
     
-    Optional<GroupMember> findByGroupIdAndUserId(Long groupId, Long userId);
+    @Query("SELECT gm FROM GroupMember gm LEFT JOIN FETCH gm.user LEFT JOIN FETCH gm.group WHERE gm.group.id = :groupId AND gm.user.id = :userId")
+    Optional<GroupMember> findByGroupIdAndUserId(@Param("groupId") Long groupId, @Param("userId") Long userId);
     
     Page<GroupMember> findByGroupId(Long groupId, Pageable pageable);
     
@@ -22,7 +23,7 @@ public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> 
     
     Page<GroupMember> findByUserId(Long userId, Pageable pageable);
     
-    @Query("SELECT gm FROM GroupMember gm WHERE gm.group.id = :groupId AND " +
+    @Query("SELECT gm FROM GroupMember gm LEFT JOIN FETCH gm.user LEFT JOIN FETCH gm.group WHERE gm.group.id = :groupId AND " +
            "(:role IS NULL OR gm.role = :role)")
     Page<GroupMember> findMembersWithFilters(
         @Param("groupId") Long groupId,

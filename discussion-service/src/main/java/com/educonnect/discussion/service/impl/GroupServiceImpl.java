@@ -1,6 +1,7 @@
 package com.educonnect.discussion.service.impl;
 
 import com.educonnect.discussion.dto.GroupRequest;
+import com.educonnect.discussion.dto.UpdateGroupRequest;
 import com.educonnect.discussion.dto.PagedResponse;
 import com.educonnect.discussion.entity.Group;
 import com.educonnect.discussion.entity.GroupMember;
@@ -52,8 +53,10 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public Group getGroupById(Long id, Long currentUserId) {
-        Group group = groupRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Group not found with id: " + id));
+        Group group = groupRepository.findByIdWithCreatedBy(id);
+        if (group == null) {
+            throw new ResourceNotFoundException("Group not found with id: " + id);
+        }
         
         // Check if private group and user is not a member
         if (group.getIsPrivate()) {
@@ -98,9 +101,11 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public Group updateGroup(Long id, GroupRequest request, Long currentUserId) {
-        Group group = groupRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Group not found with id: " + id));
+    public Group updateGroup(Long id, UpdateGroupRequest request, Long currentUserId) {
+        Group group = groupRepository.findByIdWithCreatedBy(id);
+        if (group == null) {
+            throw new ResourceNotFoundException("Group not found with id: " + id);
+        }
         
         // Check if user is admin or moderator
         GroupMember membership = groupMemberRepository.findByGroupIdAndUserId(id, currentUserId)
@@ -120,8 +125,10 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void joinGroup(Long groupId, Long userId) {
-        Group group = groupRepository.findById(groupId)
-            .orElseThrow(() -> new ResourceNotFoundException("Group not found with id: " + groupId));
+        Group group = groupRepository.findByIdWithCreatedBy(groupId);
+        if (group == null) {
+            throw new ResourceNotFoundException("Group not found with id: " + groupId);
+        }
         
         User user = userSyncService.getOrCreateUser(userId);
         

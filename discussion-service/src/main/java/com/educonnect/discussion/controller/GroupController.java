@@ -1,6 +1,7 @@
 package com.educonnect.discussion.controller;
 
 import com.educonnect.discussion.dto.*;
+import com.educonnect.discussion.dto.UpdateGroupRequest;
 import com.educonnect.discussion.entity.Group;
 import com.educonnect.discussion.entity.GroupMember;
 import com.educonnect.discussion.enums.GroupRole;
@@ -87,7 +88,7 @@ public class GroupController {
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<GroupDto>> updateGroup(
             @PathVariable Long groupId,
-            @Valid @RequestBody GroupRequest request,
+            @Valid @RequestBody UpdateGroupRequest request,
             @CurrentUser UserPrincipal currentUser) {
         
         Group group = groupService.updateGroup(groupId, request, currentUser.getId());

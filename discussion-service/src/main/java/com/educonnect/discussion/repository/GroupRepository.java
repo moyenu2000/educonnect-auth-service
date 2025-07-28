@@ -13,13 +13,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Long> {
     
-    Page<Group> findByIsPrivate(Boolean isPrivate, Pageable pageable);
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy WHERE g.isPrivate = :isPrivate")
+    Page<Group> findByIsPrivate(@Param("isPrivate") Boolean isPrivate, Pageable pageable);
     
-    Page<Group> findByType(GroupType type, Pageable pageable);
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy WHERE g.type = :type")
+    Page<Group> findByType(@Param("type") GroupType type, Pageable pageable);
     
-    Page<Group> findBySubjectId(Long subjectId, Pageable pageable);
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy WHERE g.subjectId = :subjectId")
+    Page<Group> findBySubjectId(@Param("subjectId") Long subjectId, Pageable pageable);
     
-    @Query("SELECT g FROM Group g WHERE " +
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy WHERE " +
            "(:type IS NULL OR g.type = :type) AND " +
            "(:subjectId IS NULL OR g.subjectId = :subjectId) AND " +
            "(:isPrivate IS NULL OR g.isPrivate = :isPrivate)")
@@ -30,7 +33,7 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
         Pageable pageable
     );
     
-    @Query("SELECT g FROM Group g WHERE " +
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy WHERE " +
            "(g.name LIKE %:query% OR g.description LIKE %:query%) AND " +
            "(:type IS NULL OR g.type = :type)")
     Page<Group> searchGroups(
@@ -39,9 +42,12 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
         Pageable pageable
     );
     
-    @Query("SELECT g FROM Group g JOIN GroupMember gm ON g.id = gm.group.id " +
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy JOIN GroupMember gm ON g.id = gm.group.id " +
            "WHERE gm.user.id = :userId")
     Page<Group> findGroupsByMemberId(@Param("userId") Long userId, Pageable pageable);
+    
+    @Query("SELECT g FROM Group g LEFT JOIN FETCH g.createdBy WHERE g.id = :id")
+    Group findByIdWithCreatedBy(@Param("id") Long id);
     
     @Modifying
     @Query("UPDATE Group g SET g.membersCount = g.membersCount + 1 WHERE g.id = :id")

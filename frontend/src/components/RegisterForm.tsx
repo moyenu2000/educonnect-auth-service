@@ -59,13 +59,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
   };
 
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-center">Register</h2>
       
       <div className="mb-6">
         <div className="flex border-b">
           <button
-            className={`flex-1 py-2 px-4 text-sm font-medium ${
+            className={`flex-1 py-2 px-2 text-xs sm:text-sm font-medium ${
               activeTab === 'student' 
                 ? 'border-b-2 border-indigo-500 text-indigo-600' 
                 : 'text-gray-500 hover:text-gray-700'
@@ -75,7 +75,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             Student
           </button>
           <button
-            className={`flex-1 py-2 px-4 text-sm font-medium ${
+            className={`flex-1 py-2 px-2 text-xs sm:text-sm font-medium ${
               activeTab === 'admin' 
                 ? 'border-b-2 border-indigo-500 text-indigo-600' 
                 : 'text-gray-500 hover:text-gray-700'
@@ -85,14 +85,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             Admin
           </button>
           <button
-            className={`flex-1 py-2 px-4 text-sm font-medium ${
+            className={`flex-1 py-2 px-2 text-xs sm:text-sm font-medium ${
               activeTab === 'question-setter' 
                 ? 'border-b-2 border-indigo-500 text-indigo-600' 
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={() => setActiveTab('question-setter')}
           >
-            Question Setter
+            <span className="hidden sm:inline">Question Setter</span>
+            <span className="sm:hidden">Q. Setter</span>
           </button>
         </div>
       </div>
@@ -107,7 +108,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             name="username"
             value={formData.username}
             onChange={handleInputChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -121,7 +122,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             name="email"
             value={formData.email}
             onChange={handleInputChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -135,7 +136,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             name="fullName"
             value={formData.fullName}
             onChange={handleInputChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -149,7 +150,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             name="password"
             value={formData.password}
             onChange={handleInputChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-base"
             required
           />
         </div>
@@ -160,7 +161,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
         >
           {loading ? 'Registering...' : `Register as ${activeTab.replace('-', ' ').toUpperCase()}`}
         </button>
