@@ -30,7 +30,11 @@ cleanup_containers() {
     sudo docker-compose -f docker-compose.prod.yml --env-file .env down --remove-orphans || true
     
     # Remove specific containers if they exist
-    sudo docker rm -f educonnect-postgres educonnect-redis educonnect-auth-service educonnect-discussion-service educonnect-assessment-service 2>/dev/null || true
+    sudo docker rm -f educonnect-postgres educonnect-redis educonnect-auth-service educonnect-discussion-service educonnect-assessment-service educonnect-frontend 2>/dev/null || true
+    
+    # Kill any processes using ports 3000, 8081, 8082, 8083 to prevent conflicts
+    echo "Killing processes on ports 3000, 8081, 8082, 8083..."
+    sudo fuser -k 3000/tcp 8081/tcp 8082/tcp 8083/tcp 2>/dev/null || true
     
     # Remove orphaned containers
     sudo docker container prune -f || true
