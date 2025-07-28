@@ -23,6 +23,7 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
+
   # Auth Service
   auth-service:
     image: ${DOCKER_HUB_USERNAME}/auth-service:latest
