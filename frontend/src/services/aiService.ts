@@ -1,7 +1,21 @@
-// API Configuration
-const VM_IP = import.meta.env.VITE_VM_IP || '35.188.75.223';
+// API Configuration - Dynamic IP detection
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // If running on localhost (development), use localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'localhost';
+    }
+    // If running on VM or any other host, use that hostname
+    return hostname;
+  }
+  // Fallback to environment variable or default
+  return import.meta.env.VITE_VM_IP || '35.188.75.223';
+};
+
+const API_BASE_HOST = getApiBaseUrl();
 const API_CONFIG = {
-  DISCUSSION_SERVICE: `http://${VM_IP}:8082/api/v1`,
+  DISCUSSION_SERVICE: `http://${API_BASE_HOST}:8082/api/v1`,
 }
 
 export interface AIQueryRequest {

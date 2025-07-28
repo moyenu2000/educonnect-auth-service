@@ -50,7 +50,8 @@
       "Bash(./test-all-assessment-apis.sh:*)",
       "Bash(docker cp:*)",
       "Bash(./test-discussion-working.sh:*)",
-      "Bash(docker system prune:*)"
+      "Bash(docker system prune:*)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }

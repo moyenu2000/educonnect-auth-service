@@ -8,6 +8,7 @@ import { ProfileManagement } from './components/ProfileManagement'
 import { TwoFactorSetup } from './components/TwoFactorSetup'
 import { AdminUserManagement } from './components/AdminUserManagement'
 import { HealthCheck } from './components/HealthCheck'
+import DebugInfo from './components/DebugInfo'
 
 // Layout Components
 import Layout from './components/layout/Layout'
@@ -401,6 +402,8 @@ const App: React.FC = () => {
     <Router>
       <AuthProvider>
         <AppContent />
+        {/* Debug info - remove in production */}
+        {import.meta.env.DEV && <DebugInfo />}
       </AuthProvider>
     </Router>
   )

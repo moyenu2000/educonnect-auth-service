@@ -23,8 +23,23 @@ export type {
   UsersPageResponse
 };
 
-const VM_IP = import.meta.env.VITE_VM_IP || '35.188.75.223';
-const BASE_URL = `http://${VM_IP}:8081/api/v1`;
+// Dynamic API URL detection
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // If running on localhost (development), use localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'localhost';
+    }
+    // If running on VM or any other host, use that hostname
+    return hostname;
+  }
+  // Fallback to environment variable or default
+  return import.meta.env.VITE_VM_IP || '35.188.75.223';
+};
+
+const API_BASE_HOST = getApiBaseUrl();
+const BASE_URL = `http://${API_BASE_HOST}:8081/api/v1`;
 
 // Force module refresh
 export const CACHE_BUSTER = Date.now();

@@ -4,7 +4,12 @@ This guide explains how to configure your CI/CD pipeline to deploy EduConnect to
 
 ## 🔧 Required GitHub Secrets
 
-Configure these secrets in your GitHub repository settings:
+Configure these secrets in your GitHub repository settings → Settings → Secrets and variables → Actions:
+
+### ⚡️ VM Configuration (Required)
+```
+VM_IP=35.188.75.223
+```
 
 ### Database & Authentication
 ```
