@@ -40,7 +40,7 @@ services:
       - MAIL_PASSWORD=${MAIL_PASSWORD}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - APP_BASE_URL=${APP_BASE_URL}
+      - AUTH_URL=${AUTH_URL}
       - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       - postgres
