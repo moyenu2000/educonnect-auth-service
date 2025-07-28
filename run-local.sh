@@ -173,7 +173,7 @@ sleep 10
 check_service() {
     local name=$1
     local url=$2
-    local timeout=30
+    local timeout=300
     local count=0
     
     while [ $count -lt $timeout ]; do

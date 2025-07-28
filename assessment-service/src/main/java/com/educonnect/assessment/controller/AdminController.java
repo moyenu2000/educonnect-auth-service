@@ -34,7 +34,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
 public class AdminController {
 
     @Autowired
