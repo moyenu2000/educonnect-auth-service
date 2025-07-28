@@ -192,11 +192,11 @@ services:
     image: ${DOCKER_HUB_USERNAME}/educonnect-frontend:latest
     container_name: educonnect-frontend
     ports:
-      - "3000:3000"
+      - "3000:80"
     networks:
       - educonnect-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 30s
       timeout: 10s
       retries: 3
