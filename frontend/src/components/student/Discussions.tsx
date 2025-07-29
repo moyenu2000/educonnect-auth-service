@@ -12,6 +12,7 @@ import {
   Plus,
   Search
 } from 'lucide-react'
+import LaTeXText from '../ui/LaTeXText'
 
 interface Discussion {
   id: number
@@ -221,7 +222,7 @@ const Discussions: React.FC = () => {
                     </div>
                     
                     <CardTitle className="text-xl mb-2 hover:text-primary cursor-pointer">
-                      {discussion.title}
+                      <LaTeXText text={discussion.title} />
                     </CardTitle>
                     
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -234,7 +235,7 @@ const Discussions: React.FC = () => {
               
               <CardContent>
                 <p className="text-muted-foreground mb-4 line-clamp-2">
-                  {discussion.content}
+                  <LaTeXText text={discussion.content} />
                 </p>
 
                 {discussion.tags.length > 0 && (

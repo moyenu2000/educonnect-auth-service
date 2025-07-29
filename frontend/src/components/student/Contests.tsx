@@ -211,7 +211,7 @@ const Contests: React.FC = () => {
           </div>
           <div className="flex gap-2">
             {section === 'live' && (
-              <Button onClick={() => handleJoinContest(contest)} className="bg-green-600 hover:bg-green-700">
+              <Button onClick={() => handleJoinContest(contest)} className="bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg transition-all duration-200">
                 <Play className="mr-2 h-4 w-4" />
                 Join Contest
               </Button>
@@ -226,7 +226,11 @@ const Contests: React.FC = () => {
                 View Results
               </Button>
             )}
-            <Button variant="outline" onClick={() => handleViewDetails(contest)}>
+            <Button 
+              variant="outline" 
+              onClick={() => handleViewDetails(contest)}
+              className="border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 active:bg-blue-100 active:border-blue-600 active:text-blue-800 shadow-sm hover:shadow-md"
+            >
               View Details
             </Button>
           </div>

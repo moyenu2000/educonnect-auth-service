@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { assessmentService } from '@/services/assessmentService'
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import Pagination from '../ui/pagination'
+import LaTeXText from '../ui/LaTeXText'
 
 interface Question {
   id: number
@@ -242,7 +243,9 @@ const Questions: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-lg font-medium">{question.text}</p>
+                  <p className="text-lg font-medium">
+                    <LaTeXText text={question.text} />
+                  </p>
                   
                   {question.type === 'MCQ' && question.options && question.options.length > 0 && (
                     <div className="space-y-2">

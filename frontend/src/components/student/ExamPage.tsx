@@ -20,6 +20,7 @@ import {
   AlertCircle 
 } from 'lucide-react'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
+import LaTeXText from '../ui/LaTeXText'
 
 interface QuestionOption {
   id: number
@@ -61,6 +62,7 @@ interface ExamState {
   examDate?: string
   isAlreadySubmitted?: boolean
   viewOnly?: boolean
+  isIndividualPractice?: boolean
 }
 
 const ExamPage: React.FC = () => {
@@ -86,6 +88,17 @@ const ExamPage: React.FC = () => {
   const [questionStartTimes, setQuestionStartTimes] = useState<Record<number, number>>({})
   const [pendingSaves, setPendingSaves] = useState<Record<number, boolean>>({})
   const debounceTimers = useRef<Record<number, NodeJS.Timeout>>({})
+
+  // Helper function for back navigation
+  const handleBackNavigation = () => {
+    const backPath = examState.examType === 'practice' ? '/student/practice-questions' : '/student/daily-questions'
+    navigate(backPath)
+  }
+
+  // Helper function for back button text
+  const getBackButtonText = () => {
+    return examState.examType === 'practice' ? 'Practice Questions' : 'Daily Questions'
+  }
 
   useEffect(() => {
     loadExamQuestions()
@@ -121,6 +134,7 @@ const ExamPage: React.FC = () => {
       const forceShowResults = searchParams.get('showResults') === 'true'
       const questionId = searchParams.get('questionId') // For practice questions
       const questionIndex = parseInt(searchParams.get('index') || '0') // For practice navigation
+      const isIndividualPractice = searchParams.get('individual') === 'true' // For individual practice questions
       
       if (questionIds.length === 0 && !questionId) {
         navigate(examType === 'practice' ? '/student/practice-questions' : '/student/daily-questions')
@@ -238,7 +252,8 @@ const ExamPage: React.FC = () => {
         examDate: examDate || undefined,
         timeRemaining: examType === 'contest' ? 3600 : undefined, // 1 hour for contests
         isAlreadySubmitted,
-        viewOnly
+        viewOnly,
+        isIndividualPractice // Add flag for individual practice questions
       })
 
       // Check if this is a previous day question (not today)
@@ -601,11 +616,11 @@ const ExamPage: React.FC = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => navigate('/student/daily-questions')}
+                  onClick={handleBackNavigation}
                   className="flex items-center gap-2"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Back to Daily Questions
+                  Back to {getBackButtonText()}
                 </Button>
               </div>
             </div>
@@ -729,7 +744,9 @@ const ExamPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <p className="text-sm mb-3 font-medium">{question.text}</p>
+                    <p className="text-sm mb-3 font-medium">
+                      <LaTeXText text={question.text} />
+                    </p>
                     
                     {/* MCQ Options Display */}
                     {question.type === 'MCQ' && question.options && question.options.length > 0 && (
@@ -761,7 +778,9 @@ const ExamPage: React.FC = () => {
                                   {isCorrect && <CheckCircle className="h-5 w-5 text-green-600" />}
                                   {(isUserAnswer && !isCorrect) && <span className="text-red-600 font-bold text-lg">✗</span>}
                                   {wasUserAnswerWithoutResult && <span className="text-yellow-600 font-bold text-lg">?</span>}
-                                  <span className="flex-1">{option.text}</span>
+                                  <span className="flex-1">
+                                    <LaTeXText text={option.text} />
+                                  </span>
                                   <div className="flex gap-2">
                                     {isCorrect && <Badge variant="default" className="bg-green-600 text-white">✓ Correct</Badge>}
                                     {isUserAnswer && !isCorrect && <Badge variant="destructive">Your Answer</Badge>}
@@ -800,7 +819,9 @@ const ExamPage: React.FC = () => {
                         {result.explanation && (
                           <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded">
                             <strong className="text-blue-700">Explanation:</strong> 
-                            <div className="text-blue-600 mt-1">{result.explanation}</div>
+                            <div className="text-blue-600 mt-1">
+                              <LaTeXText text={result.explanation} />
+                            </div>
                           </div>
                         )}
                         <div className="mt-2 text-gray-600">
@@ -836,7 +857,9 @@ const ExamPage: React.FC = () => {
                         {question.explanation && (
                           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
                             <strong className="text-blue-700">Explanation:</strong> 
-                            <div className="text-blue-600 mt-1">{question.explanation}</div>
+                            <div className="text-blue-600 mt-1">
+                              <LaTeXText text={question.explanation} />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -853,11 +876,11 @@ const ExamPage: React.FC = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-center gap-3">
               <Button 
-                onClick={() => navigate('/student/daily-questions')}
+                onClick={handleBackNavigation}
                 className="flex items-center gap-2"
               >
                 <CheckCircle className="h-4 w-4" />
-                Back to Daily Questions
+                Back to {getBackButtonText()}
               </Button>
             </div>
           </CardContent>
@@ -901,21 +924,22 @@ const ExamPage: React.FC = () => {
         )}
       </div>
 
-      {/* Progress Overview */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Progress Overview</h3>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span>Auto-saved</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                <span>Saving...</span>
-              </div>
-              <div className="flex items-center gap-2">
+      {/* Progress Overview - Hidden for individual practice questions */}
+      {!examState.isIndividualPractice && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Progress Overview</h3>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span>Auto-saved</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                  <span>Saving...</span>
+                </div>
+                <div className="flex items-center gap-2">
                 <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
                 <span>Not answered</span>
               </div>
@@ -961,12 +985,16 @@ const ExamPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Auto-save info */}
-      {examState.examType === 'daily' && !examState.isAlreadySubmitted && (
+      {((examState.examType === 'daily' && !examState.isAlreadySubmitted) || examState.isIndividualPractice) && (
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
-            💾 Your answers will be automatically saved when you select options or finish typing. Scroll down to answer all questions, then click "Submit All" at the bottom.
+            {examState.isIndividualPractice 
+              ? '💾 Your answer will be automatically saved when you select options or finish typing. Click "Submit Answer" to get the result.'
+              : '💾 Your answers will be automatically saved when you select options or finish typing. Scroll down to answer all questions, then click "Submit All" at the bottom.'
+            }
           </p>
         </div>
       )}
@@ -1020,7 +1048,9 @@ const ExamPage: React.FC = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-lg mb-6">{question.text}</p>
+                <p className="text-lg mb-6">
+                  <LaTeXText text={question.text} />
+                </p>
                 
                 {/* Multiple Choice Options */}
                 {question.type === 'MCQ' && question.options && (
@@ -1028,10 +1058,10 @@ const ExamPage: React.FC = () => {
                     {question.options.map((option, index) => (
                       <label
                         key={option.id}
-                        className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
+                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                           currentAnswer === option.text
-                            ? 'border-primary bg-primary/5'
-                            : 'border-input'
+                            ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200 ring-opacity-50'
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
                         }`}
                       >
                         <input
@@ -1043,18 +1073,22 @@ const ExamPage: React.FC = () => {
                           disabled={examState.isAlreadySubmitted || examState.viewOnly}
                           className="sr-only"
                         />
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                           currentAnswer === option.text
-                            ? 'border-primary bg-primary'
-                            : 'border-gray-300'
+                            ? 'border-blue-500 bg-blue-500 shadow-sm'
+                            : 'border-gray-400 hover:border-blue-400'
                         }`}>
                           {currentAnswer === option.text && (
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                            <div className="w-3 h-3 bg-white rounded-full shadow-sm"></div>
                           )}
                         </div>
-                        <span className="flex-1">
-                          <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
-                          {option.text}
+                        <span className={`flex-1 transition-colors duration-200 ${
+                          currentAnswer === option.text ? 'text-blue-900 font-medium' : 'text-gray-700'
+                        }`}>
+                          <span className={`font-semibold mr-2 text-lg ${
+                            currentAnswer === option.text ? 'text-blue-600' : 'text-gray-500'
+                          }`}>{String.fromCharCode(65 + index)}.</span>
+                          <LaTeXText text={option.text} />
                         </span>
                       </label>
                     ))}
@@ -1067,10 +1101,10 @@ const ExamPage: React.FC = () => {
                     {['True', 'False'].map((option) => (
                       <label
                         key={option}
-                        className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
+                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                           currentAnswer === option
-                            ? 'border-primary bg-primary/5'
-                            : 'border-input'
+                            ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200 ring-opacity-50'
+                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
                         }`}
                       >
                         <input
@@ -1082,16 +1116,20 @@ const ExamPage: React.FC = () => {
                           disabled={examState.isAlreadySubmitted || examState.viewOnly}
                           className="sr-only"
                         />
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
                           currentAnswer === option
-                            ? 'border-primary bg-primary'
-                            : 'border-gray-300'
+                            ? 'border-blue-500 bg-blue-500 shadow-sm'
+                            : 'border-gray-400 hover:border-blue-400'
                         }`}>
                           {currentAnswer === option && (
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                            <div className="w-3 h-3 bg-white rounded-full shadow-sm"></div>
                           )}
                         </div>
-                        <span>{option}</span>
+                        <span className={`flex-1 text-lg font-medium transition-colors duration-200 ${
+                          currentAnswer === option ? 'text-blue-900' : 'text-gray-700'
+                        }`}>
+                          {option}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -1165,7 +1203,7 @@ const ExamPage: React.FC = () => {
                   size="lg"
                 >
                   <CheckCircle className="h-4 w-4" />
-                  Submit All Questions
+                  {examState.isIndividualPractice ? 'Submit Answer' : 'Submit All Questions'}
                 </Button>
               )}
             </div>
@@ -1175,25 +1213,44 @@ const ExamPage: React.FC = () => {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmSubmit} onOpenChange={setShowConfirmSubmit}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Submit All Daily Questions?</DialogTitle>
-            <DialogDescription>
-              This will finalize all your answers and calculate your marks. You will see detailed results with correct answers and explanations after submission. This action cannot be undone.
+        <DialogContent className="sm:max-w-[500px] p-6 bg-white border-2 border-gray-200 shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-bold text-gray-900 text-center">
+              {examState.isIndividualPractice ? 'Submit Answer?' : 'Submit All Daily Questions?'}
+            </DialogTitle>
+            <DialogDescription className="text-base text-gray-700 text-center leading-relaxed">
+              {examState.isIndividualPractice 
+                ? 'This will submit your answer for this practice question. You will see the result and explanation after submission.'
+                : 'This will finalize all your answers and calculate your marks. You will see detailed results with correct answers and explanations after submission. This action cannot be undone.'
+              }
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center justify-end gap-3 mt-4">
+          <div className="flex items-center justify-center gap-4 mt-6">
             <Button
               variant="outline"
               onClick={() => setShowConfirmSubmit(false)}
+              className="px-6 py-2 text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSubmitFullExam}
               disabled={submitting}
+              className={`px-6 py-2 text-white font-semibold transition-all duration-200 transform hover:scale-105 ${
+                examState.isIndividualPractice
+                  ? 'bg-green-600 hover:bg-green-700 shadow-lg hover:shadow-xl'
+                  : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
+              }`}
             >
-              {submitting ? 'Submitting...' : 'Submit'}
+              {submitting 
+                ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Submitting...
+                  </span>
+                ) 
+                : (examState.isIndividualPractice ? 'Submit Answer' : 'Submit All')
+              }
             </Button>
           </div>
         </DialogContent>
