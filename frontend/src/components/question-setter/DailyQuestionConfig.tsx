@@ -7,8 +7,32 @@ import { useNavigate } from 'react-router-dom'
 import { getTodayDateString } from '@/lib/utils'
 import { 
   Plus,
-  X
+  X,
+  Search
 } from 'lucide-react'
+
+interface Subject {
+  id: number
+  name: string
+  description: string
+  classLevel: string
+  displayOrder: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+  topicsCount: number
+  questionsCount: number
+}
+
+interface Topic {
+  id: number
+  name: string
+  description: string
+  subjectId: number
+  displayOrder: number
+  isActive: boolean
+  questionsCount: number
+}
 
 interface QuestionOption {
   id: number
@@ -28,6 +52,7 @@ interface Question {
   correctAnswerOptionId?: number
   correctAnswerText?: string
   explanation?: string
+  points: number
   createdAt: string
   updatedAt: string
 }
@@ -61,6 +86,18 @@ const DailyQuestionConfig: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false)
   const questionsPerPage = 20
   
+  // Filter state
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [topics, setTopics] = useState<Topic[]>([])
+  const [allTopics, setAllTopics] = useState<Topic[]>([])
+  const [filters, setFilters] = useState({
+    subjectId: '',
+    topicId: '',
+    difficulty: '',
+    type: '',
+    search: ''
+  })
+  
   // Toast state
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error', show: boolean}>({
     message: '', 
@@ -88,10 +125,17 @@ const DailyQuestionConfig: React.FC = () => {
         setLoading(true)
       }
 
-      const params = {
+      const params: any = {
         page,
         size: questionsPerPage
       }
+
+      // Add filter parameters
+      if (filters.subjectId) params.subjectId = filters.subjectId
+      if (filters.topicId) params.topicId = filters.topicId
+      if (filters.difficulty) params.difficulty = filters.difficulty
+      if (filters.type) params.type = filters.type
+      if (filters.search) params.search = filters.search
 
       const response = await assessmentService.getQuestions(params)
       const data = response.data?.data
@@ -152,6 +196,44 @@ const DailyQuestionConfig: React.FC = () => {
     }
   }
 
+  // Load subjects
+  const loadSubjects = async () => {
+    try {
+      const response = await assessmentService.getSubjects()
+      const data = response.data?.data
+      if (data && data.content) {
+        setSubjects(data.content)
+      }
+    } catch (error) {
+      console.error('Failed to load subjects:', error)
+    }
+  }
+
+  // Load topics
+  const loadTopics = async () => {
+    try {
+      const response = await assessmentService.getTopics()
+      const data = response.data?.data
+      if (data && data.content) {
+        setAllTopics(data.content)
+      }
+    } catch (error) {
+      console.error('Failed to load topics:', error)
+    }
+  }
+
+  // Filter topics when subject changes
+  useEffect(() => {
+    if (filters.subjectId) {
+      const filteredTopics = allTopics.filter(
+        (topic) => topic.subjectId === parseInt(filters.subjectId)
+      )
+      setTopics(filteredTopics)
+    } else {
+      setTopics([])
+    }
+  }, [filters.subjectId, allTopics])
+
   // Load more function
   const handleLoadMore = () => {
     const nextPage = currentPage + 1
@@ -159,9 +241,18 @@ const DailyQuestionConfig: React.FC = () => {
     loadQuestions(nextPage, true)
   }
 
+  // Reload questions when filters change
+  useEffect(() => {
+    setCurrentPage(0)
+    setAllQuestions([])
+    loadQuestions(0, false)
+  }, [filters.subjectId, filters.topicId, filters.difficulty, filters.type, filters.search])
+
   useEffect(() => {
     // Load questions from API on component mount
     loadQuestions(0, false)
+    loadSubjects()
+    loadTopics()
   }, [])
 
   useEffect(() => {
@@ -175,12 +266,12 @@ const DailyQuestionConfig: React.FC = () => {
     
     setDailyQuestionsList(prev => [...prev, questionId])
     
-    // Initialize config for new question
+    // Initialize config for new question using the question's actual points
     setQuestionConfigs(prev => ({
       ...prev,
       [questionId]: {
         difficulty: question.difficulty || 'MEDIUM',
-        points: 10
+        points: question.points || 10  // Use question's actual points, fallback to 10
       }
     }))
   }
@@ -299,6 +390,129 @@ const DailyQuestionConfig: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-gray-800">All Questions ({allQuestions.length})</CardTitle>
           </CardHeader>
+          
+          {/* Filter Section */}
+          <div className="px-4 pb-4 border-b border-gray-200">
+            <div className="grid gap-3">
+              {/* First row of filters */}
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Subject</label>
+                  <select
+                    className="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm"
+                    value={filters.subjectId}
+                    onChange={(e) => {
+                      setFilters(prev => ({ 
+                        ...prev, 
+                        subjectId: e.target.value,
+                        topicId: '' // Reset topic when subject changes
+                      }))
+                    }}
+                  >
+                    <option value="">All Subjects</option>
+                    {subjects.map(subject => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Topic</label>
+                  <select
+                    className="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm"
+                    value={filters.topicId}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, topicId: e.target.value }))
+                    }}
+                    disabled={!filters.subjectId}
+                  >
+                    <option value="">All Topics</option>
+                    {topics.map(topic => (
+                      <option key={topic.id} value={topic.id}>
+                        {topic.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {/* Second row of filters */}
+              <div className="grid gap-3 md:grid-cols-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Difficulty</label>
+                  <select
+                    className="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm"
+                    value={filters.difficulty}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, difficulty: e.target.value }))
+                    }}
+                  >
+                    <option value="">All Difficulties</option>
+                    <option value="EASY">Easy</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HARD">Hard</option>
+                    <option value="EXPERT">Expert</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Type</label>
+                  <select
+                    className="w-full mt-1 p-2 border border-gray-300 rounded-md text-sm"
+                    value={filters.type}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, type: e.target.value }))
+                    }}
+                  >
+                    <option value="">All Types</option>
+                    <option value="MCQ">Multiple Choice</option>
+                    <option value="TRUE_FALSE">True/False</option>
+                    <option value="FILL_BLANK">Fill in the Blank</option>
+                    <option value="NUMERIC">Numeric</option>
+                    <option value="ESSAY">Essay</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Search</label>
+                  <div className="relative mt-1">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search questions..."
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md text-sm"
+                      value={filters.search}
+                      onChange={(e) => {
+                        setFilters(prev => ({ ...prev, search: e.target.value }))
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Clear filters button */}
+              {(filters.subjectId || filters.topicId || filters.difficulty || filters.type || filters.search) && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFilters({
+                        subjectId: '',
+                        topicId: '',
+                        difficulty: '',
+                        type: '',
+                        search: ''
+                      })
+                    }}
+                    className="text-xs"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+          
           <CardContent className="p-0">
             <div className="max-h-[500px] overflow-y-auto p-4 space-y-3">
               {allQuestions.map(question => {
