@@ -90,114 +90,114 @@ done
 
 echo "✅ All required ports are now available"
 
-# Function to cleanup background processes on script exit
-cleanup() {
-    echo ""
-    echo "🛑 Stopping all services..."
-    jobs -p | xargs -r kill 2>/dev/null || true
-    echo "🐳 Stopping Docker infrastructure..."
-    docker-compose -f docker-compose.infrastructure.yml down
-    exit 0
-}
+# # Function to cleanup background processes on script exit
+# cleanup() {
+#     echo ""
+#     echo "🛑 Stopping all services..."
+#     jobs -p | xargs -r kill 2>/dev/null || true
+#     echo "🐳 Stopping Docker infrastructure..."
+#     docker-compose -f docker-compose.infrastructure.yml down
+#     exit 0
+# }
 
-# Set trap to cleanup on script exit
-trap cleanup SIGINT SIGTERM EXIT
+# # Set trap to cleanup on script exit
+# trap cleanup SIGINT SIGTERM EXIT
 
-# Start services
-echo ""
-echo "🔧 Starting Auth Service (port 8081)..."
-cd auth
-./mvnw spring-boot:run > ../logs/auth.log 2>&1 &
-AUTH_PID=$!
-cd ..
+# # Start services
+# echo ""
+# echo "🔧 Starting Auth Service (port 8081)..."
+# cd auth
+# ./mvnw spring-boot:run > ../logs/auth.log 2>&1 &
+# AUTH_PID=$!
+# cd ..
 
-echo "🔧 Starting Discussion Service (port 8082)..."
-cd discussion-service
-./mvnw spring-boot:run > ../logs/discussion.log 2>&1 &
-DISCUSSION_PID=$!
-cd ..
+# echo "🔧 Starting Discussion Service (port 8082)..."
+# cd discussion-service
+# ./mvnw spring-boot:run > ../logs/discussion.log 2>&1 &
+# DISCUSSION_PID=$!
+# cd ..
 
-echo "🔧 Starting Assessment Service (port 8083)..."
-cd assessment-service
-./mvnw spring-boot:run > ../logs/assessment.log 2>&1 &
-ASSESSMENT_PID=$!
-cd ..
+# echo "🔧 Starting Assessment Service (port 8083)..."
+# cd assessment-service
+# ./mvnw spring-boot:run > ../logs/assessment.log 2>&1 &
+# ASSESSMENT_PID=$!
+# cd ..
 
-# Create logs directory if it doesn't exist
-mkdir -p logs
+# # Create logs directory if it doesn't exist
+# mkdir -p logs
 
-echo "🔧 Installing frontend dependencies (if needed)..."
-cd frontend
-if [ ! -d "node_modules" ]; then
-    echo "📦 Installing npm dependencies..."
-    npm install
-fi
+# echo "🔧 Installing frontend dependencies (if needed)..."
+# cd frontend
+# if [ ! -d "node_modules" ]; then
+#     echo "📦 Installing npm dependencies..."
+#     npm install
+# fi
 
-echo "🔧 Starting Frontend (port 80)..."
-npm run dev > ../logs/frontend.log 2>&1 &
-FRONTEND_PID=$!
-cd ..
+# echo "🔧 Starting Frontend (port 80)..."
+# npm run dev > ../logs/frontend.log 2>&1 &
+# FRONTEND_PID=$!
+# cd ..
 
-echo ""
-echo "🎉 All services are starting up!"
-echo ""
-echo "📊 Service Status:"
-echo "├── 🐳 PostgreSQL:      http://localhost:5433 (Docker)"
-echo "├── 🐳 Redis:           http://localhost:6379 (Docker)"
-echo "├── 🐳 RabbitMQ:        http://localhost:15672 (Docker Management UI)"
-echo "├── Auth Service:       http://localhost:8081"
-echo "├── Discussion Service: http://localhost:8082"
-echo "├── Assessment Service: http://localhost:8083"
-echo "└── Frontend:           http://localhost:3000"
-echo ""
-echo "📋 Application logs are being written to:"
-echo "├── Auth:       logs/auth.log"
-echo "├── Discussion: logs/discussion.log"
-echo "├── Assessment: logs/assessment.log"
-echo "└── Frontend:   logs/frontend.log"
-echo ""
-echo "🐳 Docker infrastructure logs:"
-echo "docker-compose -f docker-compose.infrastructure.yml logs -f"
-echo ""
-echo "💡 Tip: You can view application logs in real-time with:"
-echo "tail -f logs/auth.log"
-echo ""
-echo "🛑 Press Ctrl+C to stop all services (including Docker infrastructure)"
-echo ""
+# echo ""
+# echo "🎉 All services are starting up!"
+# echo ""
+# echo "📊 Service Status:"
+# echo "├── 🐳 PostgreSQL:      http://localhost:5433 (Docker)"
+# echo "├── 🐳 Redis:           http://localhost:6379 (Docker)"
+# echo "├── 🐳 RabbitMQ:        http://localhost:15672 (Docker Management UI)"
+# echo "├── Auth Service:       http://localhost:8081"
+# echo "├── Discussion Service: http://localhost:8082"
+# echo "├── Assessment Service: http://localhost:8083"
+# echo "└── Frontend:           http://localhost:3000"
+# echo ""
+# echo "📋 Application logs are being written to:"
+# echo "├── Auth:       logs/auth.log"
+# echo "├── Discussion: logs/discussion.log"
+# echo "├── Assessment: logs/assessment.log"
+# echo "└── Frontend:   logs/frontend.log"
+# echo ""
+# echo "🐳 Docker infrastructure logs:"
+# echo "docker-compose -f docker-compose.infrastructure.yml logs -f"
+# echo ""
+# echo "💡 Tip: You can view application logs in real-time with:"
+# echo "tail -f logs/auth.log"
+# echo ""
+# echo "🛑 Press Ctrl+C to stop all services (including Docker infrastructure)"
+# echo ""
 
-# Wait for services to start and show status
-echo "⏳ Waiting for services to start..."
-sleep 10
+# # Wait for services to start and show status
+# echo "⏳ Waiting for services to start..."
+# sleep 10
 
-# Check service health
-check_service() {
-    local name=$1
-    local url=$2
-    local timeout=300
-    local count=0
+# # Check service health
+# check_service() {
+#     local name=$1
+#     local url=$2
+#     local timeout=300
+#     local count=0
     
-    while [ $count -lt $timeout ]; do
-        if curl -s -f "$url" >/dev/null 2>&1; then
-            echo "✅ $name is ready!"
-            return 0
-        fi
-        sleep 2
-        count=$((count + 2))
-    done
-    echo "⚠️  $name is taking longer than expected to start"
-    return 1
-}
+#     while [ $count -lt $timeout ]; do
+#         if curl -s -f "$url" >/dev/null 2>&1; then
+#             echo "✅ $name is ready!"
+#             return 0
+#         fi
+#         sleep 2
+#         count=$((count + 2))
+#     done
+#     echo "⚠️  $name is taking longer than expected to start"
+#     return 1
+# }
 
-echo "🔍 Checking service health..."
-check_service "Auth Service" "http://localhost:8081/api/v1/actuator/health"
-check_service "Discussion Service" "http://localhost:8082/api/v1/actuator/health" 
-check_service "Assessment Service" "http://localhost:8083/api/v1/actuator/health"
-check_service "Frontend" "http://localhost:3000"
+# echo "🔍 Checking service health..."
+# check_service "Auth Service" "http://localhost:8081/api/v1/actuator/health"
+# check_service "Discussion Service" "http://localhost:8082/api/v1/actuator/health" 
+# check_service "Assessment Service" "http://localhost:8083/api/v1/actuator/health"
+# check_service "Frontend" "http://localhost:3000"
 
-echo ""
-echo "🎯 All services are running! You can now access:"
-echo "🌐 Frontend: http://localhost:3000"
-echo ""
+# echo ""
+# echo "🎯 All services are running! You can now access:"
+# echo "🌐 Frontend: http://localhost:3000"
+# echo ""
 
-# Keep script running and wait for user to stop
-wait
+# # Keep script running and wait for user to stop
+# wait
