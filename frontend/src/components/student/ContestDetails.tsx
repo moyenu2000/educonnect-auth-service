@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getCurrentTime, formatDate, formatDateTime } from '@/lib/utils'
+import { useToast } from '../../hooks/useToast'
 
 interface Contest {
   id: number
@@ -46,6 +47,7 @@ interface ContestResponse {
 const ContestDetails: React.FC = () => {
   const navigate = useNavigate()
   const { contestId } = useParams<{ contestId: string }>()
+  const { showToast } = useToast()
   
   const [contest, setContest] = useState<Contest | null>(null)
   const [questionsCount, setQuestionsCount] = useState<number>(0)
@@ -99,14 +101,14 @@ const ContestDetails: React.FC = () => {
       
       if (result.alreadyJoined) {
         if (result.hasCompleted) {
-          alert('You have already completed this contest. You cannot participate again.')
+          showToast('You have already completed this contest. You cannot participate again.', 'warning')
           return
         } else {
           // User is already registered but hasn't completed - allow them to continue
-          alert('You are already registered for this contest. Continuing to contest page.')
+          showToast('You are already registered for this contest. Continuing to contest page.', 'info')
         }
       } else {
-        alert('Successfully joined the contest!')
+        showToast('Successfully joined the contest!', 'success')
       }
       
       // Navigate to contest taking page
@@ -114,7 +116,7 @@ const ContestDetails: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to join contest:', error)
       const errorMessage = error.response?.data?.error || 'Failed to join contest. Please try again.'
-      alert(errorMessage)
+      showToast(errorMessage, 'error')
     }
   }
 
@@ -123,11 +125,11 @@ const ContestDetails: React.FC = () => {
     
     try {
       await assessmentService.joinContest(contest.id)
-      alert('Successfully registered for the contest!')
+      showToast('Successfully registered for the contest!', 'success')
       loadContestDetails() // Reload to update status
     } catch (error) {
       console.error('Failed to register for contest:', error)
-      alert('Failed to register for contest. Please try again.')
+      showToast('Failed to register for contest. Please try again.', 'error')
     }
   }
 

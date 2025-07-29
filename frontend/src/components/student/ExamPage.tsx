@@ -10,6 +10,7 @@ import {
   DialogDescription 
 } from '@/components/ui/dialog'
 import { assessmentService } from '@/services/assessmentService'
+import { useToast } from '../../hooks/useToast'
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -62,6 +63,7 @@ interface ExamState {
 }
 
 const ExamPage: React.FC = () => {
+  const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -386,7 +388,7 @@ const ExamPage: React.FC = () => {
       console.log(`Successfully submitted practice question ${questionId}`)
     } catch (error) {
       console.error('Failed to submit practice question:', error)
-      alert('Failed to submit answer. Please try again.')
+      showToast('Failed to submit answer. Please try again.', 'error')
     }
   }
 
@@ -395,7 +397,7 @@ const ExamPage: React.FC = () => {
     const answer = examState.answers[currentQuestion.id]
     
     if (!answer) {
-      alert('Please select an answer before submitting.')
+      showToast('Please select an answer before submitting.', 'warning')
       return
     }
     
@@ -487,7 +489,7 @@ const ExamPage: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to submit exam:', error)
-      alert('Failed to submit exam. Please try again.')
+      showToast('Failed to submit exam. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }

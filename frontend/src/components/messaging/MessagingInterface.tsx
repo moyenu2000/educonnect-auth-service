@@ -7,8 +7,10 @@ import MessageInput from './MessageInput'
 import NewConversation from './NewConversation'
 import { discussionService, type Conversation, type Message, type User } from '@/services/discussionService'
 import { ArrowLeft, Phone, Video, MoreVertical, Plus } from 'lucide-react'
+import { useToast } from '../../hooks/useToast'
 
 const MessagingInterface: React.FC = () => {
+  const { showToast } = useToast()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
@@ -140,7 +142,7 @@ const MessagingInterface: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to send message:', error)
-      alert('Failed to send message. Please try again.')
+      showToast('Failed to send message. Please try again.', 'error')
     }
   }
 
@@ -192,7 +194,7 @@ const MessagingInterface: React.FC = () => {
       setMessages([]) // Clear messages for new conversation
     } catch (error) {
       console.error('Failed to start conversation:', error)
-      alert('Failed to start conversation. Please try again.')
+      showToast('Failed to start conversation. Please try again.', 'error')
     }
   }
 

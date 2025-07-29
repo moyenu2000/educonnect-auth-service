@@ -109,7 +109,7 @@ const DailyQuestionConfig: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load questions:', error)
-      alert('Failed to load questions. Please try again.')
+      showToast('Failed to load questions. Please try again.', 'error')
     } finally {
       setLoading(false)
       setLoadingMore(false)

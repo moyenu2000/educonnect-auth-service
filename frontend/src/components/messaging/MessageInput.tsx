@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { discussionService } from '@/services/discussionService'
+import { useToast } from '../../hooks/useToast'
 import { 
   Send, 
   Paperclip, 
@@ -30,6 +31,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   disabled = false
 }) => {
+  const { showToast } = useToast()
   const [message, setMessage] = useState('')
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
   const [isSending, setIsSending] = useState(false)
@@ -126,7 +128,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
     // Check if any files are still uploading
     const stillUploading = attachedFiles.some(f => f.uploading)
     if (stillUploading) {
-      alert('Please wait for files to finish uploading')
+      showToast('Please wait for files to finish uploading', 'warning')
       return
     }
 

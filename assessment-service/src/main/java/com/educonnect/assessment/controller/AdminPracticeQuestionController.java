@@ -2,6 +2,7 @@ package com.educonnect.assessment.controller;
 
 import com.educonnect.assessment.dto.*;
 import com.educonnect.assessment.enums.Difficulty;
+import com.educonnect.assessment.enums.QuestionType;
 import com.educonnect.assessment.service.PracticeProblemService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +34,13 @@ public class AdminPracticeQuestionController {
             @RequestParam(required = false) Long subjectId,
             @RequestParam(required = false) Long topicId,
             @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) QuestionType type,
             @RequestParam(required = false) String search) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size);
         
         Page<PracticeProblemDto> practiceProblems = practiceProblemService.getAllProblemsForAdmin(
-                subjectId, topicId, difficulty, search, pageable);
+                subjectId, topicId, difficulty, type, search, pageable);
 
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("content", practiceProblems.getContent());

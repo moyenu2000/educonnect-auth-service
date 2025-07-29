@@ -424,10 +424,11 @@ public class PracticeProblemServiceImpl implements PracticeProblemService {
     @Override
     @Transactional(readOnly = true)
     public Page<PracticeProblemDto> getAllProblemsForAdmin(Long subjectId, Long topicId, Difficulty difficulty, 
-                                                         String search, Pageable pageable) {
+                                                         QuestionType type, String search, Pageable pageable) {
         String difficultyStr = difficulty != null ? difficulty.name() : null;
+        String typeStr = type != null ? type.name() : null;
         Page<PracticeProblem> problemPage = practiceProblemRepository.findActiveProblemsWithFilters(
-                subjectId, topicId, difficultyStr, search, pageable);
+                subjectId, topicId, difficultyStr, typeStr, search, pageable);
 
         return problemPage.map(problem -> convertToDto(problem, null));
     }

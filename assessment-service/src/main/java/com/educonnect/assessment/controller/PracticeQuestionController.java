@@ -56,7 +56,7 @@ public class PracticeQuestionController {
         // Get practice problems with filtering
         String difficultyStr = difficulty != null ? difficulty.name() : null;
         Page<PracticeProblem> practiceProblems = practiceProblemRepository.findActiveProblemsWithFilters(
-                subjectId, topicId, difficultyStr, search, pageable);
+                subjectId, topicId, difficultyStr, null, search, pageable);
 
         // Convert to response DTOs with submission status
         Page<PracticeQuestionResponse> questionResponses = practiceProblems.map(practiceProblem -> {

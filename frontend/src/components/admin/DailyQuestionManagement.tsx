@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useToast } from "../../hooks/useToast";
 import { assessmentService } from "../../services/assessmentService";
 import {
   Plus,
   Eye,
   Trash2,
+  Settings,
 } from "lucide-react";
 
 interface DailyQuestion {
@@ -59,15 +61,153 @@ interface Filters {
   selectedDate: string;
 }
 
+interface EditDailyQuestionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: {
+    difficulty: string;
+    points: number;
+    bonusPoints?: number;
+  }) => void;
+  dailyQuestion: DailyQuestion | null;
+}
+
+const EditDailyQuestionModal: React.FC<EditDailyQuestionModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  dailyQuestion
+}) => {
+  const [difficulty, setDifficulty] = useState('MEDIUM');
+  const [points, setPoints] = useState(10);
+  const [bonusPoints, setBonusPoints] = useState(0);
+
+  useEffect(() => {
+    if (dailyQuestion) {
+      setDifficulty(dailyQuestion.difficulty);
+      setPoints(dailyQuestion.points);
+      setBonusPoints(dailyQuestion.bonusPoints || 0);
+    }
+  }, [dailyQuestion]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    onSubmit({
+      difficulty,
+      points,
+      bonusPoints: bonusPoints > 0 ? bonusPoints : undefined
+    });
+  };
+
+  if (!isOpen || !dailyQuestion) return null;
+
+  return (
+    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg border border-gray-300 shadow-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4">Edit Daily Question</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="bg-gray-50 p-3 rounded">
+            <p className="text-sm font-medium text-gray-600">
+              Question: {dailyQuestion.text || `ID: ${dailyQuestion.questionId}`}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Date: {dailyQuestion.date}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Question content and date cannot be changed
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Difficulty
+            </label>
+            <select
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="EASY">Easy</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HARD">Hard</option>
+              <option value="EXPERT">Expert</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Override the question's original difficulty
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Points
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={points}
+              onChange={(e) => setPoints(parseInt(e.target.value) || 1)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Points awarded for correctly answering this daily question
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Bonus Points (Optional)
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="50"
+              value={bonusPoints}
+              onChange={(e) => setBonusPoints(parseInt(e.target.value) || 0)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Additional bonus points for special daily questions
+            </p>
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              Update Daily Question
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const DailyQuestionManagement: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [dailyQuestions, setDailyQuestions] = useState<DailyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<Array<{ id: number; name: string }>>([]);
   const [topics, setTopics] = useState<Array<{ id: number; name: string; subjectId: number }>>([]);
   const [allTopics, setAllTopics] = useState<Array<{ id: number; name: string; subjectId: number }>>([]);
+  
+  // Modal states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedDailyQuestion, setSelectedDailyQuestion] = useState<DailyQuestion | null>(null);
   
   const [filters, setFilters] = useState<Filters>({
     subjectId: '',
@@ -84,6 +224,7 @@ const DailyQuestionManagement: React.FC = () => {
   const [pageSize] = useState(20);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+
 
   const loadDailyQuestions = useCallback(async () => {
     try {
@@ -203,10 +344,10 @@ const DailyQuestionManagement: React.FC = () => {
       setDailyQuestions(updatedQuestions);
       
       // Show success message
-      alert('Question removed from daily questions successfully!');
+      showToast('Question removed from daily questions successfully!', 'success');
     } catch (err) {
       console.error('Error removing daily question:', err);
-      alert('Failed to remove question from daily questions. Please try again.');
+      showToast('Failed to remove question from daily questions. Please try again.', 'error');
     }
   };
 
@@ -244,6 +385,45 @@ const DailyQuestionManagement: React.FC = () => {
     }
   };
 
+  const handleEditDailyQuestion = async (data: {
+    difficulty: string;
+    points: number;
+    bonusPoints?: number;
+  }) => {
+    if (!selectedDailyQuestion) return;
+    
+    try {
+      // Get all current daily questions for the date
+      const currentDailyQuestions = dailyQuestions.filter(dq => dq.date === selectedDailyQuestion.date);
+      
+      // Prepare question configurations with the updated data for the selected question
+      const questionConfigurations = currentDailyQuestions.map(dq => ({
+        questionId: dq.questionId,
+        difficulty: dq.id === selectedDailyQuestion.id ? data.difficulty : dq.difficulty,
+        points: dq.id === selectedDailyQuestion.id ? data.points : dq.points,
+        ...(dq.id === selectedDailyQuestion.id && data.bonusPoints && { bonusPoints: data.bonusPoints })
+      }));
+
+      const questionIds = currentDailyQuestions.map(dq => dq.questionId);
+
+      // Use the same API method as the daily config page
+      await assessmentService.setDailyQuestions({
+        date: selectedDailyQuestion.date,
+        questionIds: questionIds,
+        subjectDistribution: {
+          questionConfigurations
+        }
+      });
+
+      setShowEditModal(false);
+      setSelectedDailyQuestion(null);
+      await loadDailyQuestions();
+      showToast('Daily question updated successfully', 'success');
+    } catch (err) {
+      console.error('Error updating daily question:', err);
+      showToast('Failed to update daily question. Please try again.', 'error');
+    }
+  };
 
   if (loading) {
     return (
@@ -517,6 +697,17 @@ const DailyQuestionManagement: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => {
+                              setSelectedDailyQuestion(dailyQuestion);
+                              setShowEditModal(true);
+                            }}
+                            title="Edit Daily Question Settings"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleRemoveFromDaily(dailyQuestion.id)}
                             title="Remove from Daily Questions (question will remain in question bank)"
                             className="text-red-600 hover:text-red-700 hover:border-red-300"
@@ -562,6 +753,17 @@ const DailyQuestionManagement: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Daily Question Modal */}
+      <EditDailyQuestionModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedDailyQuestion(null);
+        }}
+        onSubmit={handleEditDailyQuestion}
+        dailyQuestion={selectedDailyQuestion}
+      />
     </div>
   );
 };

@@ -43,7 +43,7 @@ public interface PracticeProblemService {
     void deletePracticeProblem(Long problemId);
     
     Page<PracticeProblemDto> getAllProblemsForAdmin(Long subjectId, Long topicId, Difficulty difficulty, 
-                                                   String search, Pageable pageable);
+                                                   QuestionType type, String search, Pageable pageable);
     
     boolean isPracticeQuestion(Long questionId);
     

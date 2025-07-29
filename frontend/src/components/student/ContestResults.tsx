@@ -15,6 +15,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useToast } from '../../hooks/useToast'
 
 interface Question {
   id: number
@@ -64,6 +65,7 @@ interface LeaderboardEntry {
 const ContestResults: React.FC = () => {
   const navigate = useNavigate()
   const { contestId } = useParams<{ contestId: string }>()
+  const { showToast } = useToast()
   
   const [results, setResults] = useState<ContestResult | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
@@ -127,7 +129,7 @@ const ContestResults: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to load contest results:', error)
-      alert('Failed to load contest results. Please try again.')
+      showToast('Failed to load contest results. Please try again.', 'error')
     } finally {
       setLoading(false)
     }

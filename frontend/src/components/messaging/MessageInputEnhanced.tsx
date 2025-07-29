@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { discussionService } from '@/services/discussionService'
 import { uploadFilesForMessage, formatFileSize, getFileType } from '@/utils/messageFileUtils'
+import { useToast } from '../../hooks/useToast'
 import { 
   Send, 
   Paperclip, 
@@ -39,6 +40,7 @@ const MessageInputEnhanced: React.FC<MessageInputEnhancedProps> = ({
   maxFileSize = 10, // 10MB default
   allowedFileTypes = ['image/*', 'video/*', 'audio/*', '.pdf', '.doc', '.docx', '.txt', '.zip', '.rar']
 }) => {
+  const { showToast } = useToast()
   const [message, setMessage] = useState('')
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([])
   const [isSending, setIsSending] = useState(false)
@@ -85,7 +87,7 @@ const MessageInputEnhanced: React.FC<MessageInputEnhancedProps> = ({
 
     // Show validation errors
     if (errors.length > 0) {
-      alert('Some files were rejected:\n' + errors.join('\n'))
+      showToast('Some files were rejected:\n' + errors.join('\n'), 'error')
     }
 
     if (validFiles.length === 0) return
@@ -175,7 +177,7 @@ const MessageInputEnhanced: React.FC<MessageInputEnhancedProps> = ({
     // Check if any files are still uploading
     const stillUploading = attachedFiles.some(f => f.uploading)
     if (stillUploading) {
-      alert('Please wait for files to finish uploading')
+      showToast('Please wait for files to finish uploading', 'warning')
       return
     }
 

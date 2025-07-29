@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { assessmentService } from "@/services/assessmentService";
 import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "../../hooks/useToast";
 import { getTodayDateString } from "@/lib/utils";
 import {
   Plus,
@@ -69,6 +70,7 @@ interface Topic {
 
 const QuestionManagement: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -132,8 +134,9 @@ const QuestionManagement: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to load questions:", error);
-      alert(
-        "Failed to load questions. Please check authentication and try again."
+      showToast(
+        "Failed to load questions. Please check authentication and try again.",
+        'error'
       );
     } finally {
       setLoading(false);
@@ -266,10 +269,10 @@ const QuestionManagement: React.FC = () => {
       // Reload questions to reflect the change
       await loadQuestions();
 
-      alert("Question deleted successfully");
+      showToast("Question deleted successfully", 'success');
     } catch (error) {
       console.error("Failed to delete question:", error);
-      alert("Failed to delete question. Please try again.");
+      showToast("Failed to delete question. Please try again.", 'error');
     }
   };
 
@@ -292,7 +295,7 @@ const QuestionManagement: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedQuestions.length === 0) {
-      alert("Please select questions first");
+      showToast("Please select questions first", 'warning');
       return;
     }
 
@@ -316,10 +319,10 @@ const QuestionManagement: React.FC = () => {
       // Reload questions to reflect the changes
       await loadQuestions();
 
-      alert(`${selectedQuestions.length} question(s) deleted successfully`);
+      showToast(`${selectedQuestions.length} question(s) deleted successfully`, 'success');
     } catch (error) {
       console.error("Failed to delete questions:", error);
-      alert("Failed to delete some questions. Please try again.");
+      showToast("Failed to delete some questions. Please try again.", 'error');
     }
   };
 
@@ -352,14 +355,14 @@ const QuestionManagement: React.FC = () => {
       }
 
       if (response.data?.success) {
-        alert(message);
+        showToast(message, 'success');
         setSelectedQuestions([]);
         setShowActionPanel(false);
         setActionType(null);
       }
     } catch (error) {
       console.error("Failed to execute action:", error);
-      alert("Failed to execute action. Please try again.");
+      showToast("Failed to execute action. Please try again.", 'error');
     }
   };
 

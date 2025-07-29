@@ -70,6 +70,7 @@ public interface PracticeProblemRepository extends JpaRepository<PracticeProblem
            "(:subjectId IS NULL OR pp.subject_id = :subjectId) AND " +
            "(:topicId IS NULL OR pp.topic_id = :topicId) AND " +
            "(:difficulty IS NULL OR pp.difficulty = CAST(:difficulty AS VARCHAR)) AND " +
+           "(:type IS NULL OR pp.type = CAST(:type AS VARCHAR)) AND " +
            "(:search IS NULL OR q.text ILIKE CONCAT('%', :search, '%')) " +
            "ORDER BY pp.created_at DESC",
            nativeQuery = true)
@@ -77,6 +78,7 @@ public interface PracticeProblemRepository extends JpaRepository<PracticeProblem
             @Param("subjectId") Long subjectId,
             @Param("topicId") Long topicId,
             @Param("difficulty") String difficulty,
+            @Param("type") String type,
             @Param("search") String search,
             Pageable pageable);
 }

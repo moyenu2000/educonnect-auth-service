@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Plus, Calendar, Clock, Users, Trophy, Filter, AlertCircle, CheckCircle } from 'lucide-react';
 import { assessmentService } from '../../services/assessmentService';
+import { useToast } from '../../hooks/useToast';
 import Pagination from '../ui/pagination';
 
 interface Contest {
@@ -30,6 +31,7 @@ interface Filters {
 }
 
 const ContestManagement: React.FC = () => {
+  const { showToast } = useToast();
   const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -172,10 +174,10 @@ const ContestManagement: React.FC = () => {
       setContests(updatedContests);
       calculateStats(updatedContests);
       
-      alert('Contest deleted successfully!');
+      showToast('Contest deleted successfully!', 'success');
     } catch (err: any) {
       console.error('Error deleting contest:', err);
-      alert('Failed to delete contest. Please try again.');
+      showToast('Failed to delete contest. Please try again.', 'error');
     }
   };
 

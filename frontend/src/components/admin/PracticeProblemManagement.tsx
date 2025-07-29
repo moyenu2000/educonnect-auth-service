@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { assessmentService } from "../../services/assessmentService";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../hooks/useToast";
 import {
   Plus,
   Eye,
@@ -197,6 +198,7 @@ const EditProblemModal: React.FC<EditProblemModalProps> = ({
 
 const PracticeProblemManagement: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [practiceProblems, setPracticeProblems] = useState<PracticeProblem[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -265,7 +267,9 @@ const PracticeProblemManagement: React.FC = () => {
       if (filters.type) params.type = filters.type;
       if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
 
+      console.log('Practice problems API call params:', params);
       const response = await assessmentService.getAllPracticeProblems(params);
+      console.log('Practice problems API response:', response.data);
       
       if (response.data?.success && response.data.data) {
         const data = response.data.data;
@@ -294,10 +298,19 @@ const PracticeProblemManagement: React.FC = () => {
         (topic) => topic.subjectId === parseInt(filters.subjectId)
       );
       setTopics(filteredTopics);
+      
+      // Reset topic if current topic doesn't belong to the selected subject
+      if (filters.topicId && !filteredTopics.some(topic => topic.id === parseInt(filters.topicId))) {
+        setFilters(prev => ({ ...prev, topicId: '' }));
+      }
     } else {
       setTopics([]);
+      // Reset topic when no subject is selected
+      if (filters.topicId) {
+        setFilters(prev => ({ ...prev, topicId: '' }));
+      }
     }
-  }, [filters.subjectId, allTopics]);
+  }, [filters.subjectId, filters.topicId, allTopics]);
 
   // Load initial data
   useEffect(() => {
@@ -311,6 +324,7 @@ const PracticeProblemManagement: React.FC = () => {
 
   // Load practice problems when filters change
   useEffect(() => {
+    console.log('Filters changed, reloading practice problems:', filters, 'debouncedSearch:', debouncedSearch);
     loadPracticeProblems();
   }, [loadPracticeProblems]);
 
@@ -350,7 +364,7 @@ const PracticeProblemManagement: React.FC = () => {
     
     if (!questionId || questionId === undefined || isNaN(questionId)) {
       console.error('Invalid question ID:', questionId, 'Problem data:', problem);
-      alert('Error: Cannot view question - invalid question ID');
+      showToast('Error: Cannot view question - invalid question ID', 'error');
       return;
     }
     
@@ -371,10 +385,10 @@ const PracticeProblemManagement: React.FC = () => {
     try {
       await assessmentService.deletePracticeProblem(problemId);
       await loadPracticeProblems();
-      alert('Practice problem deleted successfully');
+      showToast('Practice problem deleted successfully', 'success');
     } catch (error) {
       console.error('Failed to delete practice problem:', error);
-      alert('Failed to delete practice problem. Please try again.');
+      showToast('Failed to delete practice problem. Please try again.', 'error');
     }
   };
 
@@ -389,10 +403,10 @@ const PracticeProblemManagement: React.FC = () => {
       setShowEditModal(false);
       setSelectedProblem(null);
       await loadPracticeProblems();
-      alert('Practice problem updated successfully');
+      showToast('Practice problem updated successfully', 'success');
     } catch (error) {
       console.error('Failed to update practice problem:', error);
-      alert('Failed to update practice problem. Please try again.');
+      showToast('Failed to update practice problem. Please try again.', 'error');
     }
   };
 
@@ -543,13 +557,16 @@ const PracticeProblemManagement: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Practice Questions ({totalElements})</CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setFilters({
-                subjectId: '',
-                topicId: '',
-                difficulty: '',
-                type: '',
-                search: ''
-              })}>
+              <Button variant="outline" size="sm" onClick={() => {
+                setFilters({
+                  subjectId: '',
+                  topicId: '',
+                  difficulty: '',
+                  type: '',
+                  search: ''
+                });
+                setCurrentPage(0);
+              }}>
                 Clear Filters
               </Button>
             </div>

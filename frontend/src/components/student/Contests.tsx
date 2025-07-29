@@ -6,6 +6,7 @@ import { assessmentService } from '@/services/assessmentService'
 import { Trophy, Calendar, Users, Clock, Play } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { getCurrentTime, formatDate } from '@/lib/utils'
+import { useToast } from '../../hooks/useToast'
 
 interface Contest {
   id: number
@@ -22,6 +23,7 @@ interface Contest {
 
 const Contests: React.FC = () => {
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const [contests, setContests] = useState<Contest[]>([])
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(getCurrentTime())
@@ -55,18 +57,18 @@ const Contests: React.FC = () => {
       navigate(`/student/contest/${contest.id}`)
     } catch (error) {
       console.error('Failed to join contest:', error)
-      alert('Failed to join contest. Please try again.')
+      showToast('Failed to join contest. Please try again.', 'error')
     }
   }
 
   const handleRegisterContest = async (contest: Contest) => {
     try {
       await assessmentService.joinContest(contest.id)
-      alert('Successfully registered for the contest!')
+      showToast('Successfully registered for the contest!', 'success')
       loadContests() // Reload to update status
     } catch (error) {
       console.error('Failed to register for contest:', error)
-      alert('Failed to register for contest. Please try again.')
+      showToast('Failed to register for contest. Please try again.', 'error')
     }
   }
 

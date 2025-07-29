@@ -462,7 +462,10 @@ export const assessmentService = {
     page?: number
     size?: number
     subjectId?: number
+    topicId?: number
     difficulty?: string
+    type?: string
+    search?: string
   }) => assessmentApi.get('/admin/practice-problems', { params }),
 
   createPracticeProblem: (data: {

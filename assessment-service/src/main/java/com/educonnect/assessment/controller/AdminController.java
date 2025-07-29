@@ -324,14 +324,18 @@ public class AdminController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long subjectId,
-            @RequestParam(required = false) String difficulty) {
+            @RequestParam(required = false) Long topicId,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String search) {
         
         try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Pageable pageable = PageRequest.of(page, size);
             Difficulty difficultyEnum = difficulty != null ? Difficulty.valueOf(difficulty.toUpperCase()) : null;
+            QuestionType typeEnum = type != null ? QuestionType.valueOf(type.toUpperCase()) : null;
             
-            Page<PracticeProblemDto> problemPage = practiceProblemService.getProblems(
-                    subjectId, null, difficultyEnum, null, null, null, null, pageable);
+            Page<PracticeProblemDto> problemPage = practiceProblemService.getAllProblemsForAdmin(
+                    subjectId, topicId, difficultyEnum, typeEnum, search, pageable);
             
             Map<String, Object> response = new HashMap<>();
             response.put("content", problemPage.getContent());

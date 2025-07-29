@@ -21,6 +21,7 @@ import {
   Star
 } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useToast } from '../../hooks/useToast'
 
 interface Subject {
   id: number
@@ -69,6 +70,7 @@ interface QuestionFormData {
 
 const CreateQuestion: React.FC = () => {
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const [searchParams] = useSearchParams()
   const questionId = searchParams.get('edit')
   const returnTo = searchParams.get('returnTo')
@@ -189,7 +191,7 @@ const CreateQuestion: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to load question data:', error)
-      alert('Failed to load question data. Please try again.')
+      showToast('Failed to load question data. Please try again.', 'error')
     } finally {
       setLoading(false)
     }
@@ -344,7 +346,7 @@ const CreateQuestion: React.FC = () => {
       }
       
       if (response.data?.success) {
-        alert(isEditing ? 'Question updated successfully!' : 'Question created successfully!')
+        showToast(isEditing ? 'Question updated successfully!' : 'Question created successfully!', 'success')
         navigate(isAdminRoute ? '/admin/questions' : '/question-setter/questions')
       }
     } catch (error: any) {
@@ -358,7 +360,7 @@ const CreateQuestion: React.FC = () => {
       if (error.response?.data?.details) {
         errorMessage += ` Details: ${JSON.stringify(error.response.data.details)}`
       }
-      alert(errorMessage)
+      showToast(errorMessage, 'error')
     } finally {
       setLoading(false)
     }

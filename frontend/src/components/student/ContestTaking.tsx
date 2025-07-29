@@ -23,6 +23,7 @@ import {
   Flag
 } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useToast } from '../../hooks/useToast'
 import { getCurrentTime } from '@/lib/utils'
 
 interface QuestionOption {
@@ -62,6 +63,7 @@ interface ContestSubmission {
 const ContestTaking: React.FC = () => {
   const navigate = useNavigate()
   const { contestId } = useParams<{ contestId: string }>()
+  const { showToast } = useToast()
   
   const [contest, setContest] = useState<Contest | null>(null)
   const [questions, setQuestions] = useState<Question[]>([])
@@ -144,7 +146,7 @@ const ContestTaking: React.FC = () => {
       
     } catch (error) {
       console.error('Failed to load contest data:', error)
-      alert('Failed to load contest. Please try again.')
+      showToast('Failed to load contest. Please try again.', 'error')
       navigate('/student/contests')
     } finally {
       setLoading(false)
@@ -235,12 +237,12 @@ const ContestTaking: React.FC = () => {
       setShowConfirmSubmit(false)
       
       // Show completion message and redirect
-      alert('Contest submitted successfully! Results will be available after the contest ends.')
+      showToast('Contest submitted successfully! Results will be available after the contest ends.', 'success')
       navigate('/student/contests')
       
     } catch (error) {
       console.error('Failed to submit contest:', error)
-      alert('Failed to submit contest. Please try again.')
+      showToast('Failed to submit contest. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -254,7 +256,7 @@ const ContestTaking: React.FC = () => {
         await submitSilentAnswer(currentQuestion.id, answers[currentQuestion.id])
       }
       
-      alert('Time is up! Your contest has been automatically submitted.')
+      showToast('Time is up! Your contest has been automatically submitted.', 'warning')
       navigate('/student/contests')
     } catch (error) {
       console.error('Failed to auto-submit contest:', error)
@@ -281,11 +283,11 @@ const ContestTaking: React.FC = () => {
       setContestCompleted(true)
       setShowConfirmEnd(false)
       
-      alert('Contest completed successfully! You can now view your results.')
+      showToast('Contest completed successfully! You can now view your results.', 'success')
       navigate(`/student/contest/${contestId}/results`)
     } catch (error) {
       console.error('Failed to end contest:', error)
-      alert('Failed to end contest. Please try again.')
+      showToast('Failed to end contest. Please try again.', 'error')
     } finally {
       setSubmitting(false)
     }
