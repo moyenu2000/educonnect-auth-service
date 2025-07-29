@@ -628,6 +628,7 @@ public class AdminController {
         response.setStatus(contest.getStatus());
         response.setCreatedAt(contest.getCreatedAt());
         response.setUpdatedAt(contest.getUpdatedAt());
+        response.setCurrentTime(java.time.LocalDateTime.now().plusHours(6));
         return response;
     }
 

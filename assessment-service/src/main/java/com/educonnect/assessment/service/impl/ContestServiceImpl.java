@@ -60,8 +60,13 @@ public class ContestServiceImpl implements ContestService {
             contestPage = contestRepository.findAll(pageable);
         }
 
+        // Update status for all contests based on modified time
+        List<Contest> updatedContests = contestPage.getContent().stream()
+                .peek(this::updateContestStatusBasedOnTime)
+                .collect(java.util.stream.Collectors.toList());
+
         return new PagedResponse<>(
-                contestPage.getContent(),
+                updatedContests,
                 (int) contestPage.getTotalElements(),
                 contestPage.getTotalPages(),
                 contestPage.getNumber(),
@@ -71,7 +76,10 @@ public class ContestServiceImpl implements ContestService {
 
     @Override
     public List<Contest> getPublicContests() {
-        return contestRepository.findPublicContests();
+        List<Contest> contests = contestRepository.findPublicContests();
+        // Update status for all public contests based on modified time
+        contests.forEach(this::updateContestStatusBasedOnTime);
+        return contests;
     }
 
     @Override
@@ -79,11 +87,15 @@ public class ContestServiceImpl implements ContestService {
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
 
+        // Update contest status based on modified time
+        updateContestStatusBasedOnTime(contest);
+
         Map<String, Object> details = new HashMap<>();
         details.put("contest", contest);
         details.put("questionsCount", contest.getProblemIds() != null ? contest.getProblemIds().size() : 0);
         details.put("timeRemaining", calculateTimeRemaining(contest));
         details.put("canParticipate", canParticipateInContest(contest));
+        details.put("currentTime", getModifiedCurrentTime());
 
         return details;
     }
@@ -92,6 +104,9 @@ public class ContestServiceImpl implements ContestService {
     public List<Question> getContestQuestions(Long contestId) {
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
+
+        // Update contest status based on modified time
+        updateContestStatusBasedOnTime(contest);
 
         // Check if contest is active and user can participate
         if (!canParticipateInContest(contest)) {
@@ -121,6 +136,9 @@ public class ContestServiceImpl implements ContestService {
                                                  String answer, Integer timeTaken, String explanation) {
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
+
+        // Update contest status based on modified time
+        updateContestStatusBasedOnTime(contest);
 
         // Validate contest state and timing
         if (!canSubmitToContest(contest)) {
@@ -186,6 +204,7 @@ public class ContestServiceImpl implements ContestService {
         result.put("message", existingSubmission != null ? "Answer updated successfully" : "Answer submitted successfully");
         result.put("contestActive", true);
         result.put("isUpdate", existingSubmission != null);
+        result.put("currentTime", getModifiedCurrentTime());
         
         return result;
     }
@@ -194,6 +213,9 @@ public class ContestServiceImpl implements ContestService {
     public Map<String, Object> joinContest(Long contestId, Long userId) {
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contest not found with id: " + contestId));
+
+        // Update contest status based on modified time
+        updateContestStatusBasedOnTime(contest);
 
         if (contest.getStatus() != ContestStatus.UPCOMING && contest.getStatus() != ContestStatus.ACTIVE) {
             throw new BadRequestException("Cannot join contest that has ended");
@@ -233,6 +255,7 @@ public class ContestServiceImpl implements ContestService {
         }
         
         result.put("contestStatus", contest.getStatus());
+        result.put("currentTime", getModifiedCurrentTime());
         return result;
     }
 
@@ -265,6 +288,7 @@ public class ContestServiceImpl implements ContestService {
         result.put("completedAt", participation.getCompletedAt());
         result.put("contestId", contestId);
         result.put("userId", userId);
+        result.put("currentTime", getModifiedCurrentTime());
         
         return result;
     }
@@ -281,6 +305,7 @@ public class ContestServiceImpl implements ContestService {
         result.put("contest", contest);
         result.put("leaderboard", leaderboard);
         result.put("totalParticipants", contest.getParticipants());
+        result.put("currentTime", getModifiedCurrentTime());
 
         return result;
     }
@@ -302,6 +327,7 @@ public class ContestServiceImpl implements ContestService {
         result.put("finalLeaderboard", leaderboard);
         result.put("totalParticipants", contest.getParticipants());
         result.put("totalQuestions", contest.getProblemIds() != null ? contest.getProblemIds().size() : 0);
+        result.put("currentTime", getModifiedCurrentTime());
 
         return result;
     }
@@ -409,15 +435,19 @@ public class ContestServiceImpl implements ContestService {
     }
 
     // Helper methods
+    private LocalDateTime getModifiedCurrentTime() {
+        return LocalDateTime.now().plusHours(6);
+    }
+    
     private long calculateTimeRemaining(Contest contest) {
         if (contest.getStatus() != ContestStatus.ACTIVE) {
             return 0;
         }
-        return Math.max(0, java.time.Duration.between(LocalDateTime.now(), contest.getEndTime()).toSeconds());
+        return Math.max(0, java.time.Duration.between(getModifiedCurrentTime(), contest.getEndTime()).toSeconds());
     }
 
     private boolean canParticipateInContest(Contest contest) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = getModifiedCurrentTime();
         // Allow participation if time is within contest window, regardless of status
         // This handles cases where status hasn't been automatically updated
         boolean timeIsValid = now.isAfter(contest.getStartTime()) && now.isBefore(contest.getEndTime());
@@ -425,7 +455,7 @@ public class ContestServiceImpl implements ContestService {
                                           (contest.getStatus() == ContestStatus.UPCOMING && timeIsValid);
         
         // Debug logging
-        System.out.println("Contest participation check - Now: " + now + 
+        System.out.println("Contest participation check - Modified Now: " + now + 
                           ", Start: " + contest.getStartTime() + 
                           ", End: " + contest.getEndTime() + 
                           ", Status: " + contest.getStatus() + 
@@ -437,6 +467,27 @@ public class ContestServiceImpl implements ContestService {
 
     private boolean canSubmitToContest(Contest contest) {
         return canParticipateInContest(contest);
+    }
+    
+    private void updateContestStatusBasedOnTime(Contest contest) {
+        LocalDateTime now = getModifiedCurrentTime();
+        ContestStatus currentStatus = contest.getStatus();
+        ContestStatus newStatus = currentStatus;
+        
+        if (now.isBefore(contest.getStartTime()) && currentStatus != ContestStatus.UPCOMING) {
+            newStatus = ContestStatus.UPCOMING;
+        } else if (now.isAfter(contest.getStartTime()) && now.isBefore(contest.getEndTime()) && currentStatus != ContestStatus.ACTIVE) {
+            newStatus = ContestStatus.ACTIVE;
+        } else if (now.isAfter(contest.getEndTime()) && currentStatus != ContestStatus.COMPLETED) {
+            newStatus = ContestStatus.COMPLETED;
+        }
+        
+        if (newStatus != currentStatus) {
+            System.out.println("Updating contest status from " + currentStatus + " to " + newStatus + 
+                             " for contest " + contest.getId() + " (Modified time: " + now + ")");
+            contest.setStatus(newStatus);
+            contestRepository.save(contest);
+        }
     }
 
     @Override

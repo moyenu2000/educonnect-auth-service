@@ -78,10 +78,33 @@ const ContestManagement: React.FC = () => {
       }
 
       if (data) {
-        const contestsList = data.content || data.contests || data || [];
+        console.log('Loaded contests:', data);
+        
+        // Handle new response structure with wrapped contests
+        let contestsList, totalPages, totalElements, currentTime;
+        
+        if (data.contests && data.contests.content) {
+          // New structure: { contests: { content: [...], totalPages: ..., totalElements: ... }, currentTime: ... }
+          contestsList = data.contests.content;
+          totalPages = data.contests.totalPages;
+          totalElements = data.contests.totalElements;
+          currentTime = data.currentTime;
+        } else {
+          // Legacy structure fallback
+          contestsList = data.content || data.contests || data || [];
+          totalPages = data.totalPages;
+          totalElements = data.totalElements;
+          currentTime = data.currentTime;
+        }
+        
+        // You can use currentTime here if needed for UI features
+        if (currentTime) {
+          console.log('Server current time:', currentTime);
+        }
+        
         setContests(contestsList);
-        setTotalPages(data.totalPages || Math.ceil((data.totalElements || contestsList.length) / pageSize));
-        setTotalElements(data.totalElements || contestsList.length);
+        setTotalPages(totalPages || Math.ceil((totalElements || contestsList.length) / pageSize));
+        setTotalElements(totalElements || contestsList.length);
         setCurrentPage(page);
       }
     } catch (err) {

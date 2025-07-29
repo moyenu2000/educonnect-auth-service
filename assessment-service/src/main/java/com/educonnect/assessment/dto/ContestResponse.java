@@ -20,6 +20,7 @@ public class ContestResponse {
     private ContestStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime currentTime;
 
     public Long getId() {
         return id;
@@ -131,5 +132,13 @@ public class ContestResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getCurrentTime() {
+        return currentTime;
+    }
+
+    public void setCurrentTime(LocalDateTime currentTime) {
+        this.currentTime = currentTime;
     }
 }
