@@ -63,7 +63,6 @@ interface Filters {
 const DailyQuestionManagement: React.FC = () => {
   const navigate = useNavigate();
   const [dailyQuestions, setDailyQuestions] = useState<DailyQuestion[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<DailyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<Array<{ id: number; name: string }>>([]);
@@ -97,12 +96,18 @@ const DailyQuestionManagement: React.FC = () => {
       startDate.setFullYear(startDate.getFullYear() - 1);
       const startDateStr = startDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
       
-      const response = await assessmentService.getAllDailyQuestions(
-        startDateStr, 
-        endDate, 
-        currentPage, 
-        pageSize
-      );
+      const response = await assessmentService.getAllDailyQuestions({
+        startDate: startDateStr,
+        endDate: endDate,
+        page: currentPage,
+        size: pageSize,
+        ...(filters.subjectId && { subjectId: parseInt(filters.subjectId) }),
+        ...(filters.topicId && { topicId: parseInt(filters.topicId) }),
+        ...(filters.difficulty && { difficulty: filters.difficulty }),
+        ...(filters.type && { type: filters.type }),
+        ...(filters.selectedDate && { selectedDate: filters.selectedDate }),
+        ...(filters.search && { search: filters.search })
+      });
       console.log('Paginated daily questions API response:', response);
       
       if (response.data && response.data.data) {
@@ -130,7 +135,7 @@ const DailyQuestionManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, filters.subjectId, filters.topicId, filters.difficulty, filters.type, filters.selectedDate, filters.search]);
 
 
 
@@ -170,58 +175,11 @@ const DailyQuestionManagement: React.FC = () => {
     }
   }, [filters.subjectId, allTopics]);
 
-  const applyFilters = useCallback(() => {
-    // Ensure dailyQuestions is an array
-    if (!Array.isArray(dailyQuestions)) {
-      console.warn('applyFilters: dailyQuestions is not an array:', dailyQuestions);
-      setFilteredQuestions([]);
-      return;
-    }
-
-    let filtered = [...dailyQuestions];
-
-    // Date filter - filter by specific selected date
-    if (filters.selectedDate) {
-      filtered = filtered.filter(q => q.date === filters.selectedDate);
-    }
-
-    // Subject filter
-    if (filters.subjectId) {
-      filtered = filtered.filter(q => q.subjectId === parseInt(filters.subjectId));
-    }
-
-    // Difficulty filter
-    if (filters.difficulty) {
-      filtered = filtered.filter(q => q.difficulty === filters.difficulty);
-    }
-
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(q => {
-        const subjectName = subjects.find(s => s.id === q.subjectId)?.name || '';
-        return q.text?.toLowerCase().includes(searchLower) ||
-               subjectName.toLowerCase().includes(searchLower);
-      });
-    }
-
-    // Sort by date (most recent first)
-    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    setFilteredQuestions(filtered);
-  }, [dailyQuestions, filters, subjects]);
-
   useEffect(() => {
     loadDailyQuestions();
     loadSubjects();
     loadTopics();
   }, [loadDailyQuestions, currentPage, pageSize]);
-
-  useEffect(() => {
-    // Only apply client-side filters if we're not using server-side pagination
-    // For pagination, filtering should be handled on the server side
-    applyFilters();
-  }, [applyFilters]);
 
   // Optimized pagination handlers
   const handlePreviousPage = useCallback(() => {
@@ -266,6 +224,23 @@ const DailyQuestionManagement: React.FC = () => {
       case 'HARD': return 'text-orange-600 bg-orange-100';
       case 'EXPERT': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type?.toUpperCase()) {
+      case "MCQ":
+        return "bg-blue-100 text-blue-800";
+      case "TRUE_FALSE":
+        return "bg-purple-100 text-purple-800";
+      case "FILL_BLANK":
+        return "bg-indigo-100 text-indigo-800";
+      case "NUMERIC":
+        return "bg-teal-100 text-teal-800";
+      case "ESSAY":
+        return "bg-pink-100 text-pink-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -314,7 +289,10 @@ const DailyQuestionManagement: React.FC = () => {
               <select
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.subjectId}
-                onChange={(e) => setFilters(prev => ({ ...prev, subjectId: e.target.value, topicId: '' }))}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, subjectId: e.target.value, topicId: '' }));
+                  setCurrentPage(0);
+                }}
               >
                 <option value="">All Subjects</option>
                 {subjects.map((subject) => (
@@ -329,7 +307,10 @@ const DailyQuestionManagement: React.FC = () => {
               <select
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.topicId}
-                onChange={(e) => setFilters(prev => ({ ...prev, topicId: e.target.value }))}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, topicId: e.target.value }));
+                  setCurrentPage(0);
+                }}
                 disabled={!filters.subjectId}
               >
                 <option value="">All Topics</option>
@@ -345,7 +326,10 @@ const DailyQuestionManagement: React.FC = () => {
               <select
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.difficulty}
-                onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, difficulty: e.target.value }));
+                  setCurrentPage(0);
+                }}
               >
                 <option value="">All Difficulties</option>
                 <option value="EASY">Easy</option>
@@ -356,6 +340,7 @@ const DailyQuestionManagement: React.FC = () => {
             </div>
           </div>
           
+          
           {/* Second row of filters */}
           <div className="grid gap-4 md:grid-cols-3 mt-4">
             <div>
@@ -363,7 +348,10 @@ const DailyQuestionManagement: React.FC = () => {
               <select
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.type}
-                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, type: e.target.value }));
+                  setCurrentPage(0);
+                }}
               >
                 <option value="">All Types</option>
                 <option value="MCQ">Multiple Choice</option>
@@ -379,8 +367,11 @@ const DailyQuestionManagement: React.FC = () => {
                 type="date"
                 className="w-full mt-1 p-2 border rounded-md"
                 value={filters.selectedDate}
-                onChange={(e) => setFilters(prev => ({ ...prev, selectedDate: e.target.value }))}
-                placeholder="Select date"
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, selectedDate: e.target.value }));
+                  setCurrentPage(0);
+                }}
+                placeholder="mm/dd/yyyy"
               />
             </div>
             <div>
@@ -391,7 +382,10 @@ const DailyQuestionManagement: React.FC = () => {
                 className="w-full mt-1 p-2 border rounded-md"
                 placeholder="Search questions..."
                 value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, search: e.target.value }));
+                  setCurrentPage(0);
+                }}
               />
             </div>
           </div>
@@ -404,14 +398,17 @@ const DailyQuestionManagement: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Daily Questions ({totalElements})</CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setFilters({
-                subjectId: '',
-                topicId: '',
-                difficulty: '',
-                type: '',
-                search: '',
-                selectedDate: ''
-              })}>
+              <Button variant="outline" size="sm" onClick={() => {
+                setFilters({
+                  subjectId: '',
+                  topicId: '',
+                  difficulty: '',
+                  type: '',
+                  search: '',
+                  selectedDate: ''
+                });
+                setCurrentPage(0);
+              }}>
                 Clear Filters
               </Button>
             </div>
@@ -446,7 +443,7 @@ const DailyQuestionManagement: React.FC = () => {
                 Try Again
               </Button>
             </div>
-          ) : filteredQuestions.length === 0 ? (
+          ) : dailyQuestions.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -475,7 +472,7 @@ const DailyQuestionManagement: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredQuestions.map((dailyQuestion) => (
+              {dailyQuestions.map((dailyQuestion) => (
                 <div
                   key={dailyQuestion.id}
                   className="border rounded-lg p-4 hover:bg-gray-50"
@@ -489,7 +486,7 @@ const DailyQuestionManagement: React.FC = () => {
                             <Badge className={getDifficultyColor(dailyQuestion.difficulty)}>
                               {dailyQuestion.difficulty}
                             </Badge>
-                            <Badge className="bg-blue-100 text-blue-800">
+                            <Badge className={getTypeColor(dailyQuestion.type)}>
                               {dailyQuestion.type?.replace("_", " ") || "Unknown Type"}
                             </Badge>
                             {(() => {

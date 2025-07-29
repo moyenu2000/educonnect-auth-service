@@ -1119,7 +1119,7 @@ const ExamPage: React.FC = () => {
           )}
 
           {/* Text Input for other types */}
-          {(['FILL_BLANK', 'NUMERIC', 'ESSAY', 'SHORT_ANSWER', 'FILL_IN_BLANK'].includes(currentQuestion.type)) && (
+          {(['FILL_BLANK', 'NUMERIC', 'ESSAY'].includes(currentQuestion.type)) && (
             <div className="space-y-3">
               <textarea
                 placeholder={examState.isAlreadySubmitted || examState.viewOnly ? 'This question has been submitted' : `Enter your answer... ${pendingSaves[currentQuestion.id] ? '(saving...)' : '(auto-saves after 1.5s)'}`}
@@ -1134,7 +1134,7 @@ const ExamPage: React.FC = () => {
 
           {/* Fallback: If no specific type matched, show a generic input */}
           {!(['MCQ', 'TRUE_FALSE'].includes(currentQuestion.type)) && 
-           !(['FILL_BLANK', 'NUMERIC', 'ESSAY', 'SHORT_ANSWER', 'FILL_IN_BLANK'].includes(currentQuestion.type)) && (
+           !(['FILL_BLANK', 'NUMERIC', 'ESSAY'].includes(currentQuestion.type)) && (
             <div className="space-y-3">
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
                 <p className="text-sm text-yellow-800">

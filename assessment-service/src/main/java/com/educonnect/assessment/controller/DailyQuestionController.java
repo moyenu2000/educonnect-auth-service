@@ -310,7 +310,13 @@ public class DailyQuestionController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) Long topicId,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate selectedDate,
+            @RequestParam(required = false) String search) {
         
         try {
             System.out.println("DEBUG Controller: /all endpoint called with startDate=" + startDate + ", endDate=" + endDate + ", page=" + page + ", size=" + size);
@@ -330,7 +336,7 @@ public class DailyQuestionController {
             if (size <= 0 || size > 100) size = 20; // Limit max size to 100
             
             PagedResponse<Map<String, Object>> result = dailyQuestionService.getAllDailyQuestionsPaginated(
-                    startDate, endDate, page, size);
+                    startDate, endDate, page, size, subjectId, topicId, difficulty, type, selectedDate, search);
             
             return ResponseEntity.ok(ApiResponse.success(result));
         } catch (Exception e) {

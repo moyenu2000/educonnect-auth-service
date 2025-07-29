@@ -380,12 +380,14 @@ const QuestionManagement: React.FC = () => {
 
   const getTypeColor = (type: string) => {
     switch (type?.toUpperCase()) {
-      case "MULTIPLE_CHOICE":
+      case "MCQ":
         return "bg-blue-100 text-blue-800";
       case "TRUE_FALSE":
         return "bg-purple-100 text-purple-800";
-      case "SHORT_ANSWER":
+      case "FILL_BLANK":
         return "bg-indigo-100 text-indigo-800";
+      case "NUMERIC":
+        return "bg-teal-100 text-teal-800";
       case "ESSAY":
         return "bg-pink-100 text-pink-800";
       default:
@@ -479,9 +481,10 @@ const QuestionManagement: React.FC = () => {
                 onChange={(e) => handleTypeChange(e.target.value)}
               >
                 <option value="">All Types</option>
-                <option value="MULTIPLE_CHOICE">Multiple Choice</option>
+                <option value="MCQ">Multiple Choice</option>
                 <option value="TRUE_FALSE">True/False</option>
-                <option value="SHORT_ANSWER">Short Answer</option>
+                <option value="FILL_BLANK">Fill in the Blank</option>
+                <option value="NUMERIC">Numeric</option>
                 <option value="ESSAY">Essay</option>
               </select>
             </div>

@@ -218,14 +218,31 @@ export const assessmentService = {
     }).then(response => response.json());
   },
   
-  getAllDailyQuestions: (startDate?: string, endDate?: string, page?: number, size?: number) => {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    if (page !== undefined) params.append('page', page.toString());
-    if (size !== undefined) params.append('size', size.toString());
+  getAllDailyQuestions: (params?: {
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    size?: number;
+    subjectId?: number;
+    topicId?: number;
+    difficulty?: string;
+    type?: string;
+    selectedDate?: string;
+    search?: string;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append('startDate', params.startDate);
+    if (params?.endDate) searchParams.append('endDate', params.endDate);
+    if (params?.page !== undefined) searchParams.append('page', params.page.toString());
+    if (params?.size !== undefined) searchParams.append('size', params.size.toString());
+    if (params?.subjectId) searchParams.append('subjectId', params.subjectId.toString());
+    if (params?.topicId) searchParams.append('topicId', params.topicId.toString());
+    if (params?.difficulty) searchParams.append('difficulty', params.difficulty);
+    if (params?.type) searchParams.append('type', params.type);
+    if (params?.selectedDate) searchParams.append('selectedDate', params.selectedDate);
+    if (params?.search) searchParams.append('search', params.search);
     
-    return assessmentApi.get('/daily-questions/all', { params: Object.fromEntries(params) });
+    return assessmentApi.get('/daily-questions/all', { params: Object.fromEntries(searchParams) });
   },
 
   // Legacy method without pagination (kept for backward compatibility)

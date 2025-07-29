@@ -93,7 +93,7 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
     @Query(value = """
         SELECT 
             dq.id, dq.question_id, dq.date, dq.subject_id, dq.difficulty, 
-            dq.points, dq.bonus_points, q.text, q.type
+            dq.points, dq.bonus_points, q.text, q.type, q.topic_id
         FROM daily_questions dq
         LEFT JOIN questions q ON dq.question_id = q.id
         WHERE dq.date = :date

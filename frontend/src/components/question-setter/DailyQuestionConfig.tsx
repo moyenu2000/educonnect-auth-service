@@ -264,9 +264,10 @@ const DailyQuestionConfig: React.FC = () => {
 
   const getTypeColor = (type: string) => {
     switch (type?.toUpperCase()) {
-      case 'MULTIPLE_CHOICE': return 'bg-blue-100 text-blue-800'
+      case 'MCQ': return 'bg-blue-100 text-blue-800'
       case 'TRUE_FALSE': return 'bg-purple-100 text-purple-800'
-      case 'SHORT_ANSWER': return 'bg-indigo-100 text-indigo-800'
+      case 'FILL_BLANK': return 'bg-indigo-100 text-indigo-800'
+      case 'NUMERIC': return 'bg-teal-100 text-teal-800'
       case 'ESSAY': return 'bg-pink-100 text-pink-800'
       default: return 'bg-gray-100 text-gray-800'
     }

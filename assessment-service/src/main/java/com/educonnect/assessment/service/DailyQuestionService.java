@@ -162,6 +162,9 @@ public class DailyQuestionService {
             date = LocalDate.now();
         }
 
+        System.out.println("DEBUG: getDailyQuestionsRaw called with date=" + date + 
+                          ", subjectId=" + subjectId + ", difficulty=" + difficulty);
+
         try {
             // Use raw repository query to avoid entity loading issues
             List<Object[]> rawResults = dailyQuestionRepository.findDailyQuestionsWithQuestionDataNative(date);
@@ -169,14 +172,36 @@ public class DailyQuestionService {
             List<Map<String, Object>> detailedQuestions = new ArrayList<>();
             
             for (Object[] row : rawResults) {
+                // Extract values first
+                Long questionSubjectId = row[3] != null ? ((Number) row[3]).longValue() : 0L;
+                String questionDifficulty = row[4] != null ? row[4].toString() : "EASY";
+                
+                // Apply filtering
+                boolean shouldInclude = true;
+                
+                // Filter by subject
+                if (subjectId != null && !subjectId.equals(questionSubjectId)) {
+                    shouldInclude = false;
+                }
+                
+                // Filter by difficulty
+                if (difficulty != null && !difficulty.toString().equals(questionDifficulty)) {
+                    shouldInclude = false;
+                }
+                
+                // Skip this question if it doesn't match filters
+                if (!shouldInclude) {
+                    continue;
+                }
+                
                 Map<String, Object> questionDetail = new HashMap<>();
                 
                 // Raw data mapping from SQL result
                 questionDetail.put("id", row[0] != null ? ((Number) row[0]).longValue() : 0L);
                 questionDetail.put("questionId", row[1] != null ? ((Number) row[1]).longValue() : 0L);
                 questionDetail.put("date", row[2] != null ? row[2].toString() : date.toString());
-                questionDetail.put("subjectId", row[3] != null ? ((Number) row[3]).longValue() : 0L);
-                questionDetail.put("difficulty", row[4] != null ? row[4].toString() : "EASY");
+                questionDetail.put("subjectId", questionSubjectId);
+                questionDetail.put("difficulty", questionDifficulty);
                 questionDetail.put("points", row[5] != null ? ((Number) row[5]).intValue() : 10);
                 questionDetail.put("bonusPoints", row[6] != null ? ((Number) row[6]).intValue() : 0);
                 questionDetail.put("text", row[7] != null ? row[7].toString() : "Question text unavailable");
@@ -1093,16 +1118,23 @@ public class DailyQuestionService {
     }
 
     public PagedResponse<Map<String, Object>> getAllDailyQuestionsPaginated(
-            LocalDate startDate, LocalDate endDate, int page, int size) {
+            LocalDate startDate, LocalDate endDate, int page, int size, Long subjectId, Long topicId, Difficulty difficulty,
+            String type, LocalDate selectedDate, String search) {
         
-        // Use the existing approach that works: get a date range and iterate
-        if (startDate == null && endDate == null) {
-            endDate = LocalDate.now();
-            startDate = endDate.minusDays(30);
-        } else if (startDate == null) {
-            startDate = endDate.minusDays(30);
-        } else if (endDate == null) {
-            endDate = LocalDate.now();
+        // If selectedDate is provided, use only that date
+        if (selectedDate != null) {
+            startDate = selectedDate;
+            endDate = selectedDate;
+        } else {
+            // Use the existing approach that works: get a date range and iterate
+            if (startDate == null && endDate == null) {
+                endDate = LocalDate.now();
+                startDate = endDate.minusDays(30);
+            } else if (startDate == null) {
+                startDate = endDate.minusDays(30);
+            } else if (endDate == null) {
+                endDate = LocalDate.now();
+            }
         }
         
         List<Map<String, Object>> allQuestions = new ArrayList<>();
@@ -1111,7 +1143,7 @@ public class DailyQuestionService {
         LocalDate currentDate = startDate;
         while (!currentDate.isAfter(endDate)) {
             try {
-                Map<String, Object> dayResult = getDailyQuestionsRaw(currentDate, null, null, null);
+                Map<String, Object> dayResult = getDailyQuestionsRawWithFilters(currentDate, subjectId, topicId, null, difficulty, type, search);
                 @SuppressWarnings("unchecked")
                 List<Map<String, Object>> dayQuestions = (List<Map<String, Object>>) dayResult.get("questions");
                 if (dayQuestions != null && !dayQuestions.isEmpty()) {
@@ -1147,5 +1179,113 @@ public class DailyQuestionService {
                 page,
                 size
         );
+    }
+    
+    @Transactional(readOnly = true)
+    public Map<String, Object> getDailyQuestionsRawWithFilters(LocalDate date, Long subjectId, Long topicId,
+                                                   ClassLevel classLevel, Difficulty difficulty, String type, String search) {
+        if (date == null) {
+            date = LocalDate.now();
+        }
+
+        System.out.println("DEBUG: getDailyQuestionsRawWithFilters called with date=" + date + 
+                          ", subjectId=" + subjectId + ", topicId=" + topicId + ", difficulty=" + difficulty + ", type=" + type + ", search=" + search);
+
+        try {
+            // Use raw repository query to avoid entity loading issues
+            List<Object[]> rawResults = dailyQuestionRepository.findDailyQuestionsWithQuestionDataNative(date);
+            
+            List<Map<String, Object>> detailedQuestions = new ArrayList<>();
+            
+            for (Object[] row : rawResults) {
+                // Extract values first
+                Long questionSubjectId = row[3] != null ? ((Number) row[3]).longValue() : 0L;
+                String questionDifficulty = row[4] != null ? row[4].toString() : "EASY";
+                String questionText = row[7] != null ? row[7].toString() : "Question text unavailable";
+                String questionType = row[8] != null ? row[8].toString() : "MCQ";
+                Long questionTopicId = row[9] != null ? ((Number) row[9]).longValue() : null;
+                
+                // Apply filtering
+                boolean shouldInclude = true;
+                
+                // Filter by subject
+                if (subjectId != null && !subjectId.equals(questionSubjectId)) {
+                    shouldInclude = false;
+                }
+                
+                // Filter by topic
+                if (topicId != null && !topicId.equals(questionTopicId)) {
+                    shouldInclude = false;
+                }
+                
+                // Filter by difficulty
+                if (difficulty != null && !difficulty.toString().equals(questionDifficulty)) {
+                    shouldInclude = false;
+                }
+                
+                // Filter by type
+                if (type != null && !type.equals(questionType)) {
+                    shouldInclude = false;
+                }
+                
+                // Filter by search (search in question text)
+                if (search != null && !search.trim().isEmpty()) {
+                    String searchLower = search.toLowerCase().trim();
+                    if (!questionText.toLowerCase().contains(searchLower)) {
+                        shouldInclude = false;
+                    }
+                }
+                
+                // Skip this question if it doesn't match filters
+                if (!shouldInclude) {
+                    continue;
+                }
+                
+                Map<String, Object> questionDetail = new HashMap<>();
+                
+                // Raw data mapping from SQL result
+                questionDetail.put("id", row[0] != null ? ((Number) row[0]).longValue() : 0L);
+                questionDetail.put("questionId", row[1] != null ? ((Number) row[1]).longValue() : 0L);
+                questionDetail.put("date", row[2] != null ? row[2].toString() : date.toString());
+                questionDetail.put("subjectId", questionSubjectId);
+                questionDetail.put("difficulty", questionDifficulty);
+                questionDetail.put("points", row[5] != null ? ((Number) row[5]).intValue() : 10);
+                questionDetail.put("bonusPoints", row[6] != null ? ((Number) row[6]).intValue() : 0);
+                questionDetail.put("text", questionText);
+                questionDetail.put("type", questionType);
+                
+                // Get options for this question using raw query
+                Long questionId = row[1] != null ? ((Number) row[1]).longValue() : 0L;
+                List<Map<String, Object>> options = getQuestionOptionsRaw(questionId);
+                questionDetail.put("options", options);
+                
+                detailedQuestions.add(questionDetail);
+            }
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("questions", detailedQuestions);
+            result.put("totalQuestions", detailedQuestions.size());
+            
+            // Simple streak info
+            Map<String, Object> streakInfo = new HashMap<>();
+            streakInfo.put("currentStreak", 0);
+            streakInfo.put("longestStreak", 0);
+            streakInfo.put("streakHistory", new ArrayList<>());
+            streakInfo.put("subjectStreaks", new ArrayList<>());
+            result.put("streakInfo", streakInfo);
+            
+            return result;
+            
+        } catch (Exception e) {
+            System.out.println("ERROR: getDailyQuestionsRawWithFilters failed: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fallback response
+            Map<String, Object> result = new HashMap<>();
+            result.put("questions", new ArrayList<>());
+            result.put("totalQuestions", 0);
+            result.put("streakInfo", new HashMap<>());
+            return result;
+        }
     }
 }
