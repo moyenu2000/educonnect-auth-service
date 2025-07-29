@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Plus,
   Check,
+  X,
 } from "lucide-react";
 
 // Debounce hook
@@ -78,6 +79,14 @@ const AddPracticeQuestions: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [modalForm, setModalForm] = useState({
+    difficulty: "",
+    points: ""
+  });
 
   // Filters
   const [filters, setFilters] = useState({
@@ -228,18 +237,38 @@ const AddPracticeQuestions: React.FC = () => {
     }
   }, [filters.subjectId, allTopics]);
 
-  const handleAddToPractice = async (questionId: number) => {
+  const handleAddToPractice = (question: Question) => {
+    setSelectedQuestion(question);
+    setModalForm({
+      difficulty: question.difficulty || "",
+      points: ""
+    });
+    setShowAddModal(true);
+  };
+
+  const handleConfirmAddToPractice = async () => {
+    if (!selectedQuestion) return;
+
     try {
-      await assessmentService.addQuestionsToPractice([questionId]);
+      // Use the new API with difficulty and points
+      await assessmentService.addQuestionsToPracticeWithDetails([{
+        questionId: selectedQuestion.id,
+        difficulty: modalForm.difficulty,
+        points: parseInt(modalForm.points)
+      }]);
       
       // Update the question's isInPracticeProblem status in the local state
       setQuestions(prevQuestions => 
         prevQuestions.map(question => 
-          question.id === questionId 
+          question.id === selectedQuestion.id 
             ? { ...question, isInPracticeProblem: true }
             : question
         )
       );
+      
+      setShowAddModal(false);
+      setSelectedQuestion(null);
+      setModalForm({ difficulty: "", points: "" });
       
       showToast("Question added to practice problems successfully", 'success');
     } catch (error) {
@@ -453,7 +482,7 @@ const AddPracticeQuestions: React.FC = () => {
                             <Button
                               variant={isAdded ? "secondary" : "default"}
                               size="sm"
-                              onClick={() => handleAddToPractice(question.id)}
+                              onClick={() => handleAddToPractice(question)}
                               disabled={isAdded}
                               className={isAdded ? "opacity-50" : ""}
                             >
@@ -509,6 +538,104 @@ const AddPracticeQuestions: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Add to Practice Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Add to Practice Questions</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowAddModal(false);
+                  setSelectedQuestion(null);
+                  setModalForm({ difficulty: "", points: "" });
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {selectedQuestion && (
+              <div className="space-y-4">
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm font-medium text-gray-900">
+                    {selectedQuestion.text}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge className={getDifficultyColor(selectedQuestion.difficulty)}>
+                      {selectedQuestion.difficulty}
+                    </Badge>
+                    <Badge className={getTypeColor(selectedQuestion.type)}>
+                      {selectedQuestion.type?.replace("_", " ")}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Difficulty
+                    </label>
+                    <select
+                      className="w-full p-2 border rounded-md"
+                      value={modalForm.difficulty}
+                      onChange={(e) =>
+                        setModalForm({ ...modalForm, difficulty: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Select Difficulty</option>
+                      <option value="EASY">Easy</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HARD">Hard</option>
+                      <option value="EXPERT">Expert</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Points
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full p-2 border rounded-md"
+                      value={modalForm.points}
+                      onChange={(e) =>
+                        setModalForm({ ...modalForm, points: e.target.value })
+                      }
+                      placeholder="Enter points (e.g., 10)"
+                      min="1"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setSelectedQuestion(null);
+                      setModalForm({ difficulty: "", points: "" });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmAddToPractice}
+                    disabled={!modalForm.difficulty || !modalForm.points}
+                  >
+                    Add to Practice
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

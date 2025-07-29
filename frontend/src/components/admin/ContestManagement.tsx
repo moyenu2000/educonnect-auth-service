@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Edit, Trash2, Plus, Calendar, Clock, Users, Trophy, Filter, AlertCircle, CheckCircle } from 'lucide-react';
+import { Edit, Trash2, Plus, Calendar, Clock, Users, Trophy, Filter } from 'lucide-react';
 import { assessmentService } from '../../services/assessmentService';
 import { useToast } from '../../hooks/useToast';
-import Pagination from '../ui/pagination';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Contest {
   id: number;
@@ -24,126 +26,74 @@ interface Contest {
 interface Filters {
   status: string;
   type: string;
-  dateRange: {
-    start: string;
-    end: string;
-  };
+  search: string;
 }
 
 const ContestManagement: React.FC = () => {
   const { showToast } = useToast();
   const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [contestsLoading, setContestsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   
   const [filters, setFilters] = useState<Filters>({
     status: '',
     type: '',
-    dateRange: {
-      start: '',
-      end: ''
-    }
+    search: ''
   });
 
-  const [stats, setStats] = useState({
-    upcoming: 0,
-    active: 0,
-    completed: 0,
-    total: 0
-  });
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
-  const [totalElements, setTotalElements] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const pageSize = 20;
 
   useEffect(() => {
     loadContests();
-  }, [currentPage, pageSize, filters.status, filters.type]);
+  }, [currentPage, filters]);
 
-  const loadContests = async () => {
+  const loadContests = async (page: number = currentPage) => {
     try {
-      setLoading(true);
-      setError(null);
+      setContestsLoading(true);
       
-      const response = await assessmentService.getAllContests(
-        currentPage, 
-        pageSize,
-        filters.status || undefined,
-        filters.type || undefined
+      const params = {
+        page,
+        size: pageSize,
+        status: filters.status || undefined,
+        type: filters.type || undefined,
+        search: filters.search || undefined
+      };
+
+      // Remove undefined values
+      Object.keys(params).forEach(key => 
+        params[key] === undefined && delete params[key]
       );
+
+      const response = await assessmentService.getContests(params);
+      console.log('Contests response:', response);
       
-      console.log('Contests API response:', response);
-      
+      let data;
       if (response.data && response.data.data) {
-        const paginatedData = response.data.data;
-        const contestsData = paginatedData.content || [];
-        
-        setContests(contestsData);
-        setTotalElements(paginatedData.totalElements || 0);
-        setTotalPages(paginatedData.totalPages || 0);
-        
-        calculateStats(contestsData);
-      } else {
-        console.warn('Unexpected response structure:', response.data);
-        setContests([]);
-        setTotalElements(0);
-        setTotalPages(0);
-        calculateStats([]);
+        data = response.data.data;
+      } else if (response.data) {
+        data = response.data;
       }
-    } catch (err: any) {
+
+      if (data) {
+        const contestsList = data.content || data.contests || data || [];
+        setContests(contestsList);
+        setTotalPages(data.totalPages || Math.ceil((data.totalElements || contestsList.length) / pageSize));
+        setTotalElements(data.totalElements || contestsList.length);
+        setCurrentPage(page);
+      }
+    } catch (err) {
       console.error('Error loading contests:', err);
-      
-      if (err.response?.status === 404) {
-        setError('Contest API endpoint not found. Please ensure the assessment service is running.');
-      } else if (err.response?.status === 401) {
-        setError('Authentication required. Please log in again.');
-      } else if (err.response?.status === 403) {
-        setError('Access denied. You do not have permission to view contests.');
-      } else {
-        setError('Failed to load contests. Please check the assessment service and try again.');
-      }
-      
-      setContests([]);
-      setTotalElements(0);
-      setTotalPages(0);
-      calculateStats([]);
+      showToast('Failed to load contests. Please try again.', 'error');
     } finally {
       setLoading(false);
+      setContestsLoading(false);
     }
-  };
-
-  const calculateStats = (contestsList: Contest[]) => {
-    if (!Array.isArray(contestsList)) {
-      setStats({ upcoming: 0, active: 0, completed: 0, total: 0 });
-      return;
-    }
-
-    const upcoming = contestsList.filter(c => c.status === 'UPCOMING').length;
-    const active = contestsList.filter(c => ['ACTIVE', 'RUNNING'].includes(c.status)).length;
-    const completed = contestsList.filter(c => ['COMPLETED', 'FINISHED'].includes(c.status)).length;
-    
-    setStats({
-      upcoming,
-      active,
-      completed,
-      total: contestsList.length
-    });
-  };
-
-  // Pagination handlers
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(0);
   };
 
   const handleCreateContest = () => {
-    // Detect user type from current path
     const path = window.location.pathname;
     if (path.includes('/question-setter/')) {
       window.location.href = '/question-setter/contests/create';
@@ -153,7 +103,6 @@ const ContestManagement: React.FC = () => {
   };
 
   const handleEditContest = (contestId: number) => {
-    // Detect user type from current path
     const path = window.location.pathname;
     if (path.includes('/question-setter/')) {
       window.location.href = `/question-setter/contests/edit/${contestId}`;
@@ -163,43 +112,56 @@ const ContestManagement: React.FC = () => {
   };
 
   const handleDeleteContest = async (contestId: number, contestTitle: string) => {
-    if (!confirm(`Are you sure you want to delete the contest "${contestTitle}"?`)) {
+    if (!confirm(`Are you sure you want to delete "${contestTitle}"? This action cannot be undone.`)) {
       return;
     }
 
     try {
       await assessmentService.deleteContest(contestId);
-      
-      const updatedContests = contests.filter(c => c.id !== contestId);
-      setContests(updatedContests);
-      calculateStats(updatedContests);
-      
-      showToast('Contest deleted successfully!', 'success');
-    } catch (err: any) {
+      showToast('Contest deleted successfully', 'success');
+      loadContests();
+    } catch (err) {
       console.error('Error deleting contest:', err);
       showToast('Failed to delete contest. Please try again.', 'error');
     }
   };
 
+  const handleFilterChange = (field: keyof Filters, value: string) => {
+    setFilters(prev => ({ ...prev, [field]: value }));
+    setCurrentPage(0);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'UPCOMING': return 'text-blue-600 bg-blue-100';
-      case 'ACTIVE':
-      case 'RUNNING': return 'text-green-600 bg-green-100';
-      case 'COMPLETED':
-      case 'FINISHED': return 'text-gray-600 bg-gray-100';
-      case 'CANCELLED': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'UPCOMING': return 'bg-blue-100 text-blue-800';
+      case 'ACTIVE': return 'bg-green-100 text-green-800';
+      case 'RUNNING': return 'bg-yellow-100 text-yellow-800';
+      case 'COMPLETED': return 'bg-gray-100 text-gray-800';
+      case 'FINISHED': return 'bg-purple-100 text-purple-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'SPEED': return 'text-orange-600 bg-orange-100';
-      case 'ACCURACY': return 'text-green-600 bg-green-100';
-      case 'MIXED': return 'text-purple-600 bg-purple-100';
-      case 'CODING': return 'text-blue-600 bg-blue-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'SPEED': return 'bg-orange-100 text-orange-800';
+      case 'ACCURACY': return 'bg-green-100 text-green-800';
+      case 'MIXED': return 'bg-purple-100 text-purple-800';
+      case 'CODING': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -221,116 +183,37 @@ const ContestManagement: React.FC = () => {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  if (loading) {
+  if (loading && contests.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading contests...</p>
-        </div>
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Trophy className="mr-3 text-indigo-600" />
-                Contest Management
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Create, manage, and monitor programming contests
-              </p>
-            </div>
-            <div className="flex-shrink-0">
-              <button
-                onClick={handleCreateContest}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700 transition-colors flex items-center font-medium shadow-lg border-2 border-indigo-600"
-                style={{ minWidth: '180px' }}
-              >
-                <Plus className="mr-2" size={20} />
-                Create Contest
-              </button>
-            </div>
+    <div className="space-y-6">
+      {/* Filters and Actions Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">
+              Contest Filters & Actions
+            </CardTitle>
+            <Button onClick={handleCreateContest} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Contest
+            </Button>
           </div>
-          
-          {/* Alternative button for mobile/debugging */}
-          <div className="mt-4 lg:hidden">
-            <button
-              onClick={handleCreateContest}
-              className="w-full bg-green-600 text-white px-6 py-4 rounded-md hover:bg-green-700 transition-colors flex items-center justify-center font-medium text-lg"
-            >
-              <Plus className="mr-2" size={24} />
-              Create New Contest
-            </button>
-          </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center">
-                <Clock className="h-8 w-8 text-blue-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-blue-800">Upcoming</p>
-                  <p className="text-2xl font-bold text-blue-900">{stats.upcoming}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <div className="flex items-center">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-green-800">Active</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.active}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className="flex items-center">
-                <Trophy className="h-8 w-8 text-gray-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-800">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-              <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-indigo-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-indigo-800">Total Contests</p>
-                  <p className="text-2xl font-bold text-indigo-900">{stats.total}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Filter className="mr-2" size={20} />
-            Filters
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Status Filter */}
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
-              </label>
+              <label className="text-sm font-medium">Status</label>
               <select
+                className="w-full mt-1 p-2 border rounded-md"
                 value={filters.status}
-                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(e) => handleFilterChange('status', e.target.value)}
               >
                 <option value="">All Statuses</option>
                 <option value="UPCOMING">Upcoming</option>
@@ -341,203 +224,167 @@ const ContestManagement: React.FC = () => {
                 <option value="CANCELLED">Cancelled</option>
               </select>
             </div>
-
-            {/* Type Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Type
-              </label>
+              <label className="text-sm font-medium">Type</label>
               <select
+                className="w-full mt-1 p-2 border rounded-md"
                 value={filters.type}
-                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(e) => handleFilterChange('type', e.target.value)}
               >
                 <option value="">All Types</option>
-                <option value="SPEED">Speed</option>
-                <option value="ACCURACY">Accuracy</option>
-                <option value="MIXED">Mixed</option>
-                <option value="CODING">Coding</option>
+                <option value="SPEED">Speed Contest</option>
+                <option value="ACCURACY">Accuracy Contest</option>
+                <option value="MIXED">Mixed Contest</option>
+                <option value="CODING">Coding Contest</option>
               </select>
             </div>
-
-            {/* Reset Filters */}
-            <div className="flex items-end">
-              <button
-                onClick={() => setFilters({
-                  status: '',
-                  type: '',
-                  dateRange: { start: '', end: '' }
-                })}
-                className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-              >
-                Reset Filters
-              </button>
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium">Search</label>
+              <input
+                type="text"
+                className="w-full mt-1 p-2 border rounded-md"
+                placeholder="Search contests..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+              />
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Contests List */}
-        <div className="bg-white rounded-lg shadow-sm">
-          {error && (
-            <div className="p-4 bg-red-50 border-l-4 border-red-400 mb-4">
-              <div className="flex">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                  <button 
-                    onClick={() => {
-                      setError(null);
-                      loadContests();
-                    }}
-                    className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-                  >
-                    Try Again
-                  </button>
-                </div>
+      {/* Contest List Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">
+            Contest List ({totalElements})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {contestsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+                <span className="text-sm text-muted-foreground">
+                  Loading contests...
+                </span>
               </div>
             </div>
-          )}
-
-          {!Array.isArray(contests) || contests.length === 0 ? (
-            <div className="p-8 text-center">
-              <Trophy className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No contests found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {!Array.isArray(contests) 
-                  ? 'Unable to load contests. Please check your connection and try again.'
-                  : filters.status || filters.type
-                  ? 'Try adjusting your filters to see more contests.'
-                  : 'No contests have been created yet.'}
-              </p>
-              {Array.isArray(contests) && contests.length === 0 && !filters.status && !filters.type && (
-                <button
-                  onClick={handleCreateContest}
-                  className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
-                >
+          ) : contests.length === 0 ? (
+            <div className="text-center py-8">
+              <Trophy className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <p className="text-gray-500 mb-4">No contests found</p>
+              {!filters.status && !filters.type && !filters.search && (
+                <Button onClick={handleCreateContest} variant="outline">
+                  <Plus className="mr-2 h-4 w-4" />
                   Create your first contest
-                </button>
+                </Button>
               )}
             </div>
           ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Contest
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Type
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Schedule
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Duration
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Participants
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {contests.map((contest) => (
-                      <tr key={contest.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {contest.title}
-                            </div>
-                            {contest.description && (
-                              <div className="text-sm text-gray-500 max-w-md truncate">
-                                {contest.description}
-                              </div>
-                            )}
-                            <div className="text-xs text-gray-400 mt-1">
-                              {contest.problemIds?.length || 0} problems
-                            </div>
+            <div className="space-y-4">
+              {contests.map((contest) => (
+                <div
+                  key={contest.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm mb-2">{contest.title}</h3>
+                          {contest.description && (
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                              {contest.description}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={getStatusColor(contest.status)}>
+                              {contest.status}
+                            </Badge>
+                            <Badge className={getTypeColor(contest.type)}>
+                              {contest.type}
+                            </Badge>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(contest.type)}`}>
-                            {contest.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            <div className="flex items-center">
-                              <Calendar className="mr-1" size={14} />
-                              {formatDateTime(contest.startTime)}
+                          <div className="text-xs text-gray-500 space-y-1">
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Start: {formatDateTime(contest.startTime)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                Duration: {formatDuration(contest.duration)}
+                              </span>
                             </div>
-                            <div className="flex items-center text-gray-500 mt-1">
-                              <Clock className="mr-1" size={14} />
-                              {formatDateTime(contest.endTime)}
+                            <div className="flex items-center gap-4">
+                              <span className="flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                {contest.participants} participants
+                              </span>
+                              <span>
+                                {contest.problemIds?.length || 0} problems
+                              </span>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            {formatDuration(contest.duration)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center text-sm text-gray-900">
-                            <Users className="mr-1" size={16} />
-                            {contest.participants}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(contest.status)}`}>
-                            {contest.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEditContest(contest.id)}
-                              className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
-                              title="Edit Contest"
-                            >
-                              <Edit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteContest(contest.id, contest.title)}
-                              className="text-red-600 hover:text-red-900 p-1 rounded"
-                              title="Delete Contest"
-                              disabled={['ACTIVE', 'RUNNING'].includes(contest.status)}
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              
-              {!loading && totalElements > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={totalElements}
-                  pageSize={pageSize}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                  loading={loading}
-                />
-              )}
-            </>
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditContest(contest.id)}
+                            title="Edit Contest"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteContest(contest.id, contest.title)}
+                            title="Delete Contest"
+                            className="text-red-600 hover:text-red-700 hover:border-red-300"
+                            disabled={['ACTIVE', 'RUNNING'].includes(contest.status)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
-      </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Showing {currentPage * pageSize + 1} to{" "}
+                {Math.min((currentPage + 1) * pageSize, totalElements)} of{" "}
+                {totalElements} contests
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 0}
+                  onClick={handlePreviousPage}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages - 1}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

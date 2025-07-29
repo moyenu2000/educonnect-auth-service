@@ -287,28 +287,81 @@ public class AdminController {
     @PostMapping("/add-questions-to-practice")
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addQuestionsToPractice(
-            @RequestBody List<Long> questionIds) {
+            @RequestBody Object requestBody) {
         
-        int created = 0;
-        int skipped = 0;
-        
-        for (Long questionId : questionIds) {
-            try {
-                practiceProblemService.createProblemFromQuestion(questionId);
-                created++;
-            } catch (Exception e) {
-                skipped++;
+        try {
+            // Handle both old format (List<Long>) and new format (with details)
+            if (requestBody instanceof List) {
+                // Old format - just question IDs
+                @SuppressWarnings("unchecked")
+                List<Long> questionIds = (List<Long>) requestBody;
+                
+                int created = 0;
+                int skipped = 0;
+                
+                for (Long questionId : questionIds) {
+                    try {
+                        practiceProblemService.createProblemFromQuestion(questionId);
+                        created++;
+                    } catch (Exception e) {
+                        skipped++;
+                    }
+                }
+                
+                Map<String, Object> result = Map.of(
+                    "created", created,
+                    "skipped", skipped,
+                    "total", questionIds.size(),
+                    "message", String.format("Added %d questions to practice problems", created)
+                );
+                
+                return ResponseEntity.ok(ApiResponse.success(result, "Questions added to practice problems successfully"));
+            } else {
+                // New format - with difficulty and points
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                AddQuestionsToPracticeRequest request = mapper.convertValue(requestBody, AddQuestionsToPracticeRequest.class);
+                
+                int created = 0;
+                int skipped = 0;
+                
+                for (AddQuestionDetail questionDetail : request.getQuestions()) {
+                    try {
+                        Difficulty difficultyEnum = questionDetail.getDifficulty() != null ? 
+                            Difficulty.valueOf(questionDetail.getDifficulty().toUpperCase()) : Difficulty.MEDIUM;
+                        
+                        // Create the practice problem
+                        practiceProblemService.createProblemFromQuestion(questionDetail.getQuestionId());
+                        
+                        // Update with custom difficulty and points if provided
+                        if (questionDetail.getDifficulty() != null) {
+                            practiceProblemService.updateProblemDifficulty(questionDetail.getQuestionId(), difficultyEnum);
+                        }
+                        
+                        // Note: Points update would need additional service method implementation
+                        // For now, we'll just create with difficulty
+                        
+                        created++;
+                    } catch (Exception e) {
+                        System.err.println("Error creating practice problem from question " + questionDetail.getQuestionId() + ": " + e.getMessage());
+                        skipped++;
+                    }
+                }
+                
+                Map<String, Object> result = Map.of(
+                    "created", created,
+                    "skipped", skipped,
+                    "total", request.getQuestions().size(),
+                    "message", String.format("Added %d questions to practice problems with custom settings", created)
+                );
+                
+                return ResponseEntity.ok(ApiResponse.success(result, "Questions added to practice problems successfully"));
             }
+        } catch (Exception e) {
+            System.err.println("Error processing add questions to practice request: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                .body(ApiResponse.error("Failed to add questions to practice: " + e.getMessage()));
         }
-        
-        Map<String, Object> result = Map.of(
-            "created", created,
-            "skipped", skipped,
-            "total", questionIds.size(),
-            "message", String.format("Added %d questions to practice problems", created)
-        );
-        
-        return ResponseEntity.ok(ApiResponse.success(result, "Questions added to practice problems successfully"));
     }
 
     @GetMapping("/questions/stats")
@@ -576,6 +629,27 @@ public class AdminController {
         response.setCreatedAt(contest.getCreatedAt());
         response.setUpdatedAt(contest.getUpdatedAt());
         return response;
+    }
+
+    // DTOs for enhanced add questions to practice functionality
+    public static class AddQuestionsToPracticeRequest {
+        private List<AddQuestionDetail> questions;
+
+        public List<AddQuestionDetail> getQuestions() { return questions; }
+        public void setQuestions(List<AddQuestionDetail> questions) { this.questions = questions; }
+    }
+
+    public static class AddQuestionDetail {
+        private Long questionId;
+        private String difficulty;
+        private Integer points;
+
+        public Long getQuestionId() { return questionId; }
+        public void setQuestionId(Long questionId) { this.questionId = questionId; }
+        public String getDifficulty() { return difficulty; }
+        public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+        public Integer getPoints() { return points; }
+        public void setPoints(Integer points) { this.points = points; }
     }
 
 }

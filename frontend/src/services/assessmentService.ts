@@ -457,6 +457,12 @@ export const assessmentService = {
   addQuestionsToPractice: (questionIds: number[]) =>
     assessmentApi.post('/admin/add-questions-to-practice', questionIds),
 
+  addQuestionsToPracticeWithDetails: (questions: Array<{
+    questionId: number
+    difficulty: string
+    points: number
+  }>) => assessmentApi.post('/admin/add-questions-to-practice', { questions }),
+
   // Practice Problem Management for Admin
   getAllPracticeProblems: (params?: {
     page?: number
