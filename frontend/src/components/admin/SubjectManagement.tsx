@@ -4,7 +4,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { assessmentService } from '@/services/assessmentService'
 import { 
-  BookOpen, 
   Plus, 
   Edit, 
   Trash2, 

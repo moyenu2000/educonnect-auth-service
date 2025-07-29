@@ -16,7 +16,7 @@ import java.util.TimeZone;
 public class EduConnectAssessmentServiceApplication {
 
 	public static void main(String[] args) {
-		TimeZone.setDefault(TimeZone.getTimeZone("Asia/Dhaka"));
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		SpringApplication.run(EduConnectAssessmentServiceApplication.class, args);
 	}
 
