@@ -370,6 +370,10 @@ public class QuestionService {
                     .ifPresent(topic -> response.setTopicName(topic.getName()));
         }
 
+        // Check if question is already in practice problems
+        boolean isInPracticeProblem = practiceProblemRepository.existsByQuestionId(question.getId());
+        response.setIsInPracticeProblem(isInPracticeProblem);
+
         return response;
     }
 
