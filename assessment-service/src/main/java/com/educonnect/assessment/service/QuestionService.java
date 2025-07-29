@@ -496,10 +496,15 @@ public class QuestionService {
                 return true;
             }
 
-            // Check if question is part of practice problems
-            boolean isPracticeProblem = practiceProblemRepository.existsByQuestionId(questionId);
-            if (isPracticeProblem) {
-                return true;
+            // Check if question is part of practice problems (skip if table doesn't exist)
+            try {
+                boolean isPracticeProblem = practiceProblemRepository.existsByQuestionId(questionId);
+                if (isPracticeProblem) {
+                    return true;
+                }
+            } catch (Exception practiceException) {
+                // Skip practice problems check if table doesn't exist
+                System.out.println("Skipping practice problems check: " + practiceException.getMessage());
             }
 
             // Check if question is part of active contests
@@ -511,6 +516,7 @@ public class QuestionService {
             return false;
         } catch (Exception e) {
             // If any error occurs, deny access for security
+            System.out.println("Error checking question accessibility: " + e.getMessage());
             return false;
         }
     }

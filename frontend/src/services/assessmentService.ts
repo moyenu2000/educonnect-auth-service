@@ -184,7 +184,17 @@ export const assessmentService = {
   
   getQuestion: (id: number) => assessmentApi.get(`/questions/${id}`),
   
-  getPublicQuestion: (id: number) => assessmentApi.get(`/questions/public/${id}`),
+  getPublicQuestion: (id: number) => assessmentApi.get(`/questions/private/${id}`),
+  
+  getPublicQuestions: (params: {
+    page?: number
+    size?: number
+    subjectId?: number
+    topicId?: number
+    difficulty?: string
+    type?: string
+    search?: string
+  }) => assessmentApi.get('/questions/public', { params }),
   
   createQuestion: (data: Partial<Question>) => assessmentApi.post('/questions', data),
   

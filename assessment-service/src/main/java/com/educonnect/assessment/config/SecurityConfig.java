@@ -43,6 +43,9 @@ public class SecurityConfig {
                         .requestMatchers("/topics/public/by-subject/**").permitAll()
                         .requestMatchers("/daily-questions/public/**").permitAll()
                         .requestMatchers("/questions/public/**").permitAll()
+                        .requestMatchers("/questions/public").permitAll() // Allow public questions list access
+                        .requestMatchers("/questions/private/**").permitAll() // Allow private questions access for testing
+                        .requestMatchers("/questions/test-simple/**").permitAll() // Allow test endpoint
                         .requestMatchers("/questions").permitAll() // Allow basic questions access
                         .requestMatchers("/leaderboard/public").permitAll()
                         .requestMatchers("/test/**").permitAll()
