@@ -607,6 +607,12 @@ public class AnalyticsService {
     // Helper methods
     private LocalDateTime getStartDateForPeriod(Period period) {
         LocalDateTime now = LocalDateTime.now();
+        
+        // Handle null period by defaulting to MONTHLY
+        if (period == null) {
+            period = Period.MONTHLY;
+        }
+        
         return switch (period) {
             case DAILY -> now.minusDays(1);
             case WEEKLY -> now.minusWeeks(1);

@@ -50,10 +50,18 @@ public class DailyQuestionService {
     @Autowired
     private UserStreakRepository userStreakRepository;
 
+    /**
+     * Get current date adjusted for timezone (server time + 6 hours for Asia/Dhaka)
+     */
+    private LocalDate getCurrentDateAdjusted() {
+        // Add 6 hours to server time to match Asia/Dhaka timezone
+        return java.time.LocalDateTime.now().plusHours(6).toLocalDate();
+    }
+
     public Map<String, Object> getDailyQuestions(LocalDate date, Long subjectId, 
                                                 ClassLevel classLevel, Difficulty difficulty) {
         if (date == null) {
-            date = LocalDate.now();
+            date = getCurrentDateAdjusted();
         }
 
         List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestionsWithDifficulty(
@@ -159,7 +167,7 @@ public class DailyQuestionService {
     public Map<String, Object> getDailyQuestionsRaw(LocalDate date, Long subjectId, 
                                                    ClassLevel classLevel, Difficulty difficulty) {
         if (date == null) {
-            date = LocalDate.now();
+            date = getCurrentDateAdjusted();
         }
 
         System.out.println("DEBUG: getDailyQuestionsRaw called with date=" + date + 
@@ -325,7 +333,7 @@ public class DailyQuestionService {
     public Map<String, Object> getDailyQuestionDetails(LocalDate date, Long subjectId, 
                                                      ClassLevel classLevel, Difficulty difficulty) {
         if (date == null) {
-            date = LocalDate.now();
+            date = getCurrentDateAdjusted();
         }
 
         List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findFilteredDailyQuestionsWithDifficulty(
@@ -369,7 +377,7 @@ public class DailyQuestionService {
                         details.put("type", question.getType());
                         
                         // For previous days' questions, include correct answers for learning
-                        LocalDate today = LocalDate.now();
+                        LocalDate today = getCurrentDateAdjusted();
                         boolean isPreviousDay = dq.getDate().isBefore(today);
                         
                         if (isPreviousDay) {
@@ -410,7 +418,7 @@ public class DailyQuestionService {
     }
 
     public List<DailyQuestion> getPublicDailyQuestions() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = getCurrentDateAdjusted();
         List<DailyQuestion> todayQuestions = dailyQuestionRepository.findByDate(today);
         
         // Auto-create daily questions if none exist for today
@@ -428,7 +436,7 @@ public class DailyQuestionService {
      * All questions added to practice for today are available to students
      */
     public Map<String, Object> getTodaysPracticeQuestions() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = getCurrentDateAdjusted();
         
         try {
             // Use the existing raw method to get today's questions with full details
@@ -517,13 +525,15 @@ public class DailyQuestionService {
             return result;
         }
 
-        // Find today's daily question - ONLY allow submissions for today's date
-        LocalDate today = LocalDate.now();
-        Optional<DailyQuestion> dailyQuestion = dailyQuestionRepository
-                .findByDateAndQuestionId(today, questionId);
+        // Find daily question for any date (draft submissions allowed for any date)
+        List<DailyQuestion> dailyQuestions = dailyQuestionRepository.findAll()
+                .stream()
+                .filter(dq -> dq.getQuestionId().equals(questionId))
+                .toList();
+        Optional<DailyQuestion> dailyQuestion = dailyQuestions.stream().findFirst();
         
         if (dailyQuestion.isEmpty()) {
-            throw new IllegalArgumentException("This is not a daily question for today. Daily questions can only be submitted on their assigned date.");
+            throw new IllegalArgumentException("This is not a daily question.");
         }
 
         DailyQuestion dq = dailyQuestion.get();
@@ -563,8 +573,8 @@ public class DailyQuestionService {
             throw new IllegalArgumentException("You have already answered this daily question");
         }
 
-        // Find today's daily question - ONLY allow submissions for today's date
-        LocalDate today = LocalDate.now();
+        // Find today's daily question - ONLY allow submissions for today's date (adjusted for timezone)
+        LocalDate today = getCurrentDateAdjusted();
         Optional<DailyQuestion> dailyQuestion = dailyQuestionRepository
                 .findByDateAndQuestionId(today, questionId);
         
@@ -615,8 +625,8 @@ public class DailyQuestionService {
         Long userId = SecurityUtils.getCurrentUserId()
                 .orElse(39L); // TEMPORARY: Use test user ID 39 for testing
 
-        // IMPORTANT: Only allow batch submission for today's date
-        LocalDate today = LocalDate.now();
+        // IMPORTANT: Only allow batch submission for today's date (adjusted for timezone)
+        LocalDate today = getCurrentDateAdjusted();
         if (!date.equals(today)) {
             throw new IllegalArgumentException("Daily questions can only be submitted on their assigned date. Today is " + today + " but you're trying to submit for " + date);
         }
@@ -773,7 +783,7 @@ public class DailyQuestionService {
             streak.setSubjectId(subjectId);
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = getCurrentDateAdjusted();
         LocalDate lastActivity = streak.getLastActivity();
 
         if (isCorrect) {
@@ -1128,12 +1138,12 @@ public class DailyQuestionService {
         } else {
             // Use the existing approach that works: get a date range and iterate
             if (startDate == null && endDate == null) {
-                endDate = LocalDate.now();
+                endDate = getCurrentDateAdjusted();
                 startDate = endDate.minusDays(30);
             } else if (startDate == null) {
                 startDate = endDate.minusDays(30);
             } else if (endDate == null) {
-                endDate = LocalDate.now();
+                endDate = getCurrentDateAdjusted();
             }
         }
         
@@ -1185,7 +1195,7 @@ public class DailyQuestionService {
     public Map<String, Object> getDailyQuestionsRawWithFilters(LocalDate date, Long subjectId, Long topicId,
                                                    ClassLevel classLevel, Difficulty difficulty, String type, String search) {
         if (date == null) {
-            date = LocalDate.now();
+            date = getCurrentDateAdjusted();
         }
 
         System.out.println("DEBUG: getDailyQuestionsRawWithFilters called with date=" + date + 

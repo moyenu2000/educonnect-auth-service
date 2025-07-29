@@ -91,4 +91,59 @@ public class QuestionController {
         Map<String, Object> result = questionService.bulkImportQuestions(questions, subjectId, topicId);
         return ResponseEntity.ok(ApiResponse.success(result, "Bulk import completed"));
     }
+
+    @GetMapping("/private/{questionId}")
+    // @PreAuthorize("hasRole('STUDENT') or hasRole('ADMIN') or hasRole('QUESTION_SETTER')") // Temporarily disabled for testing
+    public ResponseEntity<ApiResponse<QuestionResponse>> getPrivateQuestionById(@PathVariable Long questionId) {
+        try {
+            System.out.println("DEBUG: Getting private question with ID: " + questionId);
+            QuestionResponse question = questionService.getQuestionResponseById(questionId);
+            System.out.println("DEBUG: Successfully retrieved question: " + question.getText());
+            return ResponseEntity.ok(ApiResponse.success(question));
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error getting question " + questionId + ": " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch question: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/public")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllPublicQuestions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) Long topicId,
+            @RequestParam(required = false) Difficulty difficulty,
+            @RequestParam(required = false) QuestionType type,
+            @RequestParam(required = false) String search) {
+        
+        try {
+            System.out.println("DEBUG: Getting all public questions with page=" + page + ", size=" + size);
+            Map<String, Object> result = questionService.getQuestionsWithFiltersEnhanced(
+                    page, size, subjectId, topicId, difficulty, type, search);
+            return ResponseEntity.ok(ApiResponse.success(result));
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error getting public questions: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch questions: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/test-simple/{questionId}")
+    public ResponseEntity<ApiResponse<String>> testSimpleQuestion(@PathVariable Long questionId) {
+        try {
+            System.out.println("DEBUG: Test simple endpoint called with ID: " + questionId);
+            
+            // Just try to get the question
+            QuestionResponse question = questionService.getQuestionResponseById(questionId);
+            return ResponseEntity.ok(ApiResponse.success("Question exists with ID: " + questionId + " - " + question.getText()));
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error in test simple: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Question not found with ID: " + questionId));
+        }
+    }
 }

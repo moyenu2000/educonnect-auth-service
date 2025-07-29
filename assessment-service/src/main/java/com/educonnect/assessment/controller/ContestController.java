@@ -17,6 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,21 +31,31 @@ public class ContestController {
     // Get all contests (with filters)
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER') or hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<PagedResponse<Contest>>> getAllContests(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAllContests(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) ContestStatus status,
             @RequestParam(required = false) ContestType type) {
         
         PagedResponse<Contest> contests = contestService.getAllContests(page, size, status, type);
-        return ResponseEntity.ok(ApiResponse.success(contests));
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("contests", contests);
+        response.put("currentTime", LocalDateTime.now().plusHours(6));
+        
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // Get public contests (no auth required)
     @GetMapping("/public")
-    public ResponseEntity<ApiResponse<List<Contest>>> getPublicContests() {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getPublicContests() {
         List<Contest> contests = contestService.getPublicContests();
-        return ResponseEntity.ok(ApiResponse.success(contests));
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("contests", contests);
+        response.put("currentTime", LocalDateTime.now().plusHours(6));
+        
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // Get contest details by ID
@@ -58,9 +69,14 @@ public class ContestController {
     // Get contest questions (only when contest is active)
     @GetMapping("/{contestId}/questions")
     @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<ApiResponse<List<Question>>> getContestQuestions(@PathVariable Long contestId) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getContestQuestions(@PathVariable Long contestId) {
         List<Question> questions = contestService.getContestQuestions(contestId);
-        return ResponseEntity.ok(ApiResponse.success(questions));
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("questions", questions);
+        response.put("currentTime", LocalDateTime.now().plusHours(6));
+        
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // Submit answer to contest question

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, Calendar, Trophy, FileText, X } from 'lucide-react';
 import { assessmentService } from '../../services/assessmentService';
-import { formatDateTimeForInput, convertToApiDateTime } from '../../lib/utils';
+import { formatDateTimeForInput } from '../../lib/utils';
+import { useToast } from '../../hooks/useToast';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface ContestForm {
   title: string;
@@ -35,6 +39,7 @@ interface Question {
 }
 
 const ContestEditor: React.FC = () => {
+  const { showToast } = useToast();
   const [isEdit, setIsEdit] = useState(false);
   const [contestId, setContestId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -299,6 +304,7 @@ const ContestEditor: React.FC = () => {
     if (!form.startTime) return 'Start time is required';
     if (!form.endTime) return 'End time is required';
     if (new Date(form.startTime) >= new Date(form.endTime)) {
+      console.log('Start time:', form.startTime, 'End time:', form.endTime);
       return 'End time must be after start time';
     }
     if (form.duration < 5) return 'Duration must be at least 5 minutes';
@@ -319,15 +325,17 @@ const ContestEditor: React.FC = () => {
 
       const contestData = {
         ...form,
-        startTime: convertToApiDateTime(form.startTime),
-        endTime: convertToApiDateTime(form.endTime),
+        startTime: form.startTime,
+        endTime: form.endTime,
         prizes: form.prizes.filter(prize => prize.trim() !== '')
       };
 
       if (isEdit && contestId) {
         await assessmentService.updateContest(contestId, contestData);
+        showToast('Contest updated successfully!', 'success');
       } else {
         await assessmentService.createContest(contestData);
+        showToast('Contest created successfully!', 'success');
       }
 
       // Redirect back to contest management (detect user type)
@@ -339,47 +347,46 @@ const ContestEditor: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Error saving contest:', err);
-      setError('Failed to save contest. Please try again.');
+      const errorMessage = 'Failed to save contest. Please try again.';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setSaving(false);
     }
   };
 
-
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading contest...</p>
-        </div>
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
-            <div className="flex">
+    <div className="space-y-6">
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
               <div className="text-sm text-red-700">{error}</div>
               <button 
                 onClick={() => setError(null)}
-                className="ml-auto text-red-400 hover:text-red-600"
+                className="text-red-400 hover:text-red-600"
               >
                 ×
               </button>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Basic Information */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
-          
+      {/* Basic Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Basic Information</CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -423,15 +430,18 @@ const ContestEditor: React.FC = () => {
               placeholder="Enter contest description"
             />
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Schedule */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+      {/* Schedule */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center">
             <Calendar className="mr-2" size={20} />
             Schedule
-          </h2>
-          
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -471,15 +481,17 @@ const ContestEditor: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Two-panel layout for questions */}
-        <div className="grid grid-cols-2 gap-6 min-h-[600px] mb-6">
-          {/* Left Panel - All Questions */}
-          <div className="bg-gray-50 rounded-lg shadow-sm">
-            <div className="bg-white p-4 border-b rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-800">All Questions ({allQuestions.length})</h3>
-            </div>
+      {/* Two-panel layout for questions */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Left Panel - All Questions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">All Questions ({allQuestions.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
             <div className="p-4 max-h-[600px] overflow-y-auto">
               {allQuestions.map((question) => {
                 const isInContestList = selectedQuestions.some(q => q.id === question.id);
@@ -529,19 +541,21 @@ const ContestEditor: React.FC = () => {
                 </button>
               )}
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Right Panel - Selected Questions */}
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="bg-indigo-50 p-4 border-b rounded-t-lg">
-              <h3 className="text-lg font-semibold text-indigo-800">Contest Questions ({selectedQuestions.length})</h3>
-              <p className="text-sm text-indigo-600">Drag to reorder questions</p>
-              {isEdit && form.problemIds.length > 0 && selectedQuestions.length !== form.problemIds.length && (
-                <div className="text-xs text-yellow-700 mt-1">
-                  Warning: {form.problemIds.length - selectedQuestions.length} question(s) could not be loaded
-                </div>
-              )}
-            </div>
+        {/* Right Panel - Selected Questions */}
+        <Card>
+          <CardHeader className="bg-indigo-50">
+            <CardTitle className="text-lg text-indigo-800">Contest Questions ({selectedQuestions.length})</CardTitle>
+            <p className="text-sm text-indigo-600">Drag to reorder questions</p>
+            {isEdit && form.problemIds.length > 0 && selectedQuestions.length !== form.problemIds.length && (
+              <div className="text-xs text-yellow-700 mt-1">
+                Warning: {form.problemIds.length - selectedQuestions.length} question(s) could not be loaded
+              </div>
+            )}
+          </CardHeader>
+          <CardContent className="p-0">
             <div className="p-4 max-h-[600px] overflow-y-auto">
               {selectedQuestions.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
@@ -591,25 +605,25 @@ const ContestEditor: React.FC = () => {
                 ))
               )}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Prizes */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+      {/* Prizes */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center">
               <Trophy className="mr-2" size={20} />
               Prizes
-            </h2>
-            <button
-              onClick={addPrize}
-              className="bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors flex items-center"
-            >
+            </CardTitle>
+            <Button onClick={addPrize} variant="outline">
               <Plus className="mr-2" size={16} />
               Add Prize
-            </button>
+            </Button>
           </div>
-
+        </CardHeader>
+        <CardContent>
           <div className="space-y-2">
             {form.prizes.map((prize, index) => (
               <div key={index} className="flex items-center space-x-2">
@@ -631,11 +645,15 @@ const ContestEditor: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Rules */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Contest Rules</h2>
+      {/* Rules */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Contest Rules</CardTitle>
+        </CardHeader>
+        <CardContent>
           <textarea
             value={form.rules}
             onChange={(e) => handleInputChange('rules', e.target.value)}
@@ -643,22 +661,24 @@ const ContestEditor: React.FC = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
             placeholder="Enter contest rules and guidelines..."
           />
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Save Button */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+      {/* Save Button */}
+      <Card>
+        <CardContent className="pt-6">
           <div className="flex justify-center">
-            <button
+            <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center disabled:opacity-50"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               <Save className="mr-2" size={20} />
               {saving ? 'Saving...' : 'Save Contest'}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
