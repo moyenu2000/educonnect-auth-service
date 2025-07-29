@@ -97,7 +97,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     // Native query to get question options without entity loading
     @Query(value = """
         SELECT qo.id, qo.text, qo.option_order 
-        FROM question_options qo 
+        FROM assessment.question_options qo 
         WHERE qo.question_id = :questionId 
         ORDER BY qo.option_order
     """, nativeQuery = true)

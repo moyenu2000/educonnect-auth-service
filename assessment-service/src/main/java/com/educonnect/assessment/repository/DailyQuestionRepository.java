@@ -69,13 +69,13 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
     
     // Native delete for more reliable deletion
     @Modifying
-    @Query(value = "DELETE FROM daily_questions WHERE date = :date", nativeQuery = true)
+    @Query(value = "DELETE FROM assessment.daily_questions WHERE date = :date", nativeQuery = true)
     int deleteByDateNative(@Param("date") LocalDate date);
     
     // Native upsert query
     @Modifying
     @Query(value = """
-        INSERT INTO daily_questions (question_id, date, subject_id, difficulty, points, bonus_points, created_at)
+        INSERT INTO assessment.daily_questions (question_id, date, subject_id, difficulty, points, bonus_points, created_at)
         VALUES (:questionId, :date, :subjectId, :difficulty, :points, 0, NOW())
         ON CONFLICT (date, question_id) 
         DO UPDATE SET 
@@ -94,8 +94,8 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
         SELECT 
             dq.id, dq.question_id, dq.date, dq.subject_id, dq.difficulty, 
             dq.points, dq.bonus_points, q.text, q.type, q.topic_id
-        FROM daily_questions dq
-        LEFT JOIN questions q ON dq.question_id = q.id
+        FROM assessment.daily_questions dq
+        LEFT JOIN assessment.questions q ON dq.question_id = q.id
         WHERE dq.date = :date
         ORDER BY dq.id
     """, nativeQuery = true)
@@ -106,9 +106,9 @@ public interface DailyQuestionRepository extends JpaRepository<DailyQuestion, Lo
         SELECT 
             dq.id, dq.question_id, dq.date, dq.subject_id, dq.difficulty, 
             dq.points, dq.bonus_points, q.text, q.type, s.name as subject_name
-        FROM daily_questions dq
-        LEFT JOIN questions q ON dq.question_id = q.id
-        LEFT JOIN subjects s ON dq.subject_id = s.id
+        FROM assessment.daily_questions dq
+        LEFT JOIN assessment.questions q ON dq.question_id = q.id
+        LEFT JOIN assessment.subjects s ON dq.subject_id = s.id
         WHERE (:startDate IS NULL OR dq.date >= :startDate)
         AND (:endDate IS NULL OR dq.date <= :endDate)
         ORDER BY dq.date DESC, dq.id
