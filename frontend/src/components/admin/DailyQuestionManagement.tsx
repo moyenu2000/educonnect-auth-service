@@ -1,16 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, Trash2, Calendar, Filter, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { assessmentService } from '../../services/assessmentService';
-import Pagination from '../ui/pagination';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { assessmentService } from "../../services/assessmentService";
+import {
+  Plus,
+  Eye,
+  Trash2,
+} from "lucide-react";
 
 interface DailyQuestion {
   id: number;
   questionId: number;
   date: string;
+  text: string;
+  type: 'MCQ' | 'TRUE_FALSE' | 'FILL_BLANK' | 'NUMERIC' | 'ESSAY';
   subjectId: number;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'EXPERT';
   points: number;
-  createdAt: string;
+  bonusPoints?: number;
+  options: Array<{
+    id: number;
+    text: string;
+    optionOrder: number;
+  }>;
+  createdAt?: string;
   question?: {
     id: number;
     text: string;
@@ -36,14 +50,14 @@ interface DailyQuestion {
 }
 
 interface Filters {
-  dateFilter: 'today' | 'previous' | 'future' | 'all';
   subjectId: string;
+  topicId: string;
   difficulty: string;
-  dateRange: {
-    start: string;
-    end: string;
-  };
+  type: string;
+  search: string;
+  selectedDate: string;
 }
+
 
 const DailyQuestionManagement: React.FC = () => {
   const [dailyQuestions, setDailyQuestions] = useState<DailyQuestion[]>([]);
@@ -51,42 +65,26 @@ const DailyQuestionManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<Array<{ id: number; name: string }>>([]);
+  const [topics, setTopics] = useState<Array<{ id: number; name: string; subjectId: number }>>([]);
+  const [allTopics, setAllTopics] = useState<Array<{ id: number; name: string; subjectId: number }>>([]);
   
   const [filters, setFilters] = useState<Filters>({
-    dateFilter: 'all',
     subjectId: '',
+    topicId: '',
     difficulty: '',
-    dateRange: {
-      start: '',
-      end: ''
-    }
+    type: '',
+    search: '',
+    selectedDate: ''
   });
 
-  const [stats, setStats] = useState({
-    today: 0,
-    previous: 0,
-    future: 0,
-    total: 0
-  });
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize] = useState(20);
   const [totalElements, setTotalElements] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  useEffect(() => {
-    loadDailyQuestions();
-    loadSubjects();
-  }, [currentPage, pageSize]);
-
-  useEffect(() => {
-    // Only apply client-side filters if we're not using server-side pagination
-    // For pagination, filtering should be handled on the server side
-    applyFilters();
-  }, [dailyQuestions, filters]);
-
-  const loadDailyQuestions = async () => {
+  const loadDailyQuestions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -109,96 +107,68 @@ const DailyQuestionManagement: React.FC = () => {
         const paginatedData = response.data.data;
         const questionsData = paginatedData.content || [];
         
+        console.log('Setting daily questions data:', questionsData);
         setDailyQuestions(questionsData);
         setTotalElements(paginatedData.totalElements || 0);
         setTotalPages(paginatedData.totalPages || 0);
-        
-        // Calculate stats from all available data (not just current page)
-        calculateStats(questionsData);
       } else {
         console.warn('Unexpected response structure:', response.data);
         setDailyQuestions([]);
         setTotalElements(0);
         setTotalPages(0);
-        calculateStats([]);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error loading daily questions:', err);
-      
-      // Handle specific error cases
-      if (err.response?.status === 404) {
-        setError('Daily questions API endpoint not found. Please ensure the assessment service is running.');
-      } else if (err.response?.status === 401) {
-        setError('Authentication required. Please log in again.');
-      } else if (err.response?.status === 403) {
-        setError('Access denied. You do not have permission to view daily questions.');
-      } else {
-        setError('Failed to load daily questions. Please check the assessment service and try again.');
-      }
+      setError('Failed to load daily questions. Please try again.');
       
       // Set empty array as fallback
       setDailyQuestions([]);
       setTotalElements(0);
       setTotalPages(0);
-      calculateStats([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize]);
+
+
 
   const loadSubjects = async () => {
     try {
       const response = await assessmentService.getSubjects();
-      console.log('Subjects API response:', response);
-      
-      // Handle different response structures
-      let subjectsData = [];
-      if (response.data) {
-        // Try different possible structures
-        if (Array.isArray(response.data)) {
-          subjectsData = response.data;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          subjectsData = response.data.data;
-        } else if (response.data.content && Array.isArray(response.data.content)) {
-          subjectsData = response.data.content;
-        } else if (response.data.subjects && Array.isArray(response.data.subjects)) {
-          subjectsData = response.data.subjects;
-        } else {
-          console.warn('Unexpected subjects response structure:', response.data);
-          subjectsData = [];
-        }
+      const data = response.data?.data;
+      if (data && data.content) {
+        setSubjects(data.content);
       }
-      
-      console.log('Processed subjects data:', subjectsData);
-      setSubjects(subjectsData);
-    } catch (err) {
-      console.error('Error loading subjects:', err);
-      setSubjects([]); // Set empty array as fallback
+    } catch (error) {
+      console.error('Failed to load subjects:', error);
     }
   };
 
-  const calculateStats = (questions: DailyQuestion[]) => {
-    // Ensure questions is an array
-    if (!Array.isArray(questions)) {
-      console.warn('calculateStats received non-array data:', questions);
-      setStats({ today: 0, previous: 0, future: 0, total: 0 });
-      return;
+  const loadTopics = async () => {
+    try {
+      const response = await assessmentService.getTopics();
+      const data = response.data?.data;
+      if (data && data.content) {
+        setAllTopics(data.content);
+      }
+    } catch (error) {
+      console.error('Failed to load topics:', error);
     }
-
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
-    const todayQuestions = questions.filter(q => q.date === today);
-    const previousQuestions = questions.filter(q => q.date < today);
-    const futureQuestions = questions.filter(q => q.date > today);
-    
-    setStats({
-      today: todayQuestions.length,
-      previous: previousQuestions.length,
-      future: futureQuestions.length,
-      total: questions.length
-    });
   };
 
-  const applyFilters = () => {
+  // Filter topics when subject changes
+  useEffect(() => {
+    if (filters.subjectId) {
+      const filteredTopics = allTopics.filter(
+        (topic) => topic.subjectId === parseInt(filters.subjectId)
+      );
+      setTopics(filteredTopics);
+    } else {
+      setTopics([]);
+    }
+  }, [filters.subjectId, allTopics]);
+
+  const applyFilters = useCallback(() => {
     // Ensure dailyQuestions is an array
     if (!Array.isArray(dailyQuestions)) {
       console.warn('applyFilters: dailyQuestions is not an array:', dailyQuestions);
@@ -207,29 +177,15 @@ const DailyQuestionManagement: React.FC = () => {
     }
 
     let filtered = [...dailyQuestions];
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
 
-    // Date filter
-    switch (filters.dateFilter) {
-      case 'today':
-        filtered = filtered.filter(q => q.date === today);
-        break;
-      case 'previous':
-        filtered = filtered.filter(q => q.date < today);
-        break;
-      case 'future':
-        filtered = filtered.filter(q => q.date > today);
-        break;
-      case 'all':
-      default:
-        // No date filtering
-        break;
+    // Date filter - filter by specific selected date
+    if (filters.selectedDate) {
+      filtered = filtered.filter(q => q.date === filters.selectedDate);
     }
 
     // Subject filter
     if (filters.subjectId) {
-      const subjectIdToFilter = parseInt(filters.subjectId);
-      filtered = filtered.filter(q => q.subjectId === subjectIdToFilter);
+      filtered = filtered.filter(q => q.subjectId === parseInt(filters.subjectId));
     }
 
     // Difficulty filter
@@ -237,28 +193,42 @@ const DailyQuestionManagement: React.FC = () => {
       filtered = filtered.filter(q => q.difficulty === filters.difficulty);
     }
 
-    // Date range filter
-    if (filters.dateRange.start && filters.dateRange.end) {
-      filtered = filtered.filter(q => 
-        q.date >= filters.dateRange.start && q.date <= filters.dateRange.end
-      );
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(q => {
+        const subjectName = subjects.find(s => s.id === q.subjectId)?.name || '';
+        return q.text?.toLowerCase().includes(searchLower) ||
+               subjectName.toLowerCase().includes(searchLower);
+      });
     }
 
     // Sort by date (most recent first)
     filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     setFilteredQuestions(filtered);
-  };
+  }, [dailyQuestions, filters, subjects]);
 
-  // Pagination handlers
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  useEffect(() => {
+    loadDailyQuestions();
+    loadSubjects();
+    loadTopics();
+  }, [loadDailyQuestions, currentPage, pageSize]);
 
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(0); // Reset to first page when changing page size
-  };
+  useEffect(() => {
+    // Only apply client-side filters if we're not using server-side pagination
+    // For pagination, filtering should be handled on the server side
+    applyFilters();
+  }, [applyFilters]);
+
+  // Optimized pagination handlers
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage((prev) => prev - 1);
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage((prev) => prev + 1);
+  }, []);
 
   const handleRemoveFromDaily = async (dailyQuestionId: number) => {
     if (!confirm('Are you sure you want to remove this question from daily questions?')) {
@@ -272,12 +242,9 @@ const DailyQuestionManagement: React.FC = () => {
       const updatedQuestions = dailyQuestions.filter(q => q.id !== dailyQuestionId);
       setDailyQuestions(updatedQuestions);
       
-      // Recalculate stats
-      calculateStats(updatedQuestions);
-      
       // Show success message
       alert('Question removed from daily questions successfully!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error removing daily question:', err);
       alert('Failed to remove question from daily questions. Please try again.');
     }
@@ -298,32 +265,6 @@ const DailyQuestionManagement: React.FC = () => {
     }
   };
 
-  const getDateStatus = (date: string) => {
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' });
-    if (date === today) return { status: 'today', icon: CheckCircle, color: 'text-green-600' };
-    if (date < today) return { status: 'previous', icon: CheckCircle, color: 'text-gray-600' };
-    return { status: 'future', icon: Clock, color: 'text-blue-600' };
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    if (dateString === today.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' })) return 'Today';
-    if (dateString === yesterday.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' })) return 'Yesterday';
-    if (dateString === tomorrow.toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' })) return 'Tomorrow';
-    
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
 
   if (loading) {
     return (
@@ -339,122 +280,63 @@ const DailyQuestionManagement: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+    <div className="space-y-6">
+      {/* Filters / controls / configuration */}
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                <Calendar className="mr-3 text-indigo-600" />
-                Daily Question Management
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Manage daily questions across all dates - view, preview, and remove questions
-              </p>
-            </div>
+            <CardTitle className="text-lg">
+              Daily Question Filters & Actions
+            </CardTitle>
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/admin/daily-questions/create'}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create Daily Question
+            </Button>
           </div>
-
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-              <div className="flex items-center">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-green-800">Today's Questions</p>
-                  <p className="text-2xl font-bold text-green-900">{stats.today}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className="flex items-center">
-                <CheckCircle className="h-8 w-8 text-gray-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-800">Previous Questions</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.previous}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center">
-                <Clock className="h-8 w-8 text-blue-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-blue-800">Future Questions</p>
-                  <p className="text-2xl font-bold text-blue-900">{stats.future}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-              <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-indigo-600" />
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-indigo-800">Total Questions</p>
-                  <p className="text-2xl font-bold text-indigo-900">{stats.total}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Filter className="mr-2" size={20} />
-            Filters
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Date Filter */}
+        </CardHeader>
+        <CardContent>
+          {/* First row of filters */}
+          <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date Filter
-              </label>
+              <label className="text-sm font-medium">Subject</label>
               <select
-                value={filters.dateFilter}
-                onChange={(e) => setFilters(prev => ({ 
-                  ...prev, 
-                  dateFilter: e.target.value as Filters['dateFilter']
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="all">All Questions</option>
-                <option value="today">Today's Questions</option>
-                <option value="previous">Previous Questions</option>
-                <option value="future">Future Questions</option>
-              </select>
-            </div>
-
-            {/* Subject Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subject
-              </label>
-              <select
+                className="w-full mt-1 p-2 border rounded-md"
                 value={filters.subjectId}
-                onChange={(e) => setFilters(prev => ({ ...prev, subjectId: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(e) => setFilters(prev => ({ ...prev, subjectId: e.target.value, topicId: '' }))}
               >
                 <option value="">All Subjects</option>
-                {Array.isArray(subjects) && subjects.map(subject => (
-                  <option key={subject.id} value={subject.id.toString()}>
+                {subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
                     {subject.name}
                   </option>
                 ))}
               </select>
             </div>
-
-            {/* Difficulty Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Difficulty
-              </label>
+              <label className="text-sm font-medium">Topic</label>
               <select
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.topicId}
+                onChange={(e) => setFilters(prev => ({ ...prev, topicId: e.target.value }))}
+                disabled={!filters.subjectId}
+              >
+                <option value="">All Topics</option>
+                {topics.map((topic) => (
+                  <option key={topic.id} value={topic.id}>
+                    {topic.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Difficulty</label>
+              <select
+                className="w-full mt-1 p-2 border rounded-md"
                 value={filters.difficulty}
                 onChange={(e) => setFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">All Difficulties</option>
                 <option value="EASY">Easy</option>
@@ -463,175 +345,212 @@ const DailyQuestionManagement: React.FC = () => {
                 <option value="EXPERT">Expert</option>
               </select>
             </div>
-
-            {/* Reset Filters */}
-            <div className="flex items-end">
-              <button
-                onClick={() => setFilters({
-                  dateFilter: 'all',
-                  subjectId: '',
-                  difficulty: '',
-                  dateRange: { start: '', end: '' }
-                })}
-                className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+          </div>
+          
+          {/* Second row of filters */}
+          <div className="grid gap-4 md:grid-cols-3 mt-4">
+            <div>
+              <label className="text-sm font-medium">Type</label>
+              <select
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.type}
+                onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
               >
-                Reset Filters
-              </button>
+                <option value="">All Types</option>
+                <option value="MCQ">Multiple Choice</option>
+                <option value="TRUE_FALSE">True/False</option>
+                <option value="FILL_BLANK">Fill in the Blank</option>
+                <option value="NUMERIC">Numeric</option>
+                <option value="ESSAY">Essay</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Date</label>
+              <input
+                type="date"
+                className="w-full mt-1 p-2 border rounded-md"
+                value={filters.selectedDate}
+                onChange={(e) => setFilters(prev => ({ ...prev, selectedDate: e.target.value }))}
+                placeholder="Select date"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Search</label>
+              <input
+                key="search-input"
+                type="text"
+                className="w-full mt-1 p-2 border rounded-md"
+                placeholder="Search questions..."
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              />
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Questions List */}
-        <div className="bg-white rounded-lg shadow-sm">
-          {error && (
-            <div className="p-4 bg-red-50 border-l-4 border-red-400 mb-4">
-              <div className="flex">
-                <AlertCircle className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                  <button 
-                    onClick={() => {
-                      setError(null);
-                      loadDailyQuestions();
-                      loadSubjects();
-                    }}
-                    className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-                  >
-                    Try Again
-                  </button>
-                </div>
+      {/* Questions List */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Daily Questions ({totalElements})</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setFilters({
+                subjectId: '',
+                topicId: '',
+                difficulty: '',
+                type: '',
+                search: '',
+                selectedDate: ''
+              })}>
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
+                <span className="text-sm text-muted-foreground">
+                  Loading daily questions...
+                </span>
               </div>
             </div>
-          )}
-
-          {!Array.isArray(filteredQuestions) || filteredQuestions.length === 0 ? (
-            <div className="p-8 text-center">
-              <Calendar className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No daily questions found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {!Array.isArray(filteredQuestions) 
-                  ? 'Unable to load daily questions. Please check your connection and try again.'
-                  : filters.dateFilter !== 'all' || filters.subjectId || filters.difficulty
-                  ? 'Try adjusting your filters to see more questions.'
-                  : 'No daily questions have been created yet.'}
+          ) : error ? (
+            <div className="text-center py-12">
+              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading daily questions</h3>
+              <p className="text-gray-500 mb-4">{error}</p>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setError(null);
+                  loadDailyQuestions();
+                }}
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : filteredQuestions.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No daily questions found</h3>
+              <p className="text-gray-500 mb-4">
+                {Object.values(filters).some(filter => filter !== '') 
+                  ? 'Try adjusting your filters or clear all filters to see more results.'
+                  : 'There are no daily questions configured yet. Create some to get started!'
+                }
               </p>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = '/admin/daily-questions/create'}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Daily Question
+              </Button>
             </div>
           ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Question
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Subject
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Difficulty
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Points
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredQuestions.map((dailyQuestion) => {
-                      const dateStatus = getDateStatus(dailyQuestion.date);
-                      const StatusIcon = dateStatus.icon;
-                      
-                      return (
-                        <tr key={dailyQuestion.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <StatusIcon className={`h-4 w-4 mr-2 ${dateStatus.color}`} />
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {formatDate(dailyQuestion.date)}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {dailyQuestion.date}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm text-gray-900 max-w-md truncate">
-                              {dailyQuestion.question?.text || `Question ID: ${dailyQuestion.questionId}`}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {dailyQuestion.question?.type ? `Type: ${dailyQuestion.question.type}` : 'Question details not loaded'}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
-                              {dailyQuestion.question?.subjectName || 
-                               (subjects.find(s => s.id === dailyQuestion.subjectId)?.name || `Subject ID: ${dailyQuestion.subjectId}`)}
-                            </div>
-                            {dailyQuestion.question?.topicName && (
-                              <div className="text-xs text-gray-500">
-                                {dailyQuestion.question.topicName}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyColor(dailyQuestion.difficulty)}`}>
+            <div className="space-y-4">
+              {filteredQuestions.map((dailyQuestion) => (
+                <div
+                  key={dailyQuestion.id}
+                  className="border rounded-lg p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{dailyQuestion.text || `Question ID: ${dailyQuestion.questionId}`}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge className={getDifficultyColor(dailyQuestion.difficulty)}>
                               {dailyQuestion.difficulty}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            </Badge>
+                            <Badge className="bg-blue-100 text-blue-800">
+                              {dailyQuestion.type?.replace("_", " ") || "Unknown Type"}
+                            </Badge>
+                            {(() => {
+                              const subjectName = subjects.find(s => s.id === dailyQuestion.subjectId)?.name;
+                              return subjectName ? (
+                                <Badge variant="outline">
+                                  {subjectName}
+                                </Badge>
+                              ) : null;
+                            })()}
+                            <Badge variant="outline">
+                              {dailyQuestion.date}
+                            </Badge>
+                            <Badge variant="outline">
                               {dailyQuestion.points} pts
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => handleViewQuestion(dailyQuestion)}
-                                className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
-                                title="View Question"
-                              >
-                                <Eye size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleRemoveFromDaily(dailyQuestion.id)}
-                                className="text-red-600 hover:text-red-900 p-1 rounded"
-                                title="Remove from Daily Questions"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              
-              {!loading && totalElements > 0 && (
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={totalElements}
-                  pageSize={pageSize}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                  loading={loading}
-                />
-              )}
-            </>
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewQuestion(dailyQuestion)}
+                            title="View Question"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemoveFromDaily(dailyQuestion.id)}
+                            title="Remove from Daily Questions"
+                            className="text-red-600 hover:text-red-700 hover:border-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
-        </div>
 
-      </div>
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Showing {currentPage * 20 + 1} to{" "}
+                {Math.min((currentPage + 1) * 20, totalElements)} of{" "}
+                {totalElements} daily questions
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage === 0}
+                  onClick={handlePreviousPage}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages - 1}
+                  onClick={handleNextPage}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
