@@ -22,6 +22,7 @@ public class QuestionResponse {
     private List<String> tags;
     private List<String> attachments;
     private Boolean isActive;
+    private Boolean isInPracticeProblem;
     private Long createdBy;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -154,6 +155,14 @@ public class QuestionResponse {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public Boolean getIsInPracticeProblem() {
+        return isInPracticeProblem;
+    }
+
+    public void setIsInPracticeProblem(Boolean isInPracticeProblem) {
+        this.isInPracticeProblem = isInPracticeProblem;
     }
 
     public Long getCreatedBy() {

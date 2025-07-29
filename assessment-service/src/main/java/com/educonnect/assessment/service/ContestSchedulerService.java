@@ -32,7 +32,7 @@ public class ContestSchedulerService {
     @Scheduled(fixedRate = 60000) // Every 60 seconds
     public void checkAndStartContests() {
         try {
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now().plusHours(6);
             
             // Find upcoming contests that should be started
             List<Contest> contestsToStart = contestRepository.findByStatusAndStartTimeBefore(
@@ -59,7 +59,7 @@ public class ContestSchedulerService {
     @Scheduled(fixedRate = 60000) // Every 60 seconds
     public void checkAndEndContests() {
         try {
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now().plusHours(6);
             
             // Find active contests that should be ended
             List<Contest> contestsToEnd = contestRepository.findByStatusAndEndTimeBefore(
@@ -95,7 +95,7 @@ public class ContestSchedulerService {
     public void cleanupOldContests() {
         try {
             // Optional: Clean up very old contests (e.g., older than 1 year)
-            LocalDateTime cutoffDate = LocalDateTime.now().minusYears(1);
+            LocalDateTime cutoffDate = LocalDateTime.now().plusHours(6).minusYears(1);
             
             List<Contest> oldContests = contestRepository.findByStatusAndEndTimeBefore(
                 ContestStatus.COMPLETED, cutoffDate);

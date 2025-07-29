@@ -20,6 +20,7 @@ import QuestionSetterDashboard from './components/question-setter/QuestionSetter
 import QuestionManagement from './components/question-setter/QuestionManagement'
 import CreateQuestion from './components/question-setter/CreateQuestion'
 import DailyQuestionConfig from './components/question-setter/DailyQuestionConfig'
+import AddPracticeQuestions from './components/question-setter/AddPracticeQuestions'
 import StudentDashboard from './components/student/StudentDashboard'
 
 // Student Components
@@ -243,6 +244,11 @@ const AppContent: React.FC = () => {
           <Layout><PracticeProblemManagement /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/admin/practice-problems/add-questions" element={
+        <ProtectedRoute requiredRole="ADMIN">
+          <Layout><AddPracticeQuestions /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/admin/contests" element={
         <ProtectedRoute requiredRole="ADMIN">
           <Layout><ContestManagement /></Layout>
@@ -297,6 +303,11 @@ const AppContent: React.FC = () => {
       <Route path="/question-setter/practice-problems" element={
         <ProtectedRoute requiredRole="QUESTION_SETTER">
           <Layout><PracticeProblemManagement /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/question-setter/practice-problems/add-questions" element={
+        <ProtectedRoute requiredRole="QUESTION_SETTER">
+          <Layout><AddPracticeQuestions /></Layout>
         </ProtectedRoute>
       } />
       <Route path="/question-setter/contests" element={

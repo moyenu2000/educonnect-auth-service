@@ -42,7 +42,8 @@ const Contests: React.FC = () => {
   const loadContests = async () => {
     try {
       const response = await assessmentService.getContests({ size: 20 })
-      setContests(response.data.data?.content || [])
+      console.log('Contests API response:', response.data)
+      setContests(response.data.data?.contests?.content || [])
     } catch (error) {
       console.error('Failed to load contests:', error)
     } finally {

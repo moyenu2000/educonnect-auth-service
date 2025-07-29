@@ -464,8 +464,8 @@ const PracticeProblemManagement: React.FC = () => {
               variant="outline"
               onClick={() => {
                 const currentPath = window.location.pathname.includes('/admin/') 
-                  ? '/admin/questions/create'
-                  : '/question-setter/questions/create';
+                  ? '/admin/practice-problems/add-questions'
+                  : '/question-setter/practice-problems/add-questions';
                 navigate(currentPath);
               }}
             >
@@ -597,8 +597,8 @@ const PracticeProblemManagement: React.FC = () => {
                 variant="outline"
                 onClick={() => {
                   const currentPath = window.location.pathname.includes('/admin/') 
-                    ? '/admin/questions/create'
-                    : '/question-setter/questions/create';
+                    ? '/admin/practice-problems/add-questions'
+                    : '/question-setter/practice-problems/add-questions';
                   navigate(currentPath);
                 }}
               >

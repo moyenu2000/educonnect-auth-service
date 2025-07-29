@@ -46,7 +46,7 @@ export function parseDateTime(dateString: string): Date {
 export function formatDateTimeForInput(date: Date): string {
   // Format date for HTML datetime-local input in Asia/Dhaka timezone
   // Convert UTC date to Asia/Dhaka local time for the input field
-  const dhakaTime = new Date(date.getTime() + (6 * 3600000))
+  const dhakaTime = new Date(date.getTime())
   return dhakaTime.toISOString().slice(0, 16)
 }
 
@@ -59,9 +59,10 @@ export function parseDateTimeFromInput(dateTimeString: string): Date {
 }
 
 export function convertToApiDateTime(dateTimeString: string): string {
-  // Convert datetime-local input to proper API format (UTC ISO string)
-  const utcDate = parseDateTimeFromInput(dateTimeString)
-  return utcDate.toISOString()
+
+  console.log('Converting dateTimeString:', dateTimeString)
+  const localDate = new Date(dateTimeString)
+  return localDate.toISOString()
 }
 
 export function getTodayDateString(): string {
