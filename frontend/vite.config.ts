@@ -15,15 +15,15 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api/auth': {
-        target: process.env.VITE_AUTH_URL || 'http://localhost:8081',
+        target: process.env.VITE_AUTH_URL || 'http://34.136.116.244:8081',
         changeOrigin: true,
       },
       '/api/assessment': {
-        target: process.env.VITE_ASSESSMENT_URL || 'http://localhost:8083',
+        target: process.env.VITE_ASSESSMENT_URL || 'http://34.136.116.244:8083',
         changeOrigin: true,
       },
       '/api/discussion': {
-        target: process.env.VITE_DISCUSSION_URL || 'http://localhost:8082',
+        target: process.env.VITE_DISCUSSION_URL || 'http://34.136.116.244:8082',
         changeOrigin: true,
       }
     }
