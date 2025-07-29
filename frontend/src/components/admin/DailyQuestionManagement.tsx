@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ interface Filters {
 
 
 const DailyQuestionManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [dailyQuestions, setDailyQuestions] = useState<DailyQuestion[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<DailyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -251,8 +253,10 @@ const DailyQuestionManagement: React.FC = () => {
   };
 
   const handleViewQuestion = (dailyQuestion: DailyQuestion) => {
-    const editPath = '/admin/questions/create?edit=' + dailyQuestion.questionId + '&returnTo=daily-questions';
-    window.location.href = editPath;
+    const editPath = window.location.pathname.includes('/admin/') 
+      ? `/admin/questions/create?edit=${dailyQuestion.questionId}`
+      : `/question-setter/questions/create?edit=${dailyQuestion.questionId}`;
+    navigate(editPath);
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -290,7 +294,12 @@ const DailyQuestionManagement: React.FC = () => {
             </CardTitle>
             <Button 
               variant="outline"
-              onClick={() => window.location.href = '/admin/daily-questions/create'}
+              onClick={() => {
+                const currentPath = window.location.pathname.includes('/admin/') 
+                  ? '/admin/questions/daily-config'
+                  : '/question-setter/questions/daily-config';
+                navigate(currentPath);
+              }}
             >
               <Plus className="mr-2 h-4 w-4" />
               Create Daily Question
@@ -453,7 +462,12 @@ const DailyQuestionManagement: React.FC = () => {
               </p>
               <Button 
                 variant="outline"
-                onClick={() => window.location.href = '/admin/daily-questions/create'}
+                onClick={() => {
+                  const currentPath = window.location.pathname.includes('/admin/') 
+                    ? '/admin/questions/daily-config'
+                    : '/question-setter/questions/daily-config';
+                  navigate(currentPath);
+                }}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Create Daily Question
@@ -499,7 +513,7 @@ const DailyQuestionManagement: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewQuestion(dailyQuestion)}
-                            title="View Question"
+                            title="Edit Question (opens question editor)"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -507,7 +521,7 @@ const DailyQuestionManagement: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleRemoveFromDaily(dailyQuestion.id)}
-                            title="Remove from Daily Questions"
+                            title="Remove from Daily Questions (question will remain in question bank)"
                             className="text-red-600 hover:text-red-700 hover:border-red-300"
                           >
                             <Trash2 className="h-4 w-4" />
