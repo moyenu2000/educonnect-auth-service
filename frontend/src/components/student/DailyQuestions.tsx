@@ -82,14 +82,17 @@ const DailyQuestions: React.FC = () => {
 
   const generateDateRange = (days: number = 30): string[] => {
     const dates: string[] = []
+    // today should be Date + 6 hours to get Asia/Dhaka timezone
     const today = new Date()
-    
+    today.setHours(today.getHours() + 6)
+
     for (let i = 0; i < days; i++) {
       const date = new Date(today)
       date.setDate(today.getDate() - i)
       dates.push(date.toISOString().split('T')[0])
     }
-    
+
+    // console.log('Generated date range:', dates)
     return dates
   }
 
@@ -176,7 +179,7 @@ const DailyQuestions: React.FC = () => {
     if (!questions || questions.length === 0) return
     
     const questionIds = questions.map(q => q.questionId)
-    const today = new Date().toISOString().split('T')[0]
+    const today = getTodayAdjusted()
     const isPreviousDay = date < today
     const completedCount = questions.filter(q => q.attempted).length
     const isAllCompleted = completedCount === questions.length
@@ -272,19 +275,25 @@ const DailyQuestions: React.FC = () => {
     }
   }
 
-  // Helper functions for date logic
+  // Helper functions for date logic (adjusted for Asia/Dhaka timezone: UTC+6)
+  const getTodayAdjusted = (): string => {
+    const utcNow = new Date()
+    const adjustedDate = new Date(utcNow.getTime() + (6 * 3600000))
+    return adjustedDate.toISOString().split('T')[0]
+  }
+
   const isToday = (date: string): boolean => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getTodayAdjusted()
     return date === today
   }
 
   const isPreviousDay = (date: string): boolean => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getTodayAdjusted()
     return date < today
   }
 
   const isFutureDay = (date: string): boolean => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getTodayAdjusted()
     return date > today
   }
 

@@ -55,6 +55,7 @@ interface ExamState {
   answers: Record<number, string>
   submissionResults: Record<number, SubmissionResult>
   draftSubmissions: Record<number, boolean>
+  lastSubmittedAnswers: Record<number, string>
   timeRemaining?: number
   examType: 'daily' | 'practice' | 'contest'
   examDate?: string
@@ -74,6 +75,7 @@ const ExamPage: React.FC = () => {
     answers: {},
     submissionResults: {},
     draftSubmissions: {},
+    lastSubmittedAnswers: {},
     examType: 'daily'
   })
   
@@ -231,6 +233,7 @@ const ExamPage: React.FC = () => {
         answers: existingAnswers,
         submissionResults: existingResults,
         draftSubmissions: {},
+        lastSubmittedAnswers: {},
         examType: examType as 'daily' | 'practice' | 'contest',
         examDate: examDate || undefined,
         timeRemaining: examType === 'contest' ? 3600 : undefined, // 1 hour for contests
@@ -263,6 +266,19 @@ const ExamPage: React.FC = () => {
   }
 
   const submitDraftAnswer = useCallback(async (questionId: number, answer: string) => {
+    // Immediately mark as draft submitted and track the submitted answer
+    setExamState(prev => ({
+      ...prev,
+      draftSubmissions: {
+        ...prev.draftSubmissions,
+        [questionId]: true
+      },
+      lastSubmittedAnswers: {
+        ...prev.lastSubmittedAnswers,
+        [questionId]: answer
+      }
+    }))
+    
     try {
       const startTime = questionStartTimes[questionId] || Date.now()
       const timeTaken = Math.round((Date.now() - startTime) / 1000)
@@ -274,21 +290,24 @@ const ExamPage: React.FC = () => {
         timeTaken
       })
       
-      // Mark as draft submitted (no results shown)
-      setExamState(prev => ({
-        ...prev,
-        draftSubmissions: {
-          ...prev.draftSubmissions,
-          [questionId]: true
-        }
-      }))
-      
       // Clear any pending save status for this question
       setPendingSaves(prev => ({ ...prev, [questionId]: false }))
       
       console.log(`Successfully auto-saved answer for question ${questionId}`)
     } catch (error) {
       console.error('Failed to auto-save answer:', error)
+      // If submission failed, remove the draft submission flag and clear last submitted answer
+      setExamState(prev => ({
+        ...prev,
+        draftSubmissions: {
+          ...prev.draftSubmissions,
+          [questionId]: false
+        },
+        lastSubmittedAnswers: {
+          ...prev.lastSubmittedAnswers,
+          [questionId]: ''
+        }
+      }))
       // Clear pending save status even on error
       setPendingSaves(prev => ({ ...prev, [questionId]: false }))
     }
@@ -309,13 +328,11 @@ const ExamPage: React.FC = () => {
     if (examState.examType === 'daily' && !examState.isAlreadySubmitted) {
       if (immediate) {
         // For radio buttons and immediate answers, submit right away
-        // But first check if already submitted to avoid duplicate calls
-        setExamState(prev => {
-          if (!prev.draftSubmissions[questionId]) {
-            submitDraftAnswer(questionId, answer)
-          }
-          return prev
-        })
+        // Check if answer has changed from last submitted answer
+        const lastSubmittedAnswer = examState.lastSubmittedAnswers[questionId]
+        if (answer !== lastSubmittedAnswer) {
+          submitDraftAnswer(questionId, answer)
+        }
       } else {
         // For text inputs, use proper debouncing
         // Clear existing timer for this question to prevent wrong answers
@@ -329,9 +346,10 @@ const ExamPage: React.FC = () => {
         
         // Set new timer with current answer value captured in closure
         debounceTimers.current[questionId] = setTimeout(async () => {
-          // Check current state to avoid submitting if already submitted
+          // Check current state to avoid submitting if answer hasn't changed
           setExamState(currentState => {
-            if (!currentState.draftSubmissions[questionId]) {
+            const lastSubmittedAnswer = currentState.lastSubmittedAnswers[questionId]
+            if (answer !== lastSubmittedAnswer) {
               console.log(`Auto-saving answer for question ${questionId}: "${answer}"`)
               submitDraftAnswer(questionId, answer)
             }
@@ -495,47 +513,6 @@ const ExamPage: React.FC = () => {
     }
   }
 
-  const navigateToQuestion = (index: number) => {
-    if (index >= 0 && index < examState.questions.length) {
-      setExamState(prev => ({
-        ...prev,
-        currentQuestionIndex: index
-      }))
-      
-      // Update start time for the question being navigated to
-      const questionId = examState.questions[index]?.id
-      if (questionId) {
-        setQuestionStartTimes(prev => ({
-          ...prev,
-          [questionId]: Date.now()
-        }))
-      }
-      
-      // For practice questions, update URL to maintain navigation context
-      if (examState.examType === 'practice' && examState.questions.length > 0) {
-        const currentQuestionId = examState.questions[index]?.id
-        if (currentQuestionId) {
-          const currentParams = new URLSearchParams(location.search)
-          currentParams.set('questionId', currentQuestionId.toString())
-          currentParams.set('index', index.toString())
-          navigate(`${location.pathname}?${currentParams.toString()}`, { replace: true })
-        }
-      }
-    }
-  }
-
-  const handleBackToPracticeQuestions = () => {
-    const currentParams = new URLSearchParams(location.search)
-    const backParams = new URLSearchParams()
-    
-    // Preserve filter context
-    if (currentParams.get('subjectId')) backParams.set('subjectId', currentParams.get('subjectId')!)
-    if (currentParams.get('topicId')) backParams.set('topicId', currentParams.get('topicId')!)
-    if (currentParams.get('difficulty')) backParams.set('difficulty', currentParams.get('difficulty')!)
-    if (currentParams.get('search')) backParams.set('search', currentParams.get('search')!)
-    
-    navigate(`/student/practice-questions?${backParams.toString()}`)
-  }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty?.toLowerCase()) {
@@ -638,8 +615,6 @@ const ExamPage: React.FC = () => {
     )
   }
 
-  const currentQuestion = examState.questions[examState.currentQuestionIndex]
-  const currentAnswer = examState.answers[currentQuestion.id]
 
   // Results Summary Component
   if (showResults) {
@@ -906,11 +881,11 @@ const ExamPage: React.FC = () => {
             )}
           </h1>
           <p className="text-muted-foreground">
-            Question {examState.currentQuestionIndex + 1} of {examState.questions.length}
+            {examState.questions.length} questions total
             {examState.examDate && ` • ${new Date(examState.examDate).toLocaleDateString()}`}
             {examState.viewOnly && (
               <span className="block text-sm mt-1 text-amber-600">
-                This is a previous day's question. You can only view the answers.
+                This is a previous day's questions. You can only view the answers.
               </span>
             )}
           </p>
@@ -926,235 +901,240 @@ const ExamPage: React.FC = () => {
         )}
       </div>
 
-      {/* Question Navigation */}
+      {/* Progress Overview */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => navigateToQuestion(examState.currentQuestionIndex - 1)}
-              disabled={examState.currentQuestionIndex === 0}
-            >
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              Previous
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              {examState.questions.map((question, index) => {
-                const isDraftSubmitted = examState.draftSubmissions[question.id]
-                const hasAnswer = examState.answers[question.id]
-                const isPending = pendingSaves[question.id]
-                
-                return (
-                  <button
-                    key={index}
-                    onClick={() => navigateToQuestion(index)}
-                    className={`w-8 h-8 rounded-full text-sm font-medium transition-colors relative ${
-                      index === examState.currentQuestionIndex
-                        ? 'bg-primary text-primary-foreground'
-                        : isDraftSubmitted
-                        ? 'bg-green-500 text-white'
-                        : isPending
-                        ? 'bg-yellow-400 text-yellow-900'
-                        : hasAnswer
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {index + 1}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Progress Overview</h3>
+            <div className="flex items-center gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span>Auto-saved</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                <span>Saving...</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                <span>Not answered</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {examState.questions.map((question, index) => {
+              const isDraftSubmitted = examState.draftSubmissions[question.id]
+              const hasAnswer = examState.answers[question.id]
+              const isPending = pendingSaves[question.id]
+              
+              return (
+                <button
+                  key={index}
+                  onClick={() => {
+                    const element = document.getElementById(`question-${question.id}`)
+                    element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }}
+                  className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors relative ${
+                    isDraftSubmitted
+                      ? 'bg-green-500 text-white'
+                      : isPending
+                      ? 'bg-yellow-400 text-yellow-900'
+                      : hasAnswer
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {index + 1}
+                  {isDraftSubmitted && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">✓</span>
+                    </div>
+                  )}
+                  {isPending && !isDraftSubmitted && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs">⋯</span>
+                    </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Auto-save info */}
+      {examState.examType === 'daily' && !examState.isAlreadySubmitted && (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-sm text-blue-800">
+            💾 Your answers will be automatically saved when you select options or finish typing. Scroll down to answer all questions, then click "Submit All" at the bottom.
+          </p>
+        </div>
+      )}
+
+      {/* Already submitted info */}
+      {examState.isAlreadySubmitted && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-sm text-green-800">
+            ✅ These daily questions have already been submitted and finalized. Your answers cannot be changed.
+          </p>
+        </div>
+      )}
+
+      {/* All Questions */}
+      <div className="space-y-8">
+        {examState.questions.map((question, questionIndex) => {
+          const currentAnswer = examState.answers[question.id]
+          const isDraftSubmitted = examState.draftSubmissions[question.id]
+          const isPending = pendingSaves[question.id]
+          
+          return (
+            <Card key={question.id} id={`question-${question.id}`} className="scroll-mt-4">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-3">
+                    <span className="text-lg">Question {questionIndex + 1}</span>
+                    <Badge className={getDifficultyColor(question.difficulty)}>
+                      {question.difficulty}
+                    </Badge>
+                    <Badge variant="outline">
+                      {question.points} pts
+                    </Badge>
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    {question.subjectName && (
+                      <Badge variant="outline">{question.subjectName}</Badge>
+                    )}
                     {isDraftSubmitted && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-600 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
+                      <Badge variant="default" className="bg-green-600">
+                        <Save className="h-3 w-3 mr-1" />
+                        Auto-saved
+                      </Badge>
                     )}
                     {isPending && !isDraftSubmitted && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">⋯</span>
-                      </div>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-            
-            <Button
-              variant="outline"
-              onClick={() => navigateToQuestion(examState.currentQuestionIndex + 1)}
-              disabled={examState.currentQuestionIndex === examState.questions.length - 1}
-            >
-              Next
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Current Question */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Question {examState.currentQuestionIndex + 1}</CardTitle>
-            <div className="flex items-center gap-2">
-              {currentQuestion.subjectName && (
-                <Badge variant="outline">{currentQuestion.subjectName}</Badge>
-              )}
-              <Badge className={getDifficultyColor(currentQuestion.difficulty)}>
-                {currentQuestion.difficulty}
-              </Badge>
-              <Badge variant="outline">
-                {currentQuestion.points} pts
-              </Badge>
-              {examState.draftSubmissions[currentQuestion.id] && (
-                <Badge variant="default" className="bg-green-600">
-                  <Save className="h-3 w-3 mr-1" />
-                  Auto-saved
-                </Badge>
-              )}
-              {pendingSaves[currentQuestion.id] && !examState.draftSubmissions[currentQuestion.id] && (
-                <Badge variant="default" className="bg-yellow-600">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Saving...
-                </Badge>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-lg mb-4">{currentQuestion.text}</p>
-          
-          {/* Auto-save info */}
-          {examState.examType === 'daily' && !examState.isAlreadySubmitted && !examState.draftSubmissions[currentQuestion.id] && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                💾 Your answer will be automatically saved when you select an option or finish typing
-              </p>
-            </div>
-          )}
-          
-          {/* Already submitted info */}
-          {examState.isAlreadySubmitted && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
-                ✅ This daily question has already been submitted and finalized. Your answers cannot be changed.
-              </p>
-            </div>
-          )}
-          
-          {/* Debug info - remove this after fixing */}
-          <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-            <strong>Debug:</strong> Type: {currentQuestion.type}, Options: {currentQuestion.options?.length || 0}
-          </div>
-          
-          {/* Multiple Choice Options */}
-          {currentQuestion.type === 'MCQ' && currentQuestion.options && (
-            <div className="space-y-3">
-              {currentQuestion.options.map((option, index) => (
-                <label
-                  key={option.id}
-                  className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
-                    currentAnswer === option.text
-                      ? 'border-primary bg-primary/5'
-                      : 'border-input'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestion.id}`}
-                    value={option.text}
-                    checked={currentAnswer === option.text}
-                    onChange={() => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(currentQuestion.id, option.text, true)}
-                    disabled={examState.isAlreadySubmitted || examState.viewOnly}
-                    className="sr-only"
-                  />
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    currentAnswer === option.text
-                      ? 'border-primary bg-primary'
-                      : 'border-gray-300'
-                  }`}>
-                    {currentAnswer === option.text && (
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                      <Badge variant="default" className="bg-yellow-600">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Saving...
+                      </Badge>
                     )}
                   </div>
-                  <span className="flex-1">
-                    <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
-                    {option.text}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-
-          {/* True/False */}
-          {currentQuestion.type === 'TRUE_FALSE' && (
-            <div className="space-y-3">
-              {['True', 'False'].map((option) => (
-                <label
-                  key={option}
-                  className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
-                    currentAnswer === option
-                      ? 'border-primary bg-primary/5'
-                      : 'border-input'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name={`question-${currentQuestion.id}`}
-                    value={option}
-                    checked={currentAnswer === option}
-                    onChange={() => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(currentQuestion.id, option, true)}
-                    disabled={examState.isAlreadySubmitted || examState.viewOnly}
-                    className="sr-only"
-                  />
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                    currentAnswer === option
-                      ? 'border-primary bg-primary'
-                      : 'border-gray-300'
-                  }`}>
-                    {currentAnswer === option && (
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-lg mb-6">{question.text}</p>
+                
+                {/* Multiple Choice Options */}
+                {question.type === 'MCQ' && question.options && (
+                  <div className="space-y-3">
+                    {question.options.map((option, index) => (
+                      <label
+                        key={option.id}
+                        className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
+                          currentAnswer === option.text
+                            ? 'border-primary bg-primary/5'
+                            : 'border-input'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${question.id}`}
+                          value={option.text}
+                          checked={currentAnswer === option.text}
+                          onChange={() => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(question.id, option.text, true)}
+                          disabled={examState.isAlreadySubmitted || examState.viewOnly}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          currentAnswer === option.text
+                            ? 'border-primary bg-primary'
+                            : 'border-gray-300'
+                        }`}>
+                          {currentAnswer === option.text && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <span className="flex-1">
+                          <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
+                          {option.text}
+                        </span>
+                      </label>
+                    ))}
                   </div>
-                  <span>{option}</span>
-                </label>
-              ))}
-            </div>
-          )}
+                )}
 
-          {/* Text Input for other types */}
-          {(['FILL_BLANK', 'NUMERIC', 'ESSAY'].includes(currentQuestion.type)) && (
-            <div className="space-y-3">
-              <textarea
-                placeholder={examState.isAlreadySubmitted || examState.viewOnly ? 'This question has been submitted' : `Enter your answer... ${pendingSaves[currentQuestion.id] ? '(saving...)' : '(auto-saves after 1.5s)'}`}
-                value={currentAnswer || ''}
-                onChange={(e) => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(currentQuestion.id, e.target.value)}
-                disabled={examState.isAlreadySubmitted || examState.viewOnly}
-                className={`w-full p-4 border rounded-lg resize-none ${pendingSaves[currentQuestion.id] ? 'border-yellow-300' : ''} ${examState.isAlreadySubmitted || examState.viewOnly ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                rows={currentQuestion.type === 'ESSAY' ? 6 : 2}
-              />
-            </div>
-          )}
+                {/* True/False */}
+                {question.type === 'TRUE_FALSE' && (
+                  <div className="space-y-3">
+                    {['True', 'False'].map((option) => (
+                      <label
+                        key={option}
+                        className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
+                          currentAnswer === option
+                            ? 'border-primary bg-primary/5'
+                            : 'border-input'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${question.id}`}
+                          value={option}
+                          checked={currentAnswer === option}
+                          onChange={() => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(question.id, option, true)}
+                          disabled={examState.isAlreadySubmitted || examState.viewOnly}
+                          className="sr-only"
+                        />
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          currentAnswer === option
+                            ? 'border-primary bg-primary'
+                            : 'border-gray-300'
+                        }`}>
+                          {currentAnswer === option && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                        <span>{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
 
-          {/* Fallback: If no specific type matched, show a generic input */}
-          {!(['MCQ', 'TRUE_FALSE'].includes(currentQuestion.type)) && 
-           !(['FILL_BLANK', 'NUMERIC', 'ESSAY'].includes(currentQuestion.type)) && (
-            <div className="space-y-3">
-              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                <p className="text-sm text-yellow-800">
-                  Question type "{currentQuestion.type}" - using generic text input
-                </p>
-              </div>
-              <textarea
-                placeholder={examState.isAlreadySubmitted || examState.viewOnly ? 'This question has been submitted' : `Enter your answer... ${pendingSaves[currentQuestion.id] ? '(saving...)' : '(auto-saves after 1.5s)'}`}
-                value={currentAnswer || ''}
-                onChange={(e) => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(currentQuestion.id, e.target.value)}
-                disabled={examState.isAlreadySubmitted || examState.viewOnly}
-                className={`w-full p-4 border rounded-lg resize-none ${pendingSaves[currentQuestion.id] ? 'border-yellow-300' : ''} ${examState.isAlreadySubmitted || examState.viewOnly ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-                rows={3}
-              />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                {/* Text Input for other types */}
+                {(['FILL_BLANK', 'NUMERIC', 'ESSAY'].includes(question.type)) && (
+                  <div className="space-y-3">
+                    <textarea
+                      placeholder={examState.isAlreadySubmitted || examState.viewOnly ? 'This question has been submitted' : `Enter your answer... ${isPending ? '(saving...)' : '(auto-saves after 1.5s)'}`}
+                      value={currentAnswer || ''}
+                      onChange={(e) => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(question.id, e.target.value)}
+                      disabled={examState.isAlreadySubmitted || examState.viewOnly}
+                      className={`w-full p-4 border rounded-lg resize-none ${isPending ? 'border-yellow-300' : ''} ${examState.isAlreadySubmitted || examState.viewOnly ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      rows={question.type === 'ESSAY' ? 6 : 2}
+                    />
+                  </div>
+                )}
+
+                {/* Fallback: If no specific type matched, show a generic input */}
+                {!(['MCQ', 'TRUE_FALSE'].includes(question.type)) && 
+                 !(['FILL_BLANK', 'NUMERIC', 'ESSAY'].includes(question.type)) && (
+                  <div className="space-y-3">
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                      <p className="text-sm text-yellow-800">
+                        Question type "{question.type}" - using generic text input
+                      </p>
+                    </div>
+                    <textarea
+                      placeholder={examState.isAlreadySubmitted || examState.viewOnly ? 'This question has been submitted' : `Enter your answer... ${isPending ? '(saving...)' : '(auto-saves after 1.5s)'}`}
+                      value={currentAnswer || ''}
+                      onChange={(e) => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(question.id, e.target.value)}
+                      disabled={examState.isAlreadySubmitted || examState.viewOnly}
+                      className={`w-full p-4 border rounded-lg resize-none ${isPending ? 'border-yellow-300' : ''} ${examState.isAlreadySubmitted || examState.viewOnly ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                      rows={3}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
       {/* Action Buttons */}
       <Card>
@@ -1182,9 +1162,10 @@ const ExamPage: React.FC = () => {
                   onClick={() => setShowConfirmSubmit(true)}
                   disabled={submitting || examState.viewOnly}
                   className="flex items-center gap-2"
+                  size="lg"
                 >
                   <CheckCircle className="h-4 w-4" />
-                  Submit Full
+                  Submit All Questions
                 </Button>
               )}
             </div>
