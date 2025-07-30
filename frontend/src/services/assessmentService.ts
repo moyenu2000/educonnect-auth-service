@@ -462,6 +462,10 @@ export const assessmentService = {
   // Admin
   getAdminAnalytics: (period?: string) =>
     assessmentApi.get('/admin/analytics', { params: { period } }),
+
+  // Question Analytics
+  getQuestionAnalytics: (questionId: number) =>
+    assessmentApi.get(`/questions/analytics/${questionId}`),
   
   createPracticeProblems: (params: { subjectId: number, count: number }) =>
     assessmentApi.post('/admin/create-practice-problems', null, { params }),

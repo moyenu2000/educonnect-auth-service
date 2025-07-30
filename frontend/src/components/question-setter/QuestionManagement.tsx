@@ -2,6 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { assessmentService } from "@/services/assessmentService";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "../../hooks/useToast";
@@ -12,6 +20,11 @@ import {
   Check,
   X,
   Trash2,
+  BarChart3,
+  Clock,
+  Users,
+  Target,
+  TrendingUp,
 } from "lucide-react";
 
 // Debounce hook
@@ -100,6 +113,10 @@ const QuestionManagement: React.FC = () => {
     "daily" | "practice" | "contest" | null
   >(null);
   const [actionDate, setActionDate] = useState(getTodayDateString());
+
+  // Analytics states
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
 
   const loadQuestions = useCallback(async () => {
     try {
@@ -243,6 +260,25 @@ const QuestionManagement: React.FC = () => {
       ? `/admin/questions/create?edit=${questionId}`
       : `/question-setter/questions/create?edit=${questionId}`;
     navigate(editPath);
+  };
+
+  const handleViewAnalytics = async (questionId: number) => {
+    setAnalyticsLoading(true);
+    try {
+      const response = await assessmentService.getQuestionAnalytics(questionId);
+      const apiResponse = response.data;
+      
+      if (apiResponse.success && apiResponse.data) {
+        setAnalyticsData(apiResponse.data);
+      } else {
+        showToast("Failed to load analytics data", 'error');
+      }
+    } catch (error) {
+      console.error("Failed to load analytics:", error);
+      showToast("Failed to load analytics data", 'error');
+    } finally {
+      setAnalyticsLoading(false);
+    }
   };
 
   const handleDeleteQuestion = async (
@@ -675,6 +711,147 @@ const QuestionManagement: React.FC = () => {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                title="View Analytics"
+                                onClick={() => handleViewAnalytics(question.id)}
+                                className="text-blue-600 hover:text-blue-700 hover:border-blue-300"
+                              >
+                                <BarChart3 className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            
+                            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-white border border-gray-200 p-6">
+                              <DialogHeader className="mb-6">
+                                <DialogTitle className="flex items-center gap-2">
+                                  <BarChart3 className="h-5 w-5" />
+                                  Question Analytics
+                                </DialogTitle>
+                                <DialogDescription>
+                                  View submission statistics and performance metrics for this question
+                                </DialogDescription>
+                              </DialogHeader>
+                              
+                              {analyticsLoading ? (
+                                <div className="flex items-center justify-center py-8">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                </div>
+                              ) : analyticsData ? (
+                                <div className="space-y-6">
+                                  {/* Question Info */}
+                                  <div className="border rounded-lg p-4 bg-gray-50">
+                                    <h3 className="font-semibold text-lg mb-2">{analyticsData.questionText}</h3>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className={getDifficultyColor(analyticsData.difficulty)}>
+                                        {analyticsData.difficulty}
+                                      </Badge>
+                                      <Badge className={getTypeColor(analyticsData.type)}>
+                                        {analyticsData.type?.replace("_", " ")}
+                                      </Badge>
+                                      <Badge variant="outline">{analyticsData.subjectName}</Badge>
+                                      <Badge variant="outline">{analyticsData.topicName}</Badge>
+                                    </div>
+                                  </div>
+
+                                  {/* Stats Cards */}
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <Card className="p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-600">Total Submissions</p>
+                                          <p className="text-2xl font-bold text-gray-900">{analyticsData.totalSubmissions}</p>
+                                        </div>
+                                        <TrendingUp className="h-8 w-8 text-blue-600" />
+                                      </div>
+                                    </Card>
+                                    
+                                    <Card className="p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-600">Accuracy</p>
+                                          <p className="text-2xl font-bold text-gray-900">{analyticsData.accuracy}%</p>
+                                        </div>
+                                        <Target className="h-8 w-8 text-green-600" />
+                                      </div>
+                                    </Card>
+                                    
+                                    <Card className="p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-600">Unique Users</p>
+                                          <p className="text-2xl font-bold text-gray-900">{analyticsData.uniqueUsers}</p>
+                                        </div>
+                                        <Users className="h-8 w-8 text-purple-600" />
+                                      </div>
+                                    </Card>
+                                    
+                                    <Card className="p-4">
+                                      <div className="flex items-center justify-between">
+                                        <div>
+                                          <p className="text-sm font-medium text-gray-600">Avg Time</p>
+                                          <p className="text-2xl font-bold text-gray-900">{analyticsData.averageTime}s</p>
+                                        </div>
+                                        <Clock className="h-8 w-8 text-orange-600" />
+                                      </div>
+                                    </Card>
+                                  </div>
+
+                                  {/* Submission Breakdown */}
+                                  <div className="border rounded-lg p-4">
+                                    <h4 className="font-semibold mb-3">Submission Breakdown by Context</h4>
+                                    <div className="grid grid-cols-3 gap-4">
+                                      <div className="text-center p-3 bg-blue-50 rounded-lg">
+                                        <div className="text-lg font-bold text-blue-600">{analyticsData.submissionBreakdown.daily}</div>
+                                        <div className="text-sm text-blue-600">Daily Questions</div>
+                                      </div>
+                                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                                        <div className="text-lg font-bold text-green-600">{analyticsData.submissionBreakdown.practice}</div>
+                                        <div className="text-sm text-green-600">Practice Questions</div>
+                                      </div>
+                                      <div className="text-center p-3 bg-purple-50 rounded-lg">
+                                        <div className="text-lg font-bold text-purple-600">{analyticsData.submissionBreakdown.contest}</div>
+                                        <div className="text-sm text-purple-600">Contest Questions</div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Recent Submissions */}
+                                  {analyticsData.recentSubmissions && analyticsData.recentSubmissions.length > 0 && (
+                                    <div className="border rounded-lg p-4">
+                                      <h4 className="font-semibold mb-3">Recent Submissions (Last 10)</h4>
+                                      <div className="space-y-2">
+                                        {analyticsData.recentSubmissions.map((submission: any, index: number) => (
+                                          <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                            <div className="flex items-center gap-3">
+                                              <Badge variant="outline">User {submission.userId}</Badge>
+                                              <Badge className={submission.isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}>
+                                                {submission.isCorrect ? "Correct" : "Incorrect"}
+                                              </Badge>
+                                              <span className="text-sm text-gray-600">{submission.context}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                              <span>{submission.pointsEarned} pts</span>
+                                              <span>{submission.timeTaken}s</span>
+                                              <span>{new Date(submission.submittedAt).toLocaleDateString()}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-center py-8">
+                                  <p className="text-gray-500">No analytics data available</p>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          
                           <Button
                             variant="outline"
                             size="sm"

@@ -156,6 +156,30 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
            "GROUP BY us.userId ORDER BY totalPoints DESC")
     List<Object[]> getGlobalRankingsAllSubmissions(@Param("startDate") LocalDateTime startDate);
     
+    // Question Analytics Methods
+    long countByQuestionId(Long questionId);
+    
+    long countByQuestionIdAndIsCorrect(Long questionId, Boolean isCorrect);
+    
+    @Query("SELECT COUNT(DISTINCT us.userId) FROM UserSubmission us WHERE us.questionId = :questionId")
+    Long countDistinctUsersByQuestionId(@Param("questionId") Long questionId);
+    
+    @Query("SELECT AVG(us.timeTaken) FROM UserSubmission us WHERE us.questionId = :questionId")
+    Double getAverageTimeByQuestionId(@Param("questionId") Long questionId);
+    
+    @Query("SELECT SUM(us.pointsEarned) FROM UserSubmission us WHERE us.questionId = :questionId")
+    Long getTotalPointsByQuestionId(@Param("questionId") Long questionId);
+    
+    long countByQuestionIdAndIsDailyQuestion(Long questionId, Boolean isDailyQuestion);
+    
+    @Query("SELECT COUNT(us) FROM UserSubmission us WHERE us.questionId = :questionId AND us.isDailyQuestion = :isDailyQuestion AND us.contestId IS NULL")
+    long countByQuestionIdAndIsDailyQuestionAndContestIdIsNull(@Param("questionId") Long questionId, @Param("isDailyQuestion") Boolean isDailyQuestion);
+    
+    @Query("SELECT COUNT(us) FROM UserSubmission us WHERE us.questionId = :questionId AND us.contestId IS NOT NULL")
+    long countByQuestionIdAndContestIdIsNotNull(@Param("questionId") Long questionId);
+    
+    List<UserSubmission> findTop10ByQuestionIdOrderBySubmittedAtDesc(Long questionId);
+    
     // Admin analytics queries - real data only
     @Query("SELECT COUNT(DISTINCT us.userId) FROM UserSubmission us")
     long countDistinctUsers();

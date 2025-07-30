@@ -146,4 +146,16 @@ public class QuestionController {
                     .body(ApiResponse.error("Question not found with ID: " + questionId));
         }
     }
+
+    @GetMapping("/analytics/{questionId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('QUESTION_SETTER')")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getQuestionAnalytics(@PathVariable Long questionId) {
+        try {
+            Map<String, Object> analytics = questionService.getQuestionAnalytics(questionId);
+            return ResponseEntity.ok(ApiResponse.success(analytics));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Failed to fetch question analytics: " + e.getMessage()));
+        }
+    }
 }

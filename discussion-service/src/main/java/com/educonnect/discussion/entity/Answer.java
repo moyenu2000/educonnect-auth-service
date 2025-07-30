@@ -32,7 +32,7 @@ public class Answer {
     @JoinColumn(name = "discussion_id", nullable = false)
     private Discussion discussion;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "answer_attachments", joinColumns = @JoinColumn(name = "answer_id"))
     @Column(name = "attachment_url")
     private List<String> attachments = new ArrayList<>();

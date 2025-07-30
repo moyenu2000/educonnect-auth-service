@@ -13,6 +13,7 @@ import com.educonnect.assessment.repository.QuestionRepository;
 import com.educonnect.assessment.repository.QuestionOptionRepository;
 import com.educonnect.assessment.repository.SubjectRepository;
 import com.educonnect.assessment.repository.TopicRepository;
+import com.educonnect.assessment.repository.UserSubmissionRepository;
 import com.educonnect.assessment.util.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -56,6 +57,9 @@ public class QuestionService {
 
     @Autowired
     private com.educonnect.assessment.repository.ContestRepository contestRepository;
+
+    @Autowired
+    private UserSubmissionRepository userSubmissionRepository;
 
     public PagedResponse<Question> getAllQuestions(int page, int size, Long subjectId, Long topicId, 
                                                  Difficulty difficulty, QuestionType type, String search) {
@@ -519,5 +523,96 @@ public class QuestionService {
             System.out.println("Error checking question accessibility: " + e.getMessage());
             return false;
         }
+    }
+
+    public Map<String, Object> getQuestionAnalytics(Long questionId) {
+        // Verify question exists
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found with id: " + questionId));
+
+        Map<String, Object> analytics = new HashMap<>();
+        
+        try {
+            // Get basic question info
+            analytics.put("questionId", questionId);
+            analytics.put("questionText", question.getText());
+            analytics.put("difficulty", question.getDifficulty());
+            analytics.put("type", question.getType());
+            analytics.put("subjectName", question.getSubject() != null ? question.getSubject().getName() : "Unknown");
+            analytics.put("topicName", question.getTopic() != null ? question.getTopic().getName() : "Unknown");
+
+            // Get submission statistics from UserSubmission table
+            // Note: UserSubmission table contains submissions from daily questions, practice questions, and contests
+            
+            // Total submissions for this question
+            Long totalSubmissions = userSubmissionRepository.countByQuestionId(questionId);
+            analytics.put("totalSubmissions", totalSubmissions);
+
+            // Correct submissions
+            Long correctSubmissions = userSubmissionRepository.countByQuestionIdAndIsCorrect(questionId, true);
+            analytics.put("correctSubmissions", correctSubmissions);
+
+            // Calculate accuracy
+            Double accuracy = totalSubmissions > 0 ? (correctSubmissions.doubleValue() / totalSubmissions.doubleValue()) * 100 : 0.0;
+            analytics.put("accuracy", Math.round(accuracy * 100.0) / 100.0); // Round to 2 decimal places
+
+            // Unique users who attempted this question
+            Long uniqueUsers = userSubmissionRepository.countDistinctUsersByQuestionId(questionId);
+            analytics.put("uniqueUsers", uniqueUsers);
+
+            // Average time taken (in seconds)
+            Double avgTime = userSubmissionRepository.getAverageTimeByQuestionId(questionId);
+            analytics.put("averageTime", avgTime != null ? Math.round(avgTime) : 0);
+
+            // Total points earned from this question
+            Long totalPoints = userSubmissionRepository.getTotalPointsByQuestionId(questionId);
+            analytics.put("totalPointsEarned", totalPoints != null ? totalPoints : 0);
+
+            // Submission breakdown by context
+            Long dailySubmissions = userSubmissionRepository.countByQuestionIdAndIsDailyQuestion(questionId, true);
+            Long practiceSubmissions = userSubmissionRepository.countByQuestionIdAndIsDailyQuestionAndContestIdIsNull(questionId, false);
+            Long contestSubmissions = userSubmissionRepository.countByQuestionIdAndContestIdIsNotNull(questionId);
+            
+            Map<String, Object> submissionBreakdown = new HashMap<>();
+            submissionBreakdown.put("daily", dailySubmissions);
+            submissionBreakdown.put("practice", practiceSubmissions);
+            submissionBreakdown.put("contest", contestSubmissions);
+            analytics.put("submissionBreakdown", submissionBreakdown);
+
+            // Recent submissions (last 10)
+            List<Map<String, Object>> recentSubmissions = userSubmissionRepository.findTop10ByQuestionIdOrderBySubmittedAtDesc(questionId)
+                    .stream()
+                    .map(submission -> {
+                        Map<String, Object> submissionData = new HashMap<>();
+                        submissionData.put("userId", submission.getUserId());
+                        submissionData.put("answer", submission.getAnswer());
+                        submissionData.put("isCorrect", submission.getIsCorrect());
+                        submissionData.put("pointsEarned", submission.getPointsEarned());
+                        submissionData.put("timeTaken", submission.getTimeTaken());
+                        submissionData.put("submittedAt", submission.getSubmittedAt());
+                        submissionData.put("context", submission.getIsDailyQuestion() ? "Daily" : 
+                                                    (submission.getContestId() != null ? "Contest" : "Practice"));
+                        return submissionData;
+                    })
+                    .collect(Collectors.toList());
+            analytics.put("recentSubmissions", recentSubmissions);
+
+        } catch (Exception e) {
+            // If there's an error getting analytics, still return basic question info
+            System.out.println("Error fetching question analytics: " + e.getMessage());
+            analytics.put("error", "Could not fetch complete analytics data");
+            
+            // Set default values
+            analytics.put("totalSubmissions", 0);
+            analytics.put("correctSubmissions", 0);
+            analytics.put("accuracy", 0.0);
+            analytics.put("uniqueUsers", 0);
+            analytics.put("averageTime", 0);
+            analytics.put("totalPointsEarned", 0);
+            analytics.put("submissionBreakdown", Map.of("daily", 0, "practice", 0, "contest", 0));
+            analytics.put("recentSubmissions", new ArrayList<>());
+        }
+
+        return analytics;
     }
 }
