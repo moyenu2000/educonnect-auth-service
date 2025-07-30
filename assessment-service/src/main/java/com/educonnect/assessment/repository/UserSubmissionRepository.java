@@ -27,6 +27,8 @@ public interface UserSubmissionRepository extends JpaRepository<UserSubmission, 
     
     Page<UserSubmission> findByUserIdAndIsDailyQuestionTrue(Long userId, Pageable pageable);
     
+    List<UserSubmission> findByUserIdAndContestIdIsNotNullOrderBySubmittedAtDesc(Long userId);
+    
     @Query("SELECT us FROM UserSubmission us JOIN us.question q WHERE us.userId = :userId " +
            "AND us.isDailyQuestion = true AND " +
            "(:subjectId IS NULL OR q.subjectId = :subjectId) AND " +

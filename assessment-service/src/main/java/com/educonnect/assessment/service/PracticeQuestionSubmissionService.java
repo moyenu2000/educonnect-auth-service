@@ -33,6 +33,9 @@ public interface PracticeQuestionSubmissionService {
     // Get recent submissions
     List<PracticeQuestionSubmissionResponse> getRecentSubmissions(Long userId);
     
+    // Get submission history (all submissions)
+    List<PracticeQuestionSubmissionResponse> getSubmissionHistory(Long userId);
+    
     // Check submission status
     String getSubmissionStatus(Long userId, Long questionId);
     

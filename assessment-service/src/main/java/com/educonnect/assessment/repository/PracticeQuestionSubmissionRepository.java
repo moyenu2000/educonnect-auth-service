@@ -20,6 +20,9 @@ public interface PracticeQuestionSubmissionRepository extends JpaRepository<Prac
 
     // Find all submissions for a user (paginated)
     Page<PracticeQuestionSubmission> findByUserIdOrderBySubmittedAtDesc(Long userId, Pageable pageable);
+    
+    // Find all submissions for a user (non-paginated)
+    List<PracticeQuestionSubmission> findByUserIdOrderBySubmittedAtDesc(Long userId);
 
     // Find latest submission for a user for a specific question
     Optional<PracticeQuestionSubmission> findTopByUserIdAndQuestionIdOrderBySubmittedAtDesc(Long userId, Long questionId);

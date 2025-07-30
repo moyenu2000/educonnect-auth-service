@@ -228,6 +228,7 @@ public class PracticeQuestionController {
         return ResponseEntity.ok(ApiResponse.success(submissions));
     }
 
+
     // Utility methods
     private Long getCurrentUserId() {
         return SecurityUtils.getCurrentUserId()

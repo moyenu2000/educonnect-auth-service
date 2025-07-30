@@ -1,8 +1,8 @@
 // Central API Configuration - Use environment variables
 const getBaseUrl = () => {
-  /*if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
     return `${window.location.protocol}//${window.location.hostname}`;
-  }*/
+  }
   return 'http://34.136.116.244';
 };
 

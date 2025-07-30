@@ -512,6 +512,21 @@ public class DailyQuestionController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/submissions/history")
+    // @PreAuthorize("hasRole('STUDENT')") // Temporarily disabled for testing
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getDailyQuestionSubmissionHistory() {
+        try {
+            // Get current user ID from security context (with fallback for testing)
+            Long userId = com.educonnect.assessment.util.SecurityUtils.getCurrentUserId()
+                    .orElseThrow(() -> new RuntimeException("User not authenticated"));
+            
+            List<Map<String, Object>> submissionHistory = dailyQuestionService.getUserSubmissionHistory(userId);
+            return ResponseEntity.ok(ApiResponse.success(submissionHistory));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error("Failed to get submission history: " + e.getMessage()));
+        }
+    }
+
     // Inner classes for request DTOs
     public static class SubmitAnswerRequest {
         private String answer;

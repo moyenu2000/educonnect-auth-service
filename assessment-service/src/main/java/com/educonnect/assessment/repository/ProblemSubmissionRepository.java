@@ -136,8 +136,8 @@ public interface ProblemSubmissionRepository extends JpaRepository<ProblemSubmis
     
     // Weak/Strong areas analysis
     @Query(value = "SELECT t.name, " +
-           "CAST(COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) AS DOUBLE) / " +
-           "CAST(COUNT(ps.id) AS DOUBLE) * 100 as accuracy " +
+           "CAST(COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) AS DOUBLE PRECISION) / " +
+           "CAST(COUNT(ps.id) AS DOUBLE PRECISION) * 100 as accuracy " +
            "FROM assessment.problem_submissions ps " +
            "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
            "JOIN assessment.topics t ON pp.topic_id = t.id " +
@@ -150,8 +150,8 @@ public interface ProblemSubmissionRepository extends JpaRepository<ProblemSubmis
                                  @Param("startDate") LocalDateTime startDate);
     
     @Query(value = "SELECT t.name, " +
-           "CAST(COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) AS DOUBLE) / " +
-           "CAST(COUNT(ps.id) AS DOUBLE) * 100 as accuracy " +
+           "CAST(COALESCE(SUM(CASE WHEN ps.is_correct = true THEN 1 ELSE 0 END), 0) AS DOUBLE PRECISION) / " +
+           "CAST(COUNT(ps.id) AS DOUBLE PRECISION) * 100 as accuracy " +
            "FROM assessment.problem_submissions ps " +
            "JOIN assessment.practice_problems pp ON ps.problem_id = pp.id " +
            "JOIN assessment.topics t ON pp.topic_id = t.id " +

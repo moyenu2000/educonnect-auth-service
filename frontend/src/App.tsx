@@ -29,6 +29,7 @@ import ExamPage from './components/student/ExamPage'
 import Practice from './components/student/Practice'
 import PracticeQuestions from './components/student/PracticeQuestions'
 import PracticeSubmissionHistory from './components/student/PracticeSubmissionHistory'
+import StudentAnalytics from './components/student/StudentAnalytics'
 import Discussions from './components/student/Discussions'
 import Contests from './components/student/Contests'
 import ContestDetails from './components/student/ContestDetails'
@@ -46,6 +47,7 @@ import CreateGroup from './components/student/CreateGroup'
 import EditGroup from './components/student/EditGroup'
 import GroupMembers from './components/student/GroupMembers'
 import GroupDiscussions from './components/student/GroupDiscussions'
+import DiscussionDetail from './components/student/DiscussionDetail'
 
 // Admin Components  
 import SubjectManagement from './components/admin/SubjectManagement'
@@ -381,6 +383,11 @@ const AppContent: React.FC = () => {
           <Layout><Contests /></Layout>
         </ProtectedRoute>
       } />
+      <Route path="/student/analytics" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><StudentAnalytics /></Layout>
+        </ProtectedRoute>
+      } />
       <Route path="/student/contest/:contestId/details" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><ContestDetails /></Layout>
@@ -436,6 +443,11 @@ const AppContent: React.FC = () => {
       <Route path="/student/groups/:groupId/discussions" element={
         <ProtectedRoute requiredRole="STUDENT">
           <Layout><GroupDiscussions /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/student/groups/:groupId/discussions/:discussionId" element={
+        <ProtectedRoute requiredRole="STUDENT">
+          <Layout><DiscussionDetail /></Layout>
         </ProtectedRoute>
       } />
       

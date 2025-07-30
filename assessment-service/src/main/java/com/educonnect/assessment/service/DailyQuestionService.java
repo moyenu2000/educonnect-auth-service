@@ -1298,4 +1298,40 @@ public class DailyQuestionService {
             return result;
         }
     }
+
+    public List<Map<String, Object>> getUserSubmissionHistory(Long userId) {
+        try {
+            List<UserSubmission> submissions = userSubmissionRepository.findByUserIdAndIsDailyQuestionTrueOrderBySubmittedAtDesc(userId);
+            List<Map<String, Object>> submissionHistory = new ArrayList<>();
+            
+            for (UserSubmission submission : submissions) {
+                Map<String, Object> submissionData = new HashMap<>();
+                submissionData.put("id", submission.getId());
+                submissionData.put("questionId", submission.getQuestionId());
+                submissionData.put("answer", submission.getAnswer());
+                submissionData.put("isCorrect", submission.getIsCorrect());
+                submissionData.put("score", submission.getPointsEarned());
+                submissionData.put("timeSpent", submission.getTimeTaken());
+                submissionData.put("submittedAt", submission.getSubmittedAt());
+                
+                // Get question details
+                Question question = questionRepository.findById(submission.getQuestionId()).orElse(null);
+                if (question != null) {
+                    submissionData.put("questionTitle", "Daily Question " + submission.getQuestionId());
+                    submissionData.put("questionText", question.getText());
+                    submissionData.put("correctAnswer", question.getCorrectAnswerText());
+                    submissionData.put("difficulty", question.getDifficulty().toString());
+                    submissionData.put("subject", question.getSubject() != null ? question.getSubject().getName() : "General");
+                    submissionData.put("topic", question.getTopic() != null ? question.getTopic().getName() : "General");
+                }
+                
+                submissionHistory.add(submissionData);
+            }
+            
+            return submissionHistory;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 }

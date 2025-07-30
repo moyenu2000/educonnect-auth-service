@@ -34,6 +34,7 @@ public interface ContestService {
     // User submissions
     List<UserSubmission> getUserContestSubmissions(Long contestId, Long userId);
     PagedResponse<UserSubmission> getUserContestSubmissions(Long userId, int page, int size, ContestStatus contestStatus);
+    List<Map<String, Object>> getUserSubmissionHistory(Long userId);
     
     // Contest control
     void startContest(Long contestId);

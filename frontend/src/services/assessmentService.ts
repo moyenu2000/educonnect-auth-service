@@ -410,6 +410,20 @@ export const assessmentService = {
   getRankings: (params: { type: string, period: string }) =>
     assessmentApi.get('/analytics/rankings', { params }),
 
+  // User Analytics
+  getUserAnalytics: (type: 'dashboard' | 'performance' | 'progress' | 'rankings', params?: any) =>
+    assessmentApi.get(`/analytics/${type}`, { params }),
+  
+  // Submission History
+  getDailyQuestionSubmissions: () =>
+    assessmentApi.get('/daily-questions/submissions/history'),
+    
+  getPracticeSubmissions: () =>
+    assessmentApi.get('/practice-questions/submissions/history'),
+    
+  getContestSubmissions: () =>
+    assessmentApi.get('/contests/submissions/history'),
+
   // Practice Questions
   getPracticeQuestions: (params?: {
     page?: number

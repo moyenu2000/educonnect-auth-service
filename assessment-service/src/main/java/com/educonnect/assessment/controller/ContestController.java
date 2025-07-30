@@ -127,6 +127,19 @@ public class ContestController {
         return ResponseEntity.ok(ApiResponse.success(submissions));
     }
 
+    // Get contest submission history for analytics
+    @GetMapping("/submissions/history")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getContestSubmissionHistory() {
+        try {
+            Long userId = SecurityUtils.getCurrentUserId().orElseThrow(() -> new RuntimeException("User not authenticated"));
+            List<Map<String, Object>> submissionHistory = contestService.getUserSubmissionHistory(userId);
+            return ResponseEntity.ok(ApiResponse.success(submissionHistory));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(ApiResponse.error("Failed to get contest submission history: " + e.getMessage()));
+        }
+    }
+
     // Join/Register for contest
     @PostMapping("/{contestId}/join")
     @PreAuthorize("hasRole('STUDENT')")

@@ -11,6 +11,7 @@ import { discussionService } from '../../services/discussionService';
 import { 
   MessageSquare, 
   ThumbsUp, 
+  ThumbsDown,
   Eye, 
   Plus,
   Search,
@@ -18,27 +19,37 @@ import {
   Calendar,
   User,
   Filter,
-  X
+  X,
+  Bookmark,
+  BookmarkCheck
 } from 'lucide-react';
 
 interface Discussion {
   id: number;
-  title: string;
+  title: string;  
   content: string;
   type: 'QUESTION' | 'HELP' | 'GENERAL' | 'ANNOUNCEMENT';
-  authorId: number;
-  authorName: string;
-  voteCount: number;
-  answerCount: number;
-  viewCount: number;
-  isBookmarked: boolean;
-  hasUpvoted: boolean;
-  hasDownvoted: boolean;
+  author: {
+    id: number;
+    username: string;
+    fullName: string;
+    email?: string;
+    bio?: string;
+    avatarUrl?: string;
+  };
+  upvotesCount: number;
+  downvotesCount: number;
+  answersCount: number;
+  viewsCount: number;
+  bookmarked: boolean;
+  upvoted?: boolean;
+  downvoted?: boolean;
   isAnonymous: boolean;
   createdAt: string;
   updatedAt?: string;
   tags: string[];
   attachments: string[];
+  groupId?: number;
 }
 
 interface DiscussionsResponse {
@@ -77,6 +88,40 @@ const GroupDiscussions: React.FC = () => {
     tags: '',
     isAnonymous: false
   });
+
+  // Vote and bookmark handlers
+  const handleUpvote = async (discussionId: number) => {
+    try {
+      await discussionService.upvoteDiscussion(discussionId);
+      showToast('Vote updated successfully!', 'success');
+      loadDiscussions(currentPage); // Reload to get updated counts
+    } catch (error: any) {
+      console.error('Error upvoting discussion:', error);
+      showToast(error.response?.data?.error || 'Failed to upvote discussion', 'error');
+    }
+  };
+
+  const handleDownvote = async (discussionId: number) => {
+    try {
+      await discussionService.downvoteDiscussion(discussionId);
+      showToast('Vote updated successfully!', 'success');
+      loadDiscussions(currentPage); // Reload to get updated counts
+    } catch (error: any) {
+      console.error('Error downvoting discussion:', error);
+      showToast(error.response?.data?.error || 'Failed to downvote discussion', 'error');
+    }
+  };
+
+  const handleBookmark = async (discussionId: number) => {
+    try {
+      await discussionService.bookmarkDiscussion(discussionId);
+      showToast('Bookmark updated successfully!', 'success');
+      loadDiscussions(currentPage); // Reload to get updated bookmark status
+    } catch (error: any) {
+      console.error('Error bookmarking discussion:', error);
+      showToast(error.response?.data?.error || 'Failed to bookmark discussion', 'error');
+    }
+  };
 
   const fetchGroupDetails = useCallback(async () => {
     if (!groupId) return;
@@ -335,9 +380,11 @@ const GroupDiscussions: React.FC = () => {
                           ))}
                         </div>
                         
-                        <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600 cursor-pointer line-clamp-2">
-                          {discussion.title}
-                        </h3>
+                        <Link to={`/student/groups/${groupId}/discussions/${discussion.id}`}>
+                          <h3 className="text-lg font-medium text-gray-900 hover:text-blue-600 cursor-pointer line-clamp-2">
+                            {discussion.title}
+                          </h3>
+                        </Link>
                         
                         <p className="text-gray-600 text-sm mt-1 line-clamp-2">
                           {discussion.content}
@@ -350,7 +397,7 @@ const GroupDiscussions: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <User className="w-4 h-4" />
-                          <span>{discussion.isAnonymous ? 'Anonymous' : discussion.authorName}</span>
+                          <span>{discussion.isAnonymous ? 'Anonymous' : discussion.author.fullName}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4" />
@@ -358,18 +405,50 @@ const GroupDiscussions: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        {/* Voting buttons */}
                         <div className="flex items-center gap-1">
-                          <ThumbsUp className="w-4 h-4" />
-                          <span>{discussion.voteCount}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`p-1 h-auto ${discussion.upvoted ? 'text-green-600' : 'text-gray-500 hover:text-green-600'}`}
+                            onClick={() => handleUpvote(discussion.id)}
+                          >
+                            <ThumbsUp className="w-4 h-4" />
+                          </Button>
+                          <span className="text-sm font-medium">{discussion.upvotesCount}</span>
                         </div>
+                        
                         <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`p-1 h-auto ${discussion.downvoted ? 'text-red-600' : 'text-gray-500 hover:text-red-600'}`}
+                            onClick={() => handleDownvote(discussion.id)}
+                          >
+                            <ThumbsDown className="w-4 h-4" />
+                          </Button>
+                          <span className="text-sm font-medium">{discussion.downvotesCount}</span>
+                        </div>
+
+                        {/* Bookmark button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`p-1 h-auto ${discussion.bookmarked ? 'text-blue-600' : 'text-gray-500 hover:text-blue-600'}`}
+                          onClick={() => handleBookmark(discussion.id)}
+                        >
+                          {discussion.bookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                        </Button>
+                        
+                        {/* Other stats */}
+                        <div className="flex items-center gap-1 text-gray-500">
                           <MessageSquare className="w-4 h-4" />
-                          <span>{discussion.answerCount}</span>
+                          <span className="text-sm">{discussion.answersCount}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 text-gray-500">
                           <Eye className="w-4 h-4" />
-                          <span>{discussion.viewCount}</span>
+                          <span className="text-sm">{discussion.viewsCount}</span>
                         </div>
                       </div>
                     </div>

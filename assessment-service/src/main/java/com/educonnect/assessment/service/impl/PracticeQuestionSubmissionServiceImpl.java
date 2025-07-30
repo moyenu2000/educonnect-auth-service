@@ -134,6 +134,16 @@ public class PracticeQuestionSubmissionServiceImpl implements PracticeQuestionSu
     }
 
     @Override
+    public List<PracticeQuestionSubmissionResponse> getSubmissionHistory(Long userId) {
+        List<PracticeQuestionSubmission> submissions = 
+                submissionRepository.findByUserIdOrderBySubmittedAtDesc(userId);
+        
+        return submissions.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public String getSubmissionStatus(Long userId, Long questionId) {
         if (hasUserSolved(userId, questionId)) {
             return "SOLVED";

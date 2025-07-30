@@ -79,6 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
     { name: 'Practice Questions', href: '/student/practice-questions', icon: FileQuestion },
     // { name: 'Live Exams', href: '/student/exams', icon: GraduationCap },
     { name: 'Contests', href: '/student/contests', icon: Trophy },
+    { name: 'Analytics', href: '/student/analytics', icon: BarChart3 },
     { name: 'Discussions', href: '/student/discussions', icon: MessageSquare },
     { name: 'Groups', href: '/student/groups', icon: Users },
     { name: 'Messages', href: '/student/messages', icon: MessageSquare },
