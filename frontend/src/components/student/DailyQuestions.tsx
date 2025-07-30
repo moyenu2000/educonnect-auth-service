@@ -99,7 +99,7 @@ const DailyQuestions: React.FC = () => {
 
   const loadDailyQuestions = async () => {
     try {
-      const dates = generateDateRange(30) // Last 30 days including today
+      const dates = generateDateRange(5) // Last 5 days including today
       
       // Include all dates including today
       setDateRange(dates)
