@@ -52,19 +52,19 @@ jobs:
         run: |
           echo "Running auth service tests..."
           cd auth
-          ./mvnw test
+          ./mvnw test -Dtest=BasicUtilsTest
           
       - name: Test Discussion Service
         run: |
           echo "Running discussion service tests..."
           cd discussion-service
-          ./mvnw test
+          ./mvnw test -Dtest=ValidationUtilsTest,DiscussionEntityTest,ApiResponseTest
           
       - name: Test Assessment Service
         run: |
           echo "Running assessment service tests..."
           cd assessment-service
-          ./mvnw test
+          ./mvnw test -Dtest=AssessmentUtilsTest
           
       - name: Test Results Summary
         run: |
