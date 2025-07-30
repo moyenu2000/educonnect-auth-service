@@ -317,25 +317,25 @@ const PracticeQuestions: React.FC = () => {
                 <div className="text-2xl font-bold text-blue-600">
                   {stats.solvedQuestions}
                 </div>
-                <div className="text-sm text-muted-foreground">Questions Solved</div>
+                <div className="text-sm text-gray-700 font-semibold">Questions Solved</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
                   {stats.accuracyPercentage.toFixed(1)}%
                 </div>
-                <div className="text-sm text-muted-foreground">Accuracy</div>
+                <div className="text-sm text-gray-700 font-semibold">Accuracy</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">
                   {stats.totalPoints}
                 </div>
-                <div className="text-sm text-muted-foreground">Total Points</div>
+                <div className="text-sm text-gray-700 font-semibold">Total Points</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">
                   {stats.totalSubmissions}
                 </div>
-                <div className="text-sm text-muted-foreground">Total Attempts</div>
+                <div className="text-sm text-gray-700 font-semibold">Total Attempts</div>
               </div>
             </div>
           </CardContent>
@@ -414,7 +414,7 @@ const PracticeQuestions: React.FC = () => {
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 <Input
                   placeholder="Search questions..."
                   value={searchQuery}
@@ -456,7 +456,7 @@ const PracticeQuestions: React.FC = () => {
             <CardContent className="text-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No practice questions found</h3>
-              <p className="text-muted-foreground">Try adjusting your filters or check back later!</p>
+              <p className="text-gray-600 font-medium">Try adjusting your filters or check back later!</p>
             </CardContent>
           </Card>
         ) : (

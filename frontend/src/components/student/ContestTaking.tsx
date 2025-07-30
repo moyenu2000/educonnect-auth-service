@@ -505,22 +505,23 @@ const ContestTaking: React.FC = () => {
           variant="outline"
           onClick={() => handleQuestionNavigation('prev')}
           disabled={currentQuestionIndex === 0}
+          className="px-6"
         >
           <ChevronLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {questions.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentQuestionIndex(index)}
-              className={`w-8 h-8 rounded-full text-sm font-medium ${
+              className={`rounded-full text-sm font-bold transition-all duration-200 ${
                 index === currentQuestionIndex
-                  ? 'bg-blue-600 text-white'
+                  ? 'w-12 h-12 bg-blue-600 text-white shadow-lg transform scale-110 border-2 border-blue-400'
                   : getSubmissionStatus(questions[index].id)
-                  ? 'bg-green-200 text-green-800'
-                  : 'bg-gray-200 text-gray-600'
+                  ? 'w-10 h-10 bg-green-500 text-white hover:bg-green-600'
+                  : 'w-10 h-10 bg-gray-300 text-gray-700 hover:bg-gray-400 hover:text-white'
               }`}
             >
               {index + 1}
@@ -532,6 +533,7 @@ const ContestTaking: React.FC = () => {
           variant="outline"
           onClick={() => handleQuestionNavigation('next')}
           disabled={currentQuestionIndex === questions.length - 1}
+          className="px-6"
         >
           Next
           <ChevronRight className="w-4 h-4 ml-2" />
@@ -542,24 +544,15 @@ const ContestTaking: React.FC = () => {
       {currentQuestion && renderQuestion(currentQuestion)}
 
       {/* Action Buttons */}
-      <div className="flex justify-center gap-4">
-        <Button 
-          onClick={handleEndContest}
-          className="bg-green-600 hover:bg-green-700 text-white px-8 py-3"
-          size="lg"
-          disabled={contestCompleted || submitting}
-        >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          End Contest
-        </Button>
+      <div className="flex justify-center">
         <Button 
           onClick={handleSubmitAll}
-          className="bg-red-600 hover:bg-red-700 text-white px-8 py-3"
+          className="bg-red-600 hover:bg-red-700 text-white px-12 py-3 text-lg font-semibold"
           size="lg"
           disabled={contestCompleted || submitting}
         >
-          <Flag className="w-4 h-4 mr-2" />
-          Submit All & End
+          <Flag className="w-5 h-5 mr-2" />
+          Submit All & End Contest
         </Button>
       </div>
 

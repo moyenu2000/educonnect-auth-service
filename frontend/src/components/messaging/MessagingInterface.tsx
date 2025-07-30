@@ -225,19 +225,19 @@ const MessagingInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-12rem)] flex bg-white rounded-lg border overflow-hidden">
+    <div className="h-[calc(100vh-12rem)] flex bg-gray-50 rounded-lg border-2 border-gray-200 overflow-hidden shadow-lg">
       {/* Conversations List - Hide on mobile when conversation is selected */}
       <div className={`${
         isMobileView && selectedConversation ? 'hidden' : 'block'
-      } w-full md:w-1/3 lg:w-1/4 border-r flex flex-col`}>
-        <div className="p-4 border-b bg-gray-50">
+      } w-full md:w-1/3 lg:w-1/4 border-r-2 border-gray-200 flex flex-col bg-white`}>
+        <div className="p-4 border-b-2 border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">Messages</h2>
+            <h2 className="text-lg font-bold text-gray-800">Messages</h2>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowNewConversation(!showNewConversation)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 border-2 hover:bg-blue-50"
             >
               <Plus className="w-4 h-4" />
               New
@@ -245,11 +245,11 @@ const MessagingInterface: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">
+            <Badge variant="secondary" className="bg-gray-100 text-gray-700 font-medium">
               {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
             </Badge>
             {conversations.some(c => c.unreadCount > 0) && (
-              <Badge variant="destructive">
+              <Badge variant="destructive" className="bg-red-500 text-white font-bold">
                 {conversations.reduce((sum, c) => sum + c.unreadCount, 0)} unread
               </Badge>
             )}

@@ -279,7 +279,7 @@ const StudentDashboard: React.FC = () => {
             ) : (
               <div className="text-center py-6">
                 <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">No daily questions available</p>
+                <p className="text-sm text-gray-600 font-medium">No daily questions available</p>
               </div>
             )}
           </CardContent>
@@ -318,7 +318,7 @@ const StudentDashboard: React.FC = () => {
             ) : (
               <div className="text-center py-6">
                 <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">No upcoming exams</p>
+                <p className="text-sm text-gray-600 font-medium">No upcoming exams</p>
               </div>
             )}
           </CardContent>
@@ -397,7 +397,7 @@ const StudentDashboard: React.FC = () => {
           ) : (
             <div className="text-center py-6">
               <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No recent discussions</p>
+              <p className="text-sm text-gray-600 font-medium">No recent discussions</p>
             </div>
           )}
         </CardContent>

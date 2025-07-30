@@ -13,18 +13,18 @@ const Toast: React.FC = () => {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-[9999] space-y-2">
       {toasts.map((toast: ToastItem) => (
         <div
           key={toast.id}
-          className={`max-w-sm p-4 rounded-lg shadow-lg transition-all duration-300 ${
+          className={`max-w-sm p-4 rounded-lg shadow-2xl border-2 transition-all duration-300 font-medium ${
             toast.type === 'success' 
-              ? 'bg-green-500 text-white' 
+              ? 'bg-green-600 text-white border-green-400 shadow-green-200' 
               : toast.type === 'error'
-              ? 'bg-red-500 text-white'
+              ? 'bg-red-600 text-white border-red-400 shadow-red-200'
               : toast.type === 'warning'
-              ? 'bg-yellow-500 text-white'
-              : 'bg-blue-500 text-white'
+              ? 'bg-yellow-600 text-white border-yellow-400 shadow-yellow-200'
+              : 'bg-blue-600 text-white border-blue-400 shadow-blue-200'
           }`}
         >
           <div className="flex items-center justify-between gap-2">

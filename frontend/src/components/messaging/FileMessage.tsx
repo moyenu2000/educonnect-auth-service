@@ -183,10 +183,10 @@ const FileMessage: React.FC<FileMessageProps> = ({ fileUrl, isOwn }) => {
               size="sm"
               onClick={handleDownload}
               disabled={isDownloading}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 hover:bg-gray-100 border border-gray-300 bg-white shadow-sm"
               title={isDownloading ? "Downloading..." : "Download file"}
             >
-              <Download className={`w-4 h-4 ${isDownloading ? 'animate-pulse' : ''}`} />
+              <Download className={`w-4 h-4 ${isDownloading ? 'animate-pulse text-blue-500' : 'text-gray-700'}`} />
             </Button>
           </div>
         </div>

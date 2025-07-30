@@ -101,21 +101,23 @@ const ConversationList: React.FC<ConversationListProps> = ({
           <div
             key={conversation.id}
             onClick={() => onSelect(conversation)}
-            className={`p-4 border-b cursor-pointer transition-colors hover:bg-gray-50 ${
-              selectedConversation?.id === conversation.id ? 'bg-blue-50 border-blue-200' : ''
+            className={`p-4 border-b border-gray-100 cursor-pointer transition-all duration-200 hover:bg-blue-50 hover:border-blue-200 ${
+              selectedConversation?.id === conversation.id 
+                ? 'bg-blue-100 border-blue-300 shadow-sm' 
+                : 'hover:shadow-sm'
             }`}
           >
             <div className="flex items-start gap-3">
               <div className="relative flex-shrink-0">
-                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
                   {otherParticipant?.avatarUrl ? (
                     <img
                       src={otherParticipant.avatarUrl}
                       alt={otherParticipant.fullName || 'User'}
-                      className="w-12 h-12 rounded-full object-cover"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                     />
                   ) : (
-                    <span className="text-gray-600 font-medium text-lg">
+                    <span className="text-white font-semibold text-lg">
                       {otherParticipant?.fullName?.charAt(0).toUpperCase() || 'U'}
                     </span>
                   )}
@@ -126,26 +128,26 @@ const ConversationList: React.FC<ConversationListProps> = ({
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className={`font-medium truncate ${
-                    conversation.unreadCount > 0 ? 'text-gray-900' : 'text-gray-700'
+                  <h3 className={`font-semibold truncate ${
+                    conversation.unreadCount > 0 ? 'text-gray-900' : 'text-gray-800'
                   }`}>
                     {otherParticipant?.fullName || 'Unknown User'}
                   </h3>
                   
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {conversation.unreadCount > 0 && (
-                      <Badge variant="destructive" className="text-xs">
+                      <Badge variant="destructive" className="text-xs px-2 py-1 min-w-[20px] h-5 rounded-full">
                         {conversation.unreadCount}
                       </Badge>
                     )}
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 font-medium">
                       {formatTime(lastMessageTime)}
                     </span>
                   </div>
                 </div>
                 
                 <p className={`text-sm truncate ${
-                  conversation.unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-500'
+                  conversation.unreadCount > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
                 }`}>
                   {truncateMessage(lastMessageText)}
                 </p>

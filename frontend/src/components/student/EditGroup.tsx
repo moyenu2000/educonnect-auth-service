@@ -143,13 +143,13 @@ const EditGroup: React.FC = () => {
       </div>
 
       {/* Info Alert */}
-      <Card className="border-blue-200 bg-blue-50">
+      <Card className="border-blue-300 bg-gradient-to-r from-blue-50 to-blue-100 shadow-md">
         <CardContent className="pt-6">
           <div className="flex gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">Editing Limitations</p>
-              <p>You can only edit the name, description, avatar, and rules. Group type and privacy settings cannot be changed after creation.</p>
+            <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-900">
+              <p className="font-bold mb-2 text-blue-800">Editing Limitations</p>
+              <p className="text-blue-700 font-medium">You can only edit the name, description, avatar, and rules. Group type and privacy settings cannot be changed after creation.</p>
             </div>
           </div>
         </CardContent>

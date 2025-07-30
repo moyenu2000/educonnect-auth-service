@@ -476,7 +476,7 @@ const Discussions: React.FC = () => {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
               <input
                 type="text"
                 placeholder="Search discussions..."
@@ -519,7 +519,7 @@ const Discussions: React.FC = () => {
             <CardContent className="text-center py-12">
               <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No discussions found</h3>
-              <p className="text-muted-foreground">Be the first to start a discussion!</p>
+              <p className="text-gray-600 font-medium">Be the first to start a discussion!</p>
             </CardContent>
           </Card>
         ) : (
@@ -544,7 +544,7 @@ const Discussions: React.FC = () => {
                       <LaTeXText text={discussion.title} />
                     </CardTitle>
                     
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-sm text-gray-600 font-medium">
                       <span>by {discussion.authorName}</span>
                       <span>{new Date(discussion.createdAt).toLocaleDateString()}</span>
                     </div>
@@ -553,7 +553,7 @@ const Discussions: React.FC = () => {
               </CardHeader>
               
               <CardContent>
-                <p className="text-muted-foreground mb-4 line-clamp-2">
+                <p className="text-gray-700 mb-4 line-clamp-2 font-medium">
                   <LaTeXText text={discussion.content} />
                 </p>
 
@@ -568,7 +568,7 @@ const Discussions: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-6 text-sm text-gray-600 font-medium">
                     <div className="flex items-center gap-1">
                       <MessageSquare className="h-4 w-4" />
                       <span>{discussion.answerCount} answers</span>
