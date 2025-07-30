@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import LatexInput from '@/components/ui/LatexInput'
+import { renderMath } from '@/utils/mathRenderer'
 import { assessmentService } from '@/services/assessmentService'
 import { 
   FileQuestion, 
@@ -399,13 +401,20 @@ const CreateQuestion: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             <div className="p-4 bg-white rounded-lg border">
-              <p className="font-medium text-gray-900 mb-3">{formData.text || 'Question text will appear here...'}</p>
+              <div className="font-medium text-gray-900 mb-3">
+                {formData.text ? (
+                  <div dangerouslySetInnerHTML={{ __html: renderMath(formData.text) }} />
+                ) : (
+                  <span className="text-gray-400">Question text will appear here...</span>
+                )}
+              </div>
               
               {formData.type === 'MCQ' && (
                 <div className="space-y-2">
                   {formData.options.filter(opt => opt.text.trim()).map((option, index) => (
                     <div key={index} className={`p-2 rounded border ${option.isCorrect ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-                      <span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option.text}
+                      <span className="font-medium">{String.fromCharCode(65 + index)}.</span>{' '}
+                      <span dangerouslySetInnerHTML={{ __html: renderMath(option.text) }} />
                       {option.isCorrect && <Check className="inline h-4 w-4 ml-2 text-green-600" />}
                     </div>
                   ))}
@@ -503,13 +512,14 @@ const CreateQuestion: React.FC = () => {
                   </span>
                 </div>
                 
-                <input
-                  type="text"
-                  value={option.text}
-                  onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
-                  placeholder={`Option ${String.fromCharCode(65 + index)}`}
-                  className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div className="flex-1">
+                  <LatexInput
+                    value={option.text}
+                    onChange={(value) => handleOptionChange(index, 'text', value)}
+                    placeholder={`Option ${String.fromCharCode(65 + index)} - Use $...$ for math`}
+                    className="h-20"
+                  />
+                </div>
                 
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-1 cursor-pointer">
@@ -759,22 +769,13 @@ const CreateQuestion: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Question Text */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Question Text *
-                </label>
-                <textarea
+                <LatexInput
                   value={formData.text}
-                  onChange={(e) => handleInputChange('text', e.target.value)}
-                  placeholder="Enter your question here... Make it clear and engaging!"
-                  className="w-full p-4 border-2 border-gray-300 rounded-lg h-32 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  onChange={(value) => handleInputChange('text', value)}
+                  placeholder="Enter your question here... Use $...$ for math expressions like $x^2 + 3x + 1$"
+                  label="Question Text *"
+                  error={errors.text}
                 />
-                {errors.text && (
-                  <div className="flex items-center gap-2 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    {errors.text}
-                  </div>
-                )}
               </div>
 
               {/* Type and Difficulty */}
@@ -882,15 +883,12 @@ const CreateQuestion: React.FC = () => {
 
               {/* Explanation */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4" />
-                  Explanation (Optional)
-                </label>
-                <textarea
+                <LatexInput
                   value={formData.explanation}
-                  onChange={(e) => handleInputChange('explanation', e.target.value)}
-                  placeholder="Provide an explanation for the correct answer..."
-                  className="w-full p-4 border-2 border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  onChange={(value) => handleInputChange('explanation', value)}
+                  placeholder="Provide an explanation for the correct answer... Use $...$ for math expressions"
+                  label="Explanation (Optional)"
+                  className="h-24"
                 />
               </div>
 

@@ -1,9 +1,9 @@
 // Central API Configuration - Use environment variables
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined') {
+  /*if (typeof window !== 'undefined') {
     return `${window.location.protocol}//${window.location.hostname}`;
-  }
-  return 'http://localhost';
+  }*/
+  return 'http://34.136.116.244';
 };
 
 const AUTH_URL = import.meta.env.VITE_AUTH_URL || `${getBaseUrl()}:8081`;

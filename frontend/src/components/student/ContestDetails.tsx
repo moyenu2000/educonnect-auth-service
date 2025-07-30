@@ -19,6 +19,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { getCurrentTime, formatDate, formatDateTime } from '@/lib/utils'
 import { useToast } from '../../hooks/useToast'
+import LaTeXText from '../ui/LaTeXText'
 
 interface Contest {
   id: number
@@ -292,7 +293,7 @@ const ContestDetails: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex gap-2">
           {contest.status === 'ACTIVE' && (
-            <Button onClick={handleJoinContest} className="bg-green-600 hover:bg-green-700">
+            <Button onClick={handleJoinContest} className="bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg transition-all duration-200">
               <Play className="mr-2 h-4 w-4" />
               Join Contest
             </Button>
@@ -345,7 +346,9 @@ const ContestDetails: React.FC = () => {
         </CardHeader>
         <CardContent>
           {contest.description && (
-            <p className="text-gray-700 text-lg mb-4">{contest.description}</p>
+            <p className="text-gray-700 text-lg mb-4">
+              <LaTeXText text={contest.description} />
+            </p>
           )}
         </CardContent>
       </Card>
@@ -441,7 +444,9 @@ const ContestDetails: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="prose max-w-none">
-              <pre className="whitespace-pre-wrap text-gray-700">{contest.rules}</pre>
+              <pre className="whitespace-pre-wrap text-gray-700">
+                <LaTeXText text={contest.rules} />
+              </pre>
             </div>
           </CardContent>
         </Card>

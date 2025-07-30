@@ -102,17 +102,17 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
   const navItems = getNavItems()
 
   return (
-    <div className="h-full w-full bg-white border-r">
+    <div className="h-full w-full bg-gray-50 border-r-2 border-gray-200">
       <div className="flex h-full max-h-screen flex-col">
-        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <Link to="/" className="flex items-center gap-2 font-semibold">
-            <GraduationCap className="h-6 w-6" />
-            <span className="">EduConnect</span>
+        <div className="flex h-14 items-center border-b-2 border-gray-200 px-4 lg:h-[60px] lg:px-6 bg-white">
+          <Link to="/" className="flex items-center gap-2 font-semibold text-gray-800">
+            <GraduationCap className="h-6 w-6 text-blue-600" />
+            <span className="text-lg">EduConnect</span>
           </Link>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
-          <nav className="grid items-start px-2 text-sm font-medium lg:px-4 py-2">
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+          <nav className="grid items-start px-3 text-sm font-medium lg:px-4 py-4 space-y-1">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href
               return (
@@ -120,11 +120,13 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
                   key={item.name}
                   to={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    isActive && "bg-muted text-primary"
+                    "flex items-center gap-3 rounded-lg px-4 py-3 transition-all font-medium",
+                    isActive 
+                      ? "bg-blue-600 text-white shadow-md" 
+                      : "text-gray-700 hover:bg-white hover:text-blue-600 hover:shadow-sm"
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className="h-5 w-5" />
                   {item.name}
                 </Link>
               )
@@ -133,18 +135,18 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
         </div>
 
         {/* Profile section at the bottom */}
-        <div className="border-t px-2 py-2 lg:px-4">
+        <div className="border-t-2 border-gray-200 px-3 py-3 lg:px-4 bg-white">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary cursor-pointer">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="h-4 w-4" />
+              <div className="flex items-center gap-3 rounded-lg px-3 py-3 text-gray-700 transition-all hover:bg-gray-50 cursor-pointer">
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <User className="h-5 w-5 text-gray-600" />
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <div className="text-sm font-medium truncate">{user?.fullName}</div>
-                  <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+                  <div className="text-sm font-semibold truncate text-gray-800">{user?.fullName}</div>
+                  <div className="text-xs text-gray-500 truncate">{user?.email}</div>
                 </div>
-                <Badge className={getRoleBadgeColor(user?.role || '')}>
+                <Badge className={cn("text-xs font-medium", getRoleBadgeColor(user?.role || ''))}>
                   {user?.role}
                 </Badge>
               </div>

@@ -8,6 +8,7 @@ import { assessmentService } from '@/services/assessmentService'
 import { BookOpen, Target, Trophy, Play, Filter, Search, Clock, CheckCircle, RotateCcw, History } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Pagination from '../ui/pagination'
+import LaTeXText from '../ui/LaTeXText'
 
 interface PracticeQuestion {
   id: number
@@ -95,6 +96,31 @@ const PracticeQuestions: React.FC = () => {
   useEffect(() => {
     loadPracticeQuestions()
   }, [currentPage, pageSize, selectedSubject, selectedTopic, selectedDifficulty, searchQuery])
+
+  // Refresh stats when the component becomes visible (user returns from solving a question)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Refresh stats and questions when tab becomes visible
+        loadData()
+        loadPracticeQuestions()
+      }
+    }
+
+    const handleFocus = () => {
+      // Also refresh when window gains focus (user navigates back)
+      loadData()
+      loadPracticeQuestions()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [])
 
   useEffect(() => {
     // Load topics when subject changes
@@ -189,24 +215,14 @@ const PracticeQuestions: React.FC = () => {
   }
 
   const handleSolveQuestion = (question: PracticeQuestion) => {
-    // Navigate to practice question solving interface with navigation support
-    const currentQuestionIndex = questions.findIndex(q => q.questionId === question.questionId)
-    const questionIds = questions.map(q => q.questionId)
-    
+    // Navigate to practice question solving interface for individual question only
     const queryParams = new URLSearchParams({
       type: 'practice',
       questionId: question.questionId.toString(),
-      index: currentQuestionIndex.toString(),
-      questions: questionIds.join(',')
+      individual: 'true' // Flag to indicate this is an individual question practice
     })
 
-    // Add current filters to maintain context for navigation
-    if (selectedSubject && selectedSubject !== 'all') queryParams.set('subjectId', selectedSubject)
-    if (selectedTopic && selectedTopic !== 'all') queryParams.set('topicId', selectedTopic)
-    if (selectedDifficulty && selectedDifficulty !== 'all') queryParams.set('difficulty', selectedDifficulty)
-    if (searchQuery) queryParams.set('search', searchQuery)
-
-    console.log('Navigating to:', `/student/exam?${queryParams.toString()}`)
+    console.log('Navigating to individual practice question:', `/student/exam?${queryParams.toString()}`)
     navigate(`/student/exam?${queryParams.toString()}`)
   }
 
@@ -468,7 +484,7 @@ const PracticeQuestions: React.FC = () => {
                     </div>
                     
                     <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                      {question.text}
+                      <LaTeXText text={question.text} />
                     </h3>
                     
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">

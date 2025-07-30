@@ -25,6 +25,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import { useToast } from '../../hooks/useToast'
 import { getCurrentTime } from '@/lib/utils'
+import LaTeXText from '../ui/LaTeXText'
 
 interface QuestionOption {
   id: number
@@ -129,9 +130,25 @@ const ContestTaking: React.FC = () => {
       let questionsData: any[] = []
       try {
         const questionsResponse = await assessmentService.getContestQuestions(parseInt(contestId!))
-        questionsData = questionsResponse.data?.data || questionsResponse.data || []
+        const responseData = questionsResponse.data?.data || questionsResponse.data
+        
         console.log('Contest questions response:', questionsResponse.data)
-        console.log('Questions data:', questionsData)
+        console.log('Response data:', responseData)
+        
+        // Handle different response structures
+        if (Array.isArray(responseData)) {
+          questionsData = responseData
+        } else if (responseData && Array.isArray(responseData.questions)) {
+          questionsData = responseData.questions
+        } else if (responseData && responseData.currentTime && Array.isArray(responseData.questions)) {
+          // New structure with timing info
+          questionsData = responseData.questions
+        } else {
+          console.warn('Unexpected questions response structure:', responseData)
+          questionsData = []
+        }
+        
+        console.log('Processed questions data:', questionsData)
         setQuestions(questionsData)
       } catch (questionsError) {
         console.error('Failed to load contest questions:', questionsError)
@@ -340,39 +357,84 @@ const ContestTaking: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-lg">{question.text}</p>
+          <p className="text-lg">
+            <LaTeXText text={question.text} />
+          </p>
           
           {question.type === 'MCQ' && question.options && (
-            <div className="space-y-2">
-              {question.options.map(option => (
-                <label key={option.id} className="flex items-center space-x-2 cursor-pointer">
+            <div className="space-y-3">
+              {question.options.map((option, index) => (
+                <label 
+                  key={option.id} 
+                  className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    answer === option.text
+                      ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200 ring-opacity-50'
+                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
+                  }`}
+                >
                   <input
                     type="radio"
                     name={`question-${question.id}`}
                     value={option.text}
                     checked={answer === option.text}
                     onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    className="form-radio"
+                    className="sr-only"
                   />
-                  <span>{option.text}</span>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                    answer === option.text
+                      ? 'border-blue-500 bg-blue-500 shadow-sm'
+                      : 'border-gray-400 hover:border-blue-400'
+                  }`}>
+                    {answer === option.text && (
+                      <div className="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+                    )}
+                  </div>
+                  <span className={`flex-1 transition-colors duration-200 ${
+                    answer === option.text ? 'text-blue-900 font-medium' : 'text-gray-700'
+                  }`}>
+                    <span className={`font-semibold mr-2 text-lg ${
+                      answer === option.text ? 'text-blue-600' : 'text-gray-500'
+                    }`}>{String.fromCharCode(65 + index)}.</span>
+                    <LaTeXText text={option.text} />
+                  </span>
                 </label>
               ))}
             </div>
           )}
           
           {question.type === 'TRUE_FALSE' && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {['True', 'False'].map(option => (
-                <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                <label 
+                  key={option} 
+                  className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    answer === option
+                      ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200 ring-opacity-50'
+                      : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25 hover:shadow-sm'
+                  }`}
+                >
                   <input
                     type="radio"
                     name={`question-${question.id}`}
                     value={option}
                     checked={answer === option}
                     onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                    className="form-radio"
+                    className="sr-only"
                   />
-                  <span>{option}</span>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                    answer === option
+                      ? 'border-blue-500 bg-blue-500 shadow-sm'
+                      : 'border-gray-400 hover:border-blue-400'
+                  }`}>
+                    {answer === option && (
+                      <div className="w-3 h-3 bg-white rounded-full shadow-sm"></div>
+                    )}
+                  </div>
+                  <span className={`text-lg font-medium transition-colors duration-200 ${
+                    answer === option ? 'text-blue-900' : 'text-gray-700'
+                  }`}>
+                    {option}
+                  </span>
                 </label>
               ))}
             </div>
@@ -518,24 +580,40 @@ const ContestTaking: React.FC = () => {
 
       {/* Confirm Submit Dialog */}
       <Dialog open={showConfirmSubmit} onOpenChange={setShowConfirmSubmit}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Submit Contest</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[500px] p-6 bg-white border-2 border-red-200 shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-bold text-red-900 text-center">
+              Submit Contest
+            </DialogTitle>
+            <DialogDescription className="text-base text-gray-700 text-center leading-relaxed">
               Are you sure you want to submit your contest? This action cannot be undone.
-              You have answered {submissions.length} out of {questions.length} questions.
+              <br />
+              <span className="font-semibold text-gray-900">
+                You have answered {submissions.length} out of {questions.length} questions.
+              </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button variant="outline" onClick={() => setShowConfirmSubmit(false)}>
+          <div className="flex justify-center gap-4 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmSubmit(false)}
+              className="px-6 py-2 text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleConfirmSubmit} 
               disabled={submitting}
-              className="bg-red-600 hover:bg-red-700"
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
-              {submitting ? 'Submitting...' : 'Submit Contest'}
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Submitting...
+                </span>
+              ) : (
+                'Submit Contest'
+              )}
             </Button>
           </div>
         </DialogContent>
@@ -543,24 +621,40 @@ const ContestTaking: React.FC = () => {
 
       {/* Confirm End Contest Dialog */}
       <Dialog open={showConfirmEnd} onOpenChange={setShowConfirmEnd}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>End Contest</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-[500px] p-6 bg-white border-2 border-green-200 shadow-2xl">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-bold text-green-900 text-center">
+              End Contest
+            </DialogTitle>
+            <DialogDescription className="text-base text-gray-700 text-center leading-relaxed">
               Are you sure you want to end your contest participation? Your current answers will be saved and your completion time will be recorded for ranking purposes.
-              You have answered {submissions.length} out of {questions.length} questions.
+              <br />
+              <span className="font-semibold text-gray-900">
+                You have answered {submissions.length} out of {questions.length} questions.
+              </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button variant="outline" onClick={() => setShowConfirmEnd(false)}>
+          <div className="flex justify-center gap-4 mt-6">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmEnd(false)}
+              className="px-6 py-2 text-gray-700 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+            >
               Cancel
             </Button>
             <Button 
               onClick={handleConfirmEndContest} 
               disabled={submitting}
-              className="bg-green-600 hover:bg-green-700"
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
-              {submitting ? 'Ending Contest...' : 'End Contest'}
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Ending Contest...
+                </span>
+              ) : (
+                'End Contest'
+              )}
             </Button>
           </div>
         </DialogContent>

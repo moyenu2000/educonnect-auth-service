@@ -16,6 +16,7 @@ import {
 import { aiService } from '../../services/aiService';
 import type { AIQueryRequest, AIQueryResponse, AIQuery } from '../../services/aiService';
 import { assessmentService } from '../../services/assessmentService';
+import LaTeXText from '../ui/LaTeXText';
 
 interface Subject {
   id: number;
@@ -229,7 +230,9 @@ const AIAssistant: React.FC = () => {
                       <Bot className="h-4 w-4 mr-2" />
                       AI Response:
                     </h3>
-                    <p className="text-blue-800 whitespace-pre-wrap mb-3">{response.answer}</p>
+                    <p className="text-blue-800 whitespace-pre-wrap mb-3">
+                      <LaTeXText text={response.answer} />
+                    </p>
                     
                     {response.sources && response.sources.length > 0 && (
                       <div className="mb-3">
@@ -309,7 +312,7 @@ const AIAssistant: React.FC = () => {
                           {item.question}
                         </p>
                         <p className="text-sm text-gray-600 line-clamp-2">
-                          {item.answer}
+                          <LaTeXText text={item.answer} />
                         </p>
                         <div className="mt-2 flex items-center justify-between">
                           <span className="text-xs text-gray-500">

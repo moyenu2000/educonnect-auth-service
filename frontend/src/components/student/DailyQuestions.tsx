@@ -6,6 +6,7 @@ import { assessmentService } from '@/services/assessmentService'
 import { Calendar, Flame, Trophy, Play, Eye, Clock, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import Pagination from '../ui/pagination'
+import LaTeXText from '../ui/LaTeXText'
 
 interface DailyQuestionDetails {
   id: number
@@ -370,7 +371,9 @@ const DailyQuestions: React.FC = () => {
               </Badge>
             )}
           </div>
-          <p className="text-lg font-medium text-gray-900 mb-3">{question.text}</p>
+          <p className="text-lg font-medium text-gray-900 mb-3">
+            <LaTeXText text={question.text} />
+          </p>
         </div>
 
         {question.type === 'MCQ' && (
@@ -396,7 +399,7 @@ const DailyQuestions: React.FC = () => {
                       <div className="flex items-center gap-2">
                         {isCorrect && <CheckCircle className="h-4 w-4 text-green-600" />}
                         {isUserAnswer && !isCorrect && <span className="text-red-600">✗</span>}
-                        <span>{option.text}</span>
+                        <LaTeXText text={option.text} />
                       </div>
                     </div>
                   )
@@ -415,7 +418,9 @@ const DailyQuestions: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
           <div>
             <h4 className="text-sm font-semibold text-green-700 mb-1">Correct Answer:</h4>
-            <p className="text-sm text-green-800 bg-green-50 p-2 rounded">{getCorrectAnswerText()}</p>
+            <p className="text-sm text-green-800 bg-green-50 p-2 rounded">
+              <LaTeXText text={getCorrectAnswerText()} />
+            </p>
           </div>
           {userSubmission && (
             <div>
@@ -425,7 +430,7 @@ const DailyQuestions: React.FC = () => {
                   ? 'text-green-800 bg-green-50' 
                   : 'text-red-800 bg-red-50'
               }`}>
-                {getUserAnswerText()}
+                <LaTeXText text={getUserAnswerText()} />
               </p>
             </div>
           )}
@@ -434,7 +439,9 @@ const DailyQuestions: React.FC = () => {
         {question.explanation && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
             <h4 className="text-sm font-semibold text-blue-700 mb-1">Explanation:</h4>
-            <p className="text-sm text-blue-800">{question.explanation}</p>
+            <p className="text-sm text-blue-800">
+              <LaTeXText text={question.explanation} />
+            </p>
           </div>
         )}
       </div>
@@ -641,7 +648,7 @@ const DailyQuestions: React.FC = () => {
                               )}
                             </div>
                             <p className="text-sm text-gray-800 line-clamp-2">
-                              {question.questionText}
+                              <LaTeXText text={question.questionText} />
                             </p>
                           </div>
                         </div>
