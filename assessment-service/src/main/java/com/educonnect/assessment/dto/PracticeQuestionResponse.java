@@ -33,6 +33,7 @@ public class PracticeQuestionResponse {
     private Integer totalAttempts;
     private Integer bestScore;
     private LocalDateTime lastAttemptAt;
+    private String lastAttemptAnswer;
     
     // Practice problem specific fields
     private String hintText;
@@ -225,6 +226,14 @@ public class PracticeQuestionResponse {
     
     public void setLastAttemptAt(LocalDateTime lastAttemptAt) {
         this.lastAttemptAt = lastAttemptAt;
+    }
+    
+    public String getLastAttemptAnswer() {
+        return lastAttemptAnswer;
+    }
+
+    public void setLastAttemptAnswer(String lastAttemptAnswer) {
+        this.lastAttemptAnswer = lastAttemptAnswer;
     }
     
     public String getHintText() {
