@@ -329,6 +329,8 @@ const ExamPage: React.FC = () => {
   }, [questionStartTimes])
 
   const handleAnswerChange = useCallback(async (questionId: number, answer: string, immediate: boolean = false) => {
+    console.log('handleAnswerChange called:', { questionId, answer, answerType: typeof answer, answerLength: answer.length, immediate })
+    
     // Update the answer locally
     setExamState(prev => ({
       ...prev,
@@ -387,6 +389,9 @@ const ExamPage: React.FC = () => {
       const timeTaken = Math.round((Date.now() - startTime) / 1000)
 
       console.log(`Submitting practice question ${questionId}: "${answer}"`)
+      console.log('Answer type:', typeof answer)
+      console.log('Answer length:', answer.length)
+      console.log('Answer bytes:', new TextEncoder().encode(answer))
       
       const response = await assessmentService.submitPracticeQuestionAnswer(questionId, {
         answer,
@@ -1069,7 +1074,12 @@ const ExamPage: React.FC = () => {
                           name={`question-${question.id}`}
                           value={option.text}
                           checked={currentAnswer === option.text}
-                          onChange={() => !examState.isAlreadySubmitted && !examState.viewOnly && handleAnswerChange(question.id, option.text, true)}
+                          onChange={() => {
+                            if (!examState.isAlreadySubmitted && !examState.viewOnly) {
+                              console.log('MCQ option selected:', option.text, 'type:', typeof option.text, 'length:', option.text.length)
+                              handleAnswerChange(question.id, option.text, true)
+                            }
+                          }}
                           disabled={examState.isAlreadySubmitted || examState.viewOnly}
                           className="sr-only"
                         />

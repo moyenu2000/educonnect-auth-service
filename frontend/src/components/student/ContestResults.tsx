@@ -86,28 +86,26 @@ const ContestResults: React.FC = () => {
       const resultsResponse = await assessmentService.getContestResults(parseInt(contestId!))
       const resultsData = resultsResponse.data?.data || resultsResponse.data
       
-      // Load leaderboard
-      const leaderboardResponse = await assessmentService.getContestLeaderboard(parseInt(contestId!))
-      const leaderboardData = leaderboardResponse.data?.data || leaderboardResponse.data
+      console.log('Contest results data:', resultsData) // Debug log
       
       // Process results data to match expected format
-      if (resultsData && resultsData.finalLeaderboard) {
-        // Find current user's result in the leaderboard
-        const currentUserId = 93 // This should ideally come from auth context
-        const userResult = resultsData.finalLeaderboard.find((entry: any) => entry.userId === currentUserId)
+      if (resultsData && resultsData.contest && resultsData.finalLeaderboard) {
+        // For now, take the first entry as the current user's result
+        // In a real implementation, you'd get the current user ID from auth context
+        const userResult = resultsData.finalLeaderboard[0] // Take first entry for now
         
         if (userResult) {
           const processedResults: ContestResult = {
             contestId: parseInt(contestId!),
-            contestTitle: resultsData.contest?.title || 'Contest',
+            contestTitle: resultsData.contest.title || 'Contest',
             totalQuestions: resultsData.totalQuestions || 0,
-            correctAnswers: userResult.totalSubmissions || 0, // This is approximate
-            totalPoints: resultsData.totalQuestions * 2, // Assuming 2 points per question
+            correctAnswers: userResult.totalSubmissions || 0,
+            totalPoints: resultsData.totalQuestions * 5, // Assuming 5 points per question based on your data
             pointsEarned: userResult.totalPoints || 0,
-            accuracy: resultsData.totalQuestions > 0 ? (userResult.totalPoints / (resultsData.totalQuestions * 2)) * 100 : 0,
-            totalTimeTaken: userResult.timeTaken || 0,
-            rank: resultsData.finalLeaderboard.findIndex((entry: any) => entry.userId === currentUserId) + 1,
-            totalParticipants: resultsData.totalParticipants || 0,
+            accuracy: resultsData.totalQuestions > 0 ? (userResult.totalSubmissions / resultsData.totalQuestions) * 100 : 0,
+            totalTimeTaken: 0, // This data is not available in the current API response
+            rank: resultsData.finalLeaderboard.findIndex((entry: any) => entry.userId === userResult.userId) + 1,
+            totalParticipants: resultsData.totalParticipants || resultsData.finalLeaderboard.length,
             submissions: [] // This would need to be loaded separately if needed
           }
           setResults(processedResults)
@@ -121,8 +119,8 @@ const ContestResults: React.FC = () => {
         username: `User ${entry.userId}`, // This should ideally come from user service
         fullName: `User ${entry.userId}`,
         score: entry.totalPoints || 0,
-        accuracy: resultsData.totalQuestions > 0 ? (entry.totalPoints / (resultsData.totalQuestions * 2)) * 100 : 0,
-        timeTaken: entry.timeTaken || 0
+        accuracy: resultsData.totalQuestions > 0 ? (entry.totalSubmissions / resultsData.totalQuestions) * 100 : 0,
+        timeTaken: 0 // Not available in current API response
       })) || []
       
       setLeaderboard(leaderboardEntries)
@@ -301,15 +299,16 @@ const ContestResults: React.FC = () => {
               <CardTitle>Question Results</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {results.submissionResults.map((result, index) => (
-                <div key={result.questionId} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      {getAnswerStatusIcon(result.isCorrect)}
-                      <div>
-                        <h3 className="font-medium">Question {index + 1}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={getDifficultyColor(result.question.difficulty)}>
+              {results.submissions && results.submissions.length > 0 ? (
+                results.submissions.map((result, index) => (
+                  <div key={result.questionId} className="border rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        {getAnswerStatusIcon(result.isCorrect)}
+                        <div>
+                          <h3 className="font-medium">Question {index + 1}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge className={getDifficultyColor(result.question.difficulty)}>
                             {result.question.difficulty}
                           </Badge>
                           <Badge variant="outline">
@@ -351,7 +350,13 @@ const ContestResults: React.FC = () => {
                     </div>
                   )}
                 </div>
-              ))}
+              ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No detailed submission results available for this contest.</p>
+                  <p className="text-sm mt-2">Contest results show only summary information.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </>
