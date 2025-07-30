@@ -75,6 +75,7 @@ public class PracticeQuestionController {
                 PracticeQuestionSubmissionResponse latestSubmission = submissionService.getLatestSubmission(userId, question.getId());
                 if (latestSubmission != null) {
                     response.setLastAttemptAt(latestSubmission.getSubmittedAt());
+                    response.setLastAttemptAnswer(latestSubmission.getAnswer());
                 }
             }
             
@@ -117,6 +118,7 @@ public class PracticeQuestionController {
             PracticeQuestionSubmissionResponse latestSubmission = submissionService.getLatestSubmission(userId, questionId);
             if (latestSubmission != null) {
                 response.setLastAttemptAt(latestSubmission.getSubmittedAt());
+                response.setLastAttemptAnswer(latestSubmission.getAnswer());
             }
         }
 
@@ -228,7 +230,8 @@ public class PracticeQuestionController {
 
     // Utility methods
     private Long getCurrentUserId() {
-        return SecurityUtils.getCurrentUserId().orElse(93L); // Default test user ID for testing
+        return SecurityUtils.getCurrentUserId()
+                .orElseThrow(() -> new RuntimeException("User not authenticated"));
     }
 
     private String getClientIpAddress(HttpServletRequest request) {
