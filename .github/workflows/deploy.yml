@@ -346,67 +346,67 @@ jobs:
             done
             echo "Auth service failed to start"
             exit 1
-          '
+  #         '
 
-  deploy-discussion:
-    runs-on: ubuntu-latest
-    needs: deploy-infrastructure
-    steps:
-      - name: Setup Google Cloud CLI
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+  # deploy-discussion:
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-infrastructure
+  #   steps:
+  #     - name: Setup Google Cloud CLI
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         credentials_json: ${{ secrets.GCP_SA_KEY }}
           
-      - name: Deploy Discussion Service
-        run: |
-          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
-            echo "Starting discussion-service..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d discussion-service
+  #     - name: Deploy Discussion Service
+  #       run: |
+  #         gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+  #           echo "Starting discussion-service..."
+  #           sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d discussion-service
             
-            # Wait for discussion-service to be ready
-            timeout=120
-            while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
-                echo "Discussion service is ready!"
-                exit 0
-              fi
-              echo "Discussion service not ready yet, waiting..."
-              sleep 5
-              timeout=$((timeout - 5))
-            done
-            echo "Discussion service failed to start"
-            exit 1
-          '
+  #           # Wait for discussion-service to be ready
+  #           timeout=120
+  #           while [ $timeout -gt 0 ]; do
+  #             if curl -f http://localhost:8082/api/v1/actuator/health >/dev/null 2>&1; then
+  #               echo "Discussion service is ready!"
+  #               exit 0
+  #             fi
+  #             echo "Discussion service not ready yet, waiting..."
+  #             sleep 5
+  #             timeout=$((timeout - 5))
+  #           done
+  #           echo "Discussion service failed to start"
+  #           exit 1
+  #         '
 
-  deploy-assessment:
-    runs-on: ubuntu-latest
-    needs: deploy-infrastructure
-    steps:
-      - name: Setup Google Cloud CLI
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+  # deploy-assessment:
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-infrastructure
+  #   steps:
+  #     - name: Setup Google Cloud CLI
+  #       uses: google-github-actions/auth@v2
+  #       with:
+  #         credentials_json: ${{ secrets.GCP_SA_KEY }}
           
-      - name: Deploy Assessment Service
-        run: |
-          gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
-            echo "Starting assessment-service..."
-            sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d assessment-service
+  #     - name: Deploy Assessment Service
+  #       run: |
+  #         gcloud compute ssh auth-service-vm --zone=us-central1-a --command='
+  #           echo "Starting assessment-service..."
+  #           sudo docker-compose -f docker-compose.prod.yml --env-file .env up -d assessment-service
             
-            # Wait for assessment-service to be ready
-            timeout=120
-            while [ $timeout -gt 0 ]; do
-              if curl -f http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
-                echo "Assessment service is ready!"
-                exit 0
-              fi
-              echo "Assessment service not ready yet, waiting..."
-              sleep 5
-              timeout=$((timeout - 5))
-            done
-            echo "Assessment service failed to start"
-            exit 1
-          '
+  #           # Wait for assessment-service to be ready
+  #           timeout=120
+  #           while [ $timeout -gt 0 ]; do
+  #             if curl -f http://localhost:8083/api/v1/actuator/health >/dev/null 2>&1; then
+  #               echo "Assessment service is ready!"
+  #               exit 0
+  #             fi
+  #             echo "Assessment service not ready yet, waiting..."
+  #             sleep 5
+  #             timeout=$((timeout - 5))
+  #           done
+  #           echo "Assessment service failed to start"
+  #           exit 1
+  #         '
 
   deploy-frontend:
     runs-on: ubuntu-latest
