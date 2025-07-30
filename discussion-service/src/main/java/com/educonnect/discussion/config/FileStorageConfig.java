@@ -17,7 +17,7 @@ public class FileStorageConfig {
     @Value("${app.file.upload-dir:./uploads}")
     private String uploadDir;
     
-    @Value("${app.file.base-url:http://localhost:8082/api/v1/files}")
+    @Value("${app.file.base-url:http://34.136.116.244:8082/api/v1/files}")
     private String baseUrl;
     
     @Value("${app.file.allowed-extensions:jpg,jpeg,png,gif,pdf,doc,docx,txt,zip,rar}")
