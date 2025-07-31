@@ -3,8 +3,10 @@
 
 # Maven build artifacts
 target/
-!**/src/main/**/target/
-!**/src/test/**/target/
+**/target/
+*.jar
+*.war
+*.ear
 
 # IDE files
 .idea/
